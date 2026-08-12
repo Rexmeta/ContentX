@@ -44,6 +44,7 @@ import {
   GitMerge
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import LineageTree from "@/components/lineage-tree";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -87,7 +88,7 @@ export default function Dashboard() {
   // State for manual classification overrides in step-2
   const [editedClassification, setEditedClassification] = useState<{domain: string, conflictType: string, tone: string, tags: string}>({ domain: "", conflictType: "", tone: "", tags: "" });
 
-  const [activeTab, setActiveTab] = useState<'CONTENT' | 'SCENARIOS'>('CONTENT');
+  const [activeTab, setActiveTab] = useState<'CONTENT' | 'SCENARIOS' | 'LINEAGE'>('CONTENT');
 
   // Filtering state
   const [filterDomain, setFilterDomain] = useState("All");
@@ -781,6 +782,14 @@ export default function Dashboard() {
                 Scenario Library
                 <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{scenarios?.length || 0}</span>
               </button>
+              <button 
+                onClick={() => setActiveTab('LINEAGE')}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'LINEAGE' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+              >
+                <GitMerge className="h-4 w-4" />
+                Lineage
+                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{scenarios?.filter(s => s.lineage).length || 0}</span>
+              </button>
             </div>
 
             {/* Filter Bar (Only shown for scenarios) */}
@@ -1018,6 +1027,17 @@ export default function Dashboard() {
                       Adjust your filters or amplify a new idea into a scenario.
                     </p>
                   </div>
+                )
+              )}
+
+              {activeTab === 'LINEAGE' && (
+                isScenariosLoading ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                    <span className="font-mono text-sm">Fetching scenarios...</span>
+                  </div>
+                ) : (
+                  <LineageTree scenarios={scenarios || []} onOpen={handleOpenScenario} />
                 )
               )}
             </div>
