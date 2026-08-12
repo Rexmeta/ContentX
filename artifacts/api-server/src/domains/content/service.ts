@@ -46,13 +46,17 @@ export function toSummary(row: ContentRow) {
 export async function createFromPrompt(
   prompt: string,
   title?: string,
+  scenario?: Parameters<typeof orchestrator.generateFromScenario>[1],
 ): Promise<ContentGraph> {
-  const payload = await orchestrator.generate(prompt);
+  // Confirmed scenario → compose graph from it; raw prompt → direct generate.
+  const payload = scenario
+    ? orchestrator.generateFromScenario(prompt, scenario)
+    : await orchestrator.generate(prompt);
   // Content row and its v1 snapshot are committed atomically.
   const row = await repo.insertContentWithInitialVersion(
     {
       id: newId("content"),
-      title: title?.trim() || prompt.trim().slice(0, 80),
+      title: title?.trim() || scenario?.title || prompt.trim().slice(0, 80),
       sourcePrompt: prompt,
       version: 1,
       graph: payload,

@@ -41,7 +41,27 @@ export const ListContentResponse = zod.array(ListContentResponseItem)
 
 export const CreateContentBody = zod.object({
   "prompt": zod.string().min(1),
-  "title": zod.string().optional()
+  "title": zod.string().optional(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}).optional()
 })
 
 export const CreateContentResponse = zod.object({
@@ -75,6 +95,39 @@ export const CreateContentResponse = zod.object({
   "generatedByProvider": zod.string().nullish(),
   "generatedByModel": zod.string().nullish()
 }).optional()
+})
+
+
+/**
+ * @summary Amplify a raw idea into a dramatic scenario draft for user confirmation
+ */
+
+
+
+export const DraftScenarioBody = zod.object({
+  "prompt": zod.string().min(1),
+  "title": zod.string().optional()
+})
+
+export const DraftScenarioResponse = zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
 })
 
 

@@ -59,6 +59,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ContentGraph"
+  /v1/scenarios/draft:
+    post:
+      operationId: draftScenario
+      tags: [content]
+      summary: Amplify a raw idea into a dramatic scenario draft for user confirmation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioDraftInput"
+      responses:
+        "200":
+          description: Amplified dramatic scenario (not yet committed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DramaticScenario"
   /v1/content/{id}:
     get:
       operationId: getContent
@@ -387,6 +405,53 @@ components:
           minLength: 1
         title:
           type: string
+        scenario:
+          $ref: "#/components/schemas/DramaticScenario"
+    ScenarioDraftInput:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+        title:
+          type: string
+    ScenarioAct:
+      type: object
+      required: [name, summary, beats]
+      properties:
+        name: { type: string }
+        summary: { type: string }
+        beats:
+          type: array
+          items: { type: string }
+    ScenarioCharacter:
+      type: object
+      required: [name, role, motivation]
+      properties:
+        name: { type: string }
+        role: { type: string }
+        motivation: { type: string }
+    DramaticScenario:
+      type: object
+      required: [title, logline, synopsis, theme, stakes, twist, acts, characters]
+      properties:
+        title: { type: string }
+        logline: { type: string }
+        synopsis: { type: string }
+        theme: { type: string }
+        stakes: { type: string }
+        twist: { type: string }
+        acts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioAct"
+        characters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioCharacter"
+        sourceIdea: { type: string }
+        amplifiedBy: { type: string }
     EntityUpdate:
       type: object
       properties:

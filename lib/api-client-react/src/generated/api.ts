@@ -26,10 +26,12 @@ import type {
   ContentInput,
   ContentSummary,
   DashboardSummary,
+  DramaticScenario,
   EntityUpdate,
   HealthStatus,
   RelationshipUpdate,
   RoleplayXScenario,
+  ScenarioDraftInput,
   ValidationReport,
   VersionInfo,
   VersionInput
@@ -286,6 +288,77 @@ export const useCreateContent = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateContentMutationOptions(options));
+    }
+
+export const getDraftScenarioUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios/draft`
+}
+
+/**
+ * @summary Amplify a raw idea into a dramatic scenario draft for user confirmation
+ */
+export const draftScenario = async (scenarioDraftInput: ScenarioDraftInput, options?: Parameters<typeof customFetch>[1]): Promise<DramaticScenario> => {
+
+  return customFetch<DramaticScenario>(getDraftScenarioUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(scenarioDraftInput)
+  }
+);}
+
+
+
+
+
+export const getDraftScenarioMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftScenario>>, TError,{data: BodyType<ScenarioDraftInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftScenario>>, TError,{data: BodyType<ScenarioDraftInput>}, TContext> => {
+
+const mutationKey = ['draftScenario'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftScenario>>, {data: BodyType<ScenarioDraftInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  draftScenario(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DraftScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof draftScenario>>>
+    export type DraftScenarioMutationBody = BodyType<ScenarioDraftInput>
+    export type DraftScenarioMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Amplify a raw idea into a dramatic scenario draft for user confirmation
+ */
+export const useDraftScenario = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftScenario>>, TError,{data: BodyType<ScenarioDraftInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof draftScenario>>,
+        TError,
+        {data: BodyType<ScenarioDraftInput>},
+        TContext
+      > => {
+      return useMutation(getDraftScenarioMutationOptions(options));
     }
 
 export const getGetContentUrl = (id: string,) => {

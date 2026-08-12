@@ -44,7 +44,7 @@ Platform-independent AI Content Engine: users describe a premise in natural lang
 
 ## Product
 
-- Dashboard: telemetry, content library, prompt → generate new Content Graph
+- Dashboard: telemetry, content library, and a two-step creation workflow — idea → AI-amplified dramatic scenario draft (logline, synopsis, theme/stakes/twist, 3 acts, characters; user-editable) → explicit user confirm → Content Graph commit (`POST /v1/scenarios/draft` drafts without persisting; `POST /v1/content` with `scenario` commits; provenance operation `compose`)
 - Workspace: entity list by kind, SVG radial graph view, object inspector (edit entities/relationships), validation panel, version snapshots, canonical JSON export, RoleplayX scenario projection
 
 ## User preferences

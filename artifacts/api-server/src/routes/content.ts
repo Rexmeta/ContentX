@@ -1,6 +1,12 @@
 import { Router, type IRouter } from "express";
 import {
+  orchestrator,
+  ScenarioValidationError,
+} from "../domains/ai/orchestrator";
+import {
   CreateContentBody,
+  DraftScenarioBody,
+  DraftScenarioResponse,
   UpdateEntityBody,
   UpdateRelationshipBody,
   CreateVersionBody,
@@ -35,11 +41,31 @@ router.post("/v1/content", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const graph = await service.createFromPrompt(
-    parsed.data.prompt,
-    parsed.data.title,
-  );
+  let graph;
+  try {
+    graph = await service.createFromPrompt(
+      parsed.data.prompt,
+      parsed.data.title,
+      parsed.data.scenario,
+    );
+  } catch (err) {
+    if (err instanceof ScenarioValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
   res.status(201).json(CreateContentResponse.parse(graph));
+});
+
+router.post("/v1/scenarios/draft", async (req, res): Promise<void> => {
+  const parsed = DraftScenarioBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const scenario = orchestrator.amplify(parsed.data.prompt, parsed.data.title);
+  res.json(DraftScenarioResponse.parse(scenario));
 });
 
 router.get("/v1/content/:id", async (req, res): Promise<void> => {

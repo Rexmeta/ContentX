@@ -76,7 +76,39 @@ export interface ContentSummary {
   relationshipCount: number;
 }
 
+export interface ScenarioAct {
+  name: string;
+  summary: string;
+  beats: string[];
+}
+
+export interface ScenarioCharacter {
+  name: string;
+  role: string;
+  motivation: string;
+}
+
+export interface DramaticScenario {
+  title: string;
+  logline: string;
+  synopsis: string;
+  theme: string;
+  stakes: string;
+  twist: string;
+  acts: ScenarioAct[];
+  characters: ScenarioCharacter[];
+  sourceIdea?: string;
+  amplifiedBy?: string;
+}
+
 export interface ContentInput {
+  /** @minLength 1 */
+  prompt: string;
+  title?: string;
+  scenario?: DramaticScenario;
+}
+
+export interface ScenarioDraftInput {
   /** @minLength 1 */
   prompt: string;
   title?: string;

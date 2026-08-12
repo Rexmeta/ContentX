@@ -5,11 +5,9 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { DramaticScenario } from './dramaticScenario';
 
-export interface ContentInput {
+export interface ScenarioDraftInput {
   /** @minLength 1 */
   prompt: string;
   title?: string;
-  scenario?: DramaticScenario;
 }
