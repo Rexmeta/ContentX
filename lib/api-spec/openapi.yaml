@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: ContentX API — platform-independent AI Content Engine
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: content
+    description: Canonical content graph operations
+  - name: projection
+    description: Platform projections
 paths:
   /healthz:
     get:
@@ -24,6 +28,272 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /v1/content:
+    get:
+      operationId: listContent
+      tags: [content]
+      summary: List all content
+      responses:
+        "200":
+          description: Content list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContentSummary"
+    post:
+      operationId: createContent
+      tags: [content]
+      summary: Generate a content graph from a natural language prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentInput"
+      responses:
+        "201":
+          description: Created content graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentGraph"
+  /v1/content/{id}:
+    get:
+      operationId: getContent
+      tags: [content]
+      summary: Get a content graph (current version)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Content graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentGraph"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    delete:
+      operationId: deleteContent
+      tags: [content]
+      summary: Delete content and its versions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+  /v1/content/{id}/entities/{entityId}:
+    patch:
+      operationId: updateEntity
+      tags: [content]
+      summary: Update an entity in the content graph
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: entityId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EntityUpdate"
+      responses:
+        "200":
+          description: Updated content graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentGraph"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/content/{id}/relationships/{relationshipId}:
+    patch:
+      operationId: updateRelationship
+      tags: [content]
+      summary: Update a relationship in the content graph
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: relationshipId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelationshipUpdate"
+      responses:
+        "200":
+          description: Updated content graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentGraph"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid reference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/content/{id}/validate:
+    post:
+      operationId: validateContent
+      tags: [content]
+      summary: Validate the content graph (schema, references, duplicates, required fields)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Validation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationReport"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/content/{id}/versions:
+    get:
+      operationId: listVersions
+      tags: [content]
+      summary: List versions of a content graph
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Version list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VersionInfo"
+    post:
+      operationId: createVersion
+      tags: [content]
+      summary: Snapshot the current graph as a new version
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VersionInput"
+      responses:
+        "201":
+          description: New version info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionInfo"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/content/{id}/export:
+    get:
+      operationId: exportContent
+      tags: [content]
+      summary: Export the canonical content graph JSON
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Canonical export document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CanonicalExport"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/projections/roleplayx/{id}:
+    get:
+      operationId: projectRoleplayX
+      tags: [projection]
+      summary: Project a content graph to RoleplayX Scenario JSON
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: RoleplayX scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleplayXScenario"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [content]
+      summary: Aggregate stats across the content library
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +303,208 @@ components:
           type: string
       required:
         - status
-
+    ApiMessage:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+    Entity:
+      type: object
+      required: [id, kind, name]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          description: "Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)"
+        name: { type: string }
+        description: { type: ["string", "null"] }
+        attributes:
+          type: object
+          additionalProperties: true
+    Relationship:
+      type: object
+      required: [id, source, type, target]
+      properties:
+        id: { type: string }
+        source: { type: string }
+        type: { type: string }
+        target: { type: string }
+        attributes:
+          type: object
+          additionalProperties: true
+    Provenance:
+      type: object
+      required: [operation, createdAt]
+      properties:
+        operation: { type: string }
+        createdAt: { type: string }
+        sourceType: { type: ["string", "null"] }
+        sourceUri: { type: ["string", "null"] }
+        sourceTitle: { type: ["string", "null"] }
+        sourceContentIds:
+          type: array
+          items: { type: string }
+        generatedByProvider: { type: ["string", "null"] }
+        generatedByModel: { type: ["string", "null"] }
+    ContentGraph:
+      type: object
+      required: [id, title, version, createdAt, updatedAt, entities, relationships]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        sourcePrompt: { type: ["string", "null"] }
+        version: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        entities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entity"
+        relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/Relationship"
+        provenance:
+          $ref: "#/components/schemas/Provenance"
+    ContentSummary:
+      type: object
+      required: [id, title, version, createdAt, updatedAt, entityCount, relationshipCount]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        sourcePrompt: { type: ["string", "null"] }
+        version: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        entityCount: { type: integer }
+        relationshipCount: { type: integer }
+    ContentInput:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+        title:
+          type: string
+    EntityUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: ["string", "null"] }
+        attributes:
+          type: object
+          additionalProperties: true
+    RelationshipUpdate:
+      type: object
+      properties:
+        type: { type: string, minLength: 1 }
+        target: { type: string }
+        source: { type: string }
+        attributes:
+          type: object
+          additionalProperties: true
+    ValidationIssue:
+      type: object
+      required: [severity, code, message]
+      properties:
+        severity:
+          type: string
+          enum: [error, warning]
+        code: { type: string }
+        message: { type: string }
+        objectId: { type: ["string", "null"] }
+    ValidationReport:
+      type: object
+      required: [valid, checkedAt, issues, checks]
+      properties:
+        valid: { type: boolean }
+        checkedAt: { type: string }
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationIssue"
+        checks:
+          type: array
+          items: { type: string }
+    VersionInfo:
+      type: object
+      required: [id, contentId, version, createdAt]
+      properties:
+        id: { type: string }
+        contentId: { type: string }
+        version: { type: integer }
+        parentVersion: { type: ["integer", "null"] }
+        note: { type: ["string", "null"] }
+        author: { type: ["string", "null"] }
+        createdAt: { type: string }
+        entityCount: { type: integer }
+        relationshipCount: { type: integer }
+    VersionInput:
+      type: object
+      properties:
+        note: { type: string }
+        author: { type: string }
+    CanonicalExport:
+      type: object
+      required: [schemaVersion, exportedAt, content]
+      properties:
+        schemaVersion: { type: string }
+        exportedAt: { type: string }
+        content:
+          $ref: "#/components/schemas/ContentGraph"
+    RoleplayXPersona:
+      type: object
+      required: [id, name, role]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: string }
+        background: { type: ["string", "null"] }
+        traits:
+          type: array
+          items: { type: string }
+    RoleplayXScenario:
+      type: object
+      required: [title, context, playerRole, objectives, successCriteria, personas, recommendedFlow, meta]
+      properties:
+        title: { type: string }
+        context: { type: string }
+        playerRole: { type: string }
+        objectives:
+          type: array
+          items: { type: string }
+        successCriteria:
+          type: array
+          items: { type: string }
+        personas:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleplayXPersona"
+        recommendedFlow:
+          type: array
+          items: { type: string }
+        meta:
+          type: object
+          required: [sourceContentId, sourceVersion, projectedAt, adapter]
+          properties:
+            sourceContentId: { type: string }
+            sourceVersion: { type: integer }
+            projectedAt: { type: string }
+            adapter: { type: string }
+    DashboardSummary:
+      type: object
+      required: [contentCount, entityCount, relationshipCount, versionCount, entityKindCounts, recentContent]
+      properties:
+        contentCount: { type: integer }
+        entityCount: { type: integer }
+        relationshipCount: { type: integer }
+        versionCount: { type: integer }
+        entityKindCounts:
+          type: object
+          additionalProperties:
+            type: integer
+        recentContent:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContentSummary"

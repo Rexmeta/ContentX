@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/relationship.schema.json",
+  "title": "ContentX Relationship",
+  "description": "A first-class edge between two entities. Important relationships are explicit data, never hidden only in prose.",
+  "type": "object",
+  "required": ["id", "source", "type", "target"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^relationship_[A-Za-z0-9_-]+$" },
+    "source": { "type": "string", "pattern": "^entity_[A-Za-z0-9_-]+$" },
+    "type": { "type": "string", "minLength": 1, "examples": ["works_for", "conflicts_with", "wants", "participates_in", "occurs_in", "involves", "lives_in"] },
+    "target": { "type": "string", "pattern": "^entity_[A-Za-z0-9_-]+$" },
+    "attributes": { "type": "object" }
+  },
+  "additionalProperties": false
+}

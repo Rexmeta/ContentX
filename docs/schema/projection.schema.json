@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/projection.schema.json",
+  "title": "ContentX Projection",
+  "description": "Envelope describing a projection of canonical content to a target platform/medium. The payload shape is target-specific; the canonical model never depends on it.",
+  "type": "object",
+  "required": ["id", "target", "adapter", "sourceContentId", "sourceVersion", "projectedAt", "payload"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^projection_[A-Za-z0-9_-]+$" },
+    "target": {
+      "type": "string",
+      "examples": ["roleplayx", "screenplay", "novel", "game-quest", "advertisement", "board-game", "use-case"]
+    },
+    "adapter": { "type": "string", "description": "Adapter name and version, e.g. roleplayx@1." },
+    "sourceContentId": { "type": "string", "pattern": "^content_[A-Za-z0-9_-]+$" },
+    "sourceVersion": { "type": "integer", "minimum": 1 },
+    "projectedAt": { "type": "string", "format": "date-time" },
+    "payload": { "type": "object", "description": "Target-platform document (e.g. RoleplayX Scenario JSON)." }
+  },
+  "additionalProperties": false
+}

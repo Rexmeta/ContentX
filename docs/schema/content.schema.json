@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/content.schema.json",
+  "title": "ContentX Canonical Content Graph",
+  "description": "Platform-independent canonical content. External platform fields (e.g. RoleplayX) are forbidden here; they belong to projections.",
+  "type": "object",
+  "required": ["id", "title", "version", "createdAt", "updatedAt", "entities", "relationships"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^content_[A-Za-z0-9_-]+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "sourcePrompt": { "type": ["string", "null"] },
+    "version": { "type": "integer", "minimum": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "entities": {
+      "type": "array",
+      "items": { "$ref": "./entity.schema.json" }
+    },
+    "relationships": {
+      "type": "array",
+      "items": { "$ref": "./relationship.schema.json" }
+    },
+    "provenance": { "$ref": "./provenance.schema.json" }
+  },
+  "additionalProperties": false
+}

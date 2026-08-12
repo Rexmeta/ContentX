@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/asset.schema.json",
+  "title": "ContentX Asset",
+  "description": "A media/document asset referenced by stable asset ID. Canonical content never hard-codes application-specific storage paths.",
+  "type": "object",
+  "required": ["id", "kind", "name"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^asset_[A-Za-z0-9_-]+$" },
+    "kind": { "type": "string", "enum": ["image", "audio", "video", "document", "other"] },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": ["string", "null"] },
+    "mediaType": { "type": ["string", "null"], "description": "MIME type when known." },
+    "provenance": { "$ref": "./provenance.schema.json" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/event.schema.json",
+  "title": "ContentX Event",
+  "description": "An event is an entity of kind 'event'. Temporal ordering and participants are expressed via relationships (participates_in, occurs_in, precedes).",
+  "allOf": [{ "$ref": "./entity.schema.json" }],
+  "properties": {
+    "kind": { "const": "event" },
+    "attributes": {
+      "type": "object",
+      "properties": {
+        "order": { "type": "integer", "description": "Optional ordering hint within a narrative." },
+        "timeframe": { "type": "string" }
+      }
+    }
+  }
+}

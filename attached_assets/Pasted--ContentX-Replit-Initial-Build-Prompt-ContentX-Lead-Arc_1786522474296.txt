@@ -1,0 +1,978 @@
+# ContentX — Replit Initial Build Prompt
+
+너는 ContentX 프로젝트의 Lead Architect이자 Senior Full-Stack Engineer다.
+
+지금부터 Replit에서 새로운 프로젝트를 개발한다.
+
+먼저 이 프로젝트의 목적과 아키텍처 원칙을 정확히 이해하고, 임의로 범위를 확장하지 마라.
+
+==================================================
+1. PRODUCT DEFINITION
+==================================================
+
+프로젝트명: ContentX
+
+ContentX는 특정 플랫폼용 시나리오 생성기가 아니다.
+
+ContentX의 목표는 다양한 콘텐츠를 구조화된 형태로 생성, 관리, 분해, 합성, 변환, 재사용, 공유할 수 있는
+
+"Platform-Independent AI Content Engine"
+
+을 만드는 것이다.
+
+활용 대상:
+
+- Movie
+- Novel
+- Screenplay
+- Advertisement
+- Roleplay
+- Training
+- Game
+- Game Quest
+- Board Game
+- Simulation
+- Business Use Case
+- Worldbuilding
+- Education
+- Marketing
+- Media
+
+ContentX에서 생성되는 콘텐츠는 특정 플랫폼에 종속되지 않아야 한다.
+
+RoleplayX는 ContentX를 사용하는 첫 번째 외부 플랫폼일 뿐이다.
+
+따라서 다음 구조를 기본 원칙으로 한다.
+
+Canonical Content
+        ↓
+Content Graph
+        ↓
+Content Engine
+        ↓
+Projection / Adapter
+        ↓
+External Platform
+
+
+==================================================
+2. ABSOLUTELY IMPORTANT ARCHITECTURE RULE
+==================================================
+
+현재 RoleplayX에서 사용하는 Scenario JSON을 ContentX의 Canonical Schema로 사용하지 마라.
+
+RoleplayX JSON은 하나의 Projection Format이다.
+
+예를 들어 RoleplayX의 다음 개념:
+
+- context
+- objectives
+- successCriteria
+- personas
+- recommendedFlow
+
+는 ContentX 내부의 Canonical Content에서 변환되어 생성되어야 한다.
+
+즉:
+
+ContentX Canonical Model
+        ↓
+RoleplayX Adapter
+        ↓
+RoleplayX Scenario JSON
+
+구조로 구현한다.
+
+향후 동일한 Canonical Content를 다음으로도 변환할 수 있어야 한다.
+
+        ↓
+Movie
+        ↓
+Novel
+        ↓
+Game
+        ↓
+Advertisement
+        ↓
+Board Game
+        ↓
+Training
+        ↓
+Use Case
+
+
+==================================================
+3. FIRST TASK — DO NOT BUILD EVERYTHING
+==================================================
+
+첫 번째 작업에서 Marketplace, Social Network, Unity Plugin, Unreal Plugin, 복잡한 Multi-Agent System 등을 만들지 마라.
+
+첫 번째 목표는 다음을 검증하는 것이다.
+
+"ContentX의 Canonical Content Model이 실제로 작동하는가?"
+
+따라서 이번 작업은 다음 Vertical Slice까지만 구현한다.
+
+Natural Language
+      ↓
+Content Graph
+      ↓
+Edit
+      ↓
+Validate
+      ↓
+Version
+      ↓
+Canonical JSON Export
+      ↓
+RoleplayX Projection
+
+
+==================================================
+4. BEFORE CODING — INSPECT THE PROJECT
+==================================================
+
+코딩하기 전에 현재 Replit 프로젝트의 전체 구조를 먼저 확인하라.
+
+확인할 항목:
+
+- package.json
+- framework
+- frontend
+- backend
+- database
+- ORM
+- existing routes
+- existing components
+- existing services
+- configuration
+- environment variables
+- deployment configuration
+
+프로젝트가 비어 있다면 새로운 구조를 설계한다.
+
+이미 코드가 존재한다면 기존 코드를 무작정 삭제하거나 재작성하지 마라.
+
+기존 구조를 분석한 후 필요한 부분만 수정한다.
+
+먼저 다음 문서를 만든다.
+
+docs/architecture-assessment.md
+
+내용:
+
+1. 현재 프로젝트 구조
+2. 현재 기술 스택
+3. 재사용 가능한 코드
+4. 문제점
+5. ContentX에 필요한 구조
+6. 유지할 코드
+7. 수정이 필요한 코드
+8. 향후 migration risk
+
+
+==================================================
+5. PROJECT ARCHITECTURE
+==================================================
+
+MVP는 Modular Monolith로 구현한다.
+
+처음부터 Microservice로 나누지 마라.
+
+추천 구조:
+
+src/
+  domains/
+    content/
+    entity/
+    relationship/
+    event/
+    narrative/
+    asset/
+    provenance/
+    versioning/
+    projection/
+    ai/
+    search/
+    integration/
+
+  api/
+  infrastructure/
+  shared/
+
+frontend/
+  components/
+  pages/
+  features/
+  lib/
+
+docs/
+  architecture/
+  schema/
+  projections/
+
+
+도메인 로직과 UI를 분리한다.
+
+React Component에서 직접 DB를 호출하지 마라.
+
+기본 흐름:
+
+UI
+ ↓
+API / Service
+ ↓
+Domain Logic
+ ↓
+Repository
+ ↓
+Database
+
+
+==================================================
+6. CANONICAL CONTENT MODEL
+==================================================
+
+가장 중요한 작업이다.
+
+ContentX의 핵심 데이터 모델을 먼저 정의한다.
+
+최소한 다음 Content Primitive를 지원할 수 있도록 설계한다.
+
+- Character
+- Organization
+- Location
+- Object
+- Event
+- Concept
+- Theme
+- Goal
+- Conflict
+- Relationship
+- Emotion
+- Action
+- Dialogue
+- Narrative
+- Rule
+- Constraint
+- Outcome
+- World
+
+
+모든 객체는 stable ID를 가져야 한다.
+
+예:
+
+entity_xxx
+event_xxx
+relationship_xxx
+content_xxx
+
+Array index를 ID로 사용하지 마라.
+
+
+==================================================
+7. SCHEMA FIRST
+==================================================
+
+다음 Schema를 정의한다.
+
+docs/schema/
+
+- content.schema.json
+- entity.schema.json
+- relationship.schema.json
+- event.schema.json
+- narrative.schema.json
+- asset.schema.json
+- provenance.schema.json
+- projection.schema.json
+
+
+Schema는 향후 다른 플랫폼에서도 사용할 수 있도록 최대한 플랫폼 독립적으로 설계한다.
+
+특정 UI나 특정 DB 구조를 Schema에 넣지 마라.
+
+특정 RoleplayX 필드를 Canonical Schema에 넣지 마라.
+
+
+==================================================
+8. CONTENT GRAPH
+==================================================
+
+ContentX의 핵심은 Content Graph다.
+
+예:
+
+Character
+   │
+   ├── works_for → Organization
+   │
+   ├── lives_in → Location
+   │
+   ├── wants → Goal
+   │
+   ├── conflicts_with → Character
+   │
+   └── participates_in → Event
+
+
+Relationship은 단순 문자열이 아니라 독립적인 데이터 객체로 관리한다.
+
+예:
+
+{
+  "id": "relationship_001",
+  "source": "entity_001",
+  "type": "conflicts_with",
+  "target": "entity_002",
+  "attributes": {
+    "intensity": 0.8,
+    "reason": "제품 출시 일정"
+  }
+}
+
+
+중요한 관계를 description 안에만 저장하지 마라.
+
+
+==================================================
+9. DATABASE
+==================================================
+
+MVP에서는 PostgreSQL을 우선 사용한다.
+
+가능하면:
+
+PostgreSQL
++
+JSONB
++
+pgvector
+
+구조를 사용한다.
+
+처음부터 Neo4j 등의 별도 Graph Database를 도입하지 마라.
+
+Content Graph는 PostgreSQL에서 먼저 구현한다.
+
+필요한 경우 향후 Graph Projection을 별도로 추가할 수 있도록 Repository Layer를 만든다.
+
+
+==================================================
+10. VERSIONING
+==================================================
+
+Content는 수정될 때 이전 상태를 추적할 수 있어야 한다.
+
+최소한:
+
+- version
+- createdAt
+- updatedAt
+- author
+- parentVersion
+
+을 고려한다.
+
+향후:
+
+- branch
+- fork
+- merge
+
+를 지원할 수 있도록 설계한다.
+
+기존 Content를 무조건 덮어쓰지 마라.
+
+
+==================================================
+11. PROVENANCE
+==================================================
+
+ContentX는 외부 콘텐츠를 모티브로 새로운 콘텐츠를 만들 수 있어야 한다.
+
+따라서 provenance를 처음부터 설계한다.
+
+예:
+
+{
+  "source": {
+    "type": "url",
+    "uri": "...",
+    "title": "..."
+  },
+  "operation": "remix",
+  "createdAt": "...",
+  "generatedBy": {
+    "provider": "...",
+    "model": "..."
+  }
+}
+
+
+향후 다음 작업을 추적할 수 있어야 한다.
+
+External Source
+      ↓
+Extract
+      ↓
+Modify
+      ↓
+Remix
+      ↓
+New Content
+
+
+외부 콘텐츠를 가져왔는데 출처 정보가 사라지는 구조를 만들지 마라.
+
+
+==================================================
+12. FIRST CONTENT CREATION FLOW
+==================================================
+
+첫 번째 Demo Content는 다음으로 한다.
+
+사용자 입력:
+
+"신제품 출시를 앞둔 회사에서 품질팀과 마케팅팀이 충돌한다."
+
+
+이 입력으로 최소한 다음 구조를 생성한다.
+
+World / Context
+Character
+Character
+Organization
+Goal
+Goal
+Conflict
+Event
+Relationship
+
+
+예:
+
+Organization
+ ├── Quality Team
+ └── Marketing Team
+
+Character A
+ └── works_for → Quality Team
+
+Character B
+ └── works_for → Marketing Team
+
+Character A
+ └── conflicts_with → Character B
+
+Marketing Team
+ └── wants → Fast Launch
+
+Quality Team
+ └── wants → Quality Assurance
+
+
+정확한 데이터는 AI 또는 fixture를 사용해서 생성하되,
+구조는 위와 같은 Content Graph가 되도록 한다.
+
+
+==================================================
+13. AI ARCHITECTURE
+==================================================
+
+AI를 하나의 거대한 Prompt로 구현하지 마라.
+
+다음 개념적 모듈을 만든다.
+
+ContentOrchestrator
+
+ ├── Planner
+ ├── Generator
+ ├── Extractor
+ ├── Composer
+ ├── Transformer
+ ├── Critic
+ ├── Validator
+ └── Repairer
+
+
+첫 번째 구현에서는 실제로 모든 Agent를 구현할 필요는 없다.
+
+우선:
+
+Generate
+ ↓
+Validate
+ ↓
+Commit
+
+구조만 확실하게 만든다.
+
+
+==================================================
+14. AI PROVIDER ABSTRACTION
+==================================================
+
+특정 LLM에 종속되지 않도록 한다.
+
+예:
+
+AIProvider
+ ├── OpenAI
+ ├── Gemini
+ ├── Anthropic
+ └── Local Model
+
+현재 사용 가능한 API가 없더라도 개발이 중단되지 않도록 Mock Provider를 만든다.
+
+API Key를 코드에 직접 작성하지 마라.
+
+Replit Secrets / Environment Variables를 사용한다.
+
+
+==================================================
+15. STRUCTURED AI OUTPUT
+==================================================
+
+AI가 생성한 결과를 바로 DB에 저장하지 마라.
+
+반드시:
+
+AI Output
+ ↓
+JSON Parse
+ ↓
+Schema Validation
+ ↓
+Reference Validation
+ ↓
+Semantic Validation
+ ↓
+Commit
+
+
+구조를 사용한다.
+
+AI가 잘못된 ID나 존재하지 않는 Relationship Target을 생성하는 경우를 고려한다.
+
+
+==================================================
+16. UI
+==================================================
+
+이번 MVP에서는 복잡한 Graph Editor를 만들 필요가 없다.
+
+다음 정도면 충분하다.
+
+Content Workspace
+
+-------------------------------------
+Content Library
+-------------------------------------
+Entities
+
+Character A
+Character B
+Organization
+Goal
+Conflict
+Event
+
+-------------------------------------
+Graph View
+-------------------------------------
+
+A ---- conflicts_with ---- B
+│                         │
+works_for              works_for
+│                         │
+Quality                 Marketing
+
+
+-------------------------------------
+Object Inspector
+-------------------------------------
+
+Name
+Description
+Attributes
+Relationships
+
+-------------------------------------
+
+AI Command
+
+[ Generate / Modify Content ]
+
+-------------------------------------
+
+Validation
+
+✓ Schema
+✓ References
+✓ Relationships
+
+-------------------------------------
+
+Export
+
+[ Canonical JSON ]
+[ RoleplayX JSON ]
+
+
+UI보다 데이터 구조를 우선한다.
+
+
+==================================================
+17. ROLEPLAYX ADAPTER
+==================================================
+
+명시적인 Adapter를 만든다.
+
+예:
+
+RoleplayXAdapter
+
+Canonical Content
+       ↓
+RoleplayX Scenario
+
+
+최소한 다음 매핑을 정의한다.
+
+Canonical Context
+        ↓
+context
+
+Character / Persona
+        ↓
+personas
+
+Goal
+        ↓
+objectives
+
+Outcome / Evaluation
+        ↓
+successCriteria
+
+Narrative / Event
+        ↓
+recommendedFlow
+
+
+이 매핑은 반드시 문서화한다.
+
+파일:
+
+docs/projections/roleplayx.md
+
+
+RoleplayX-specific logic이 Canonical Domain으로 역류하지 않도록 한다.
+
+
+==================================================
+18. CANONICAL JSON EXPORT
+==================================================
+
+사용자가 현재 Content Graph를 JSON으로 export할 수 있어야 한다.
+
+Export JSON에는:
+
+- stable IDs
+- entities
+- relationships
+- events
+- narrative
+- provenance
+- version
+
+등이 포함되어야 한다.
+
+DB 내부 ID나 private storage path는 export하지 마라.
+
+
+==================================================
+19. API
+==================================================
+
+핵심 기능은 API/service boundary를 갖는다.
+
+예:
+
+GET    /api/v1/content
+POST   /api/v1/content
+GET    /api/v1/content/:id
+PUT    /api/v1/content/:id
+GET    /api/v1/content/:id/versions
+POST   /api/v1/content/:id/validate
+GET    /api/v1/content/:id/export
+POST   /api/v1/projections/roleplayx
+
+
+실제 구현은 현재 프로젝트의 framework에 맞춰 결정하되,
+UI가 DB에 직접 접근하지 않도록 한다.
+
+
+==================================================
+20. TEST
+==================================================
+
+최소한 다음 테스트를 만든다.
+
+- Content schema validation
+- Entity creation
+- Relationship validation
+- Broken reference detection
+- Version creation
+- Provenance preservation
+- Canonical JSON export
+- RoleplayX projection
+
+Fixture:
+
+Character
+Organization
+Location
+Event
+Conflict
+Roleplay Scenario
+
+
+==================================================
+21. IMPORTANT NON-GOALS
+==================================================
+
+이번 작업에서는 다음을 만들지 마라.
+
+- Marketplace
+- Payment
+- Social Network
+- Public Community
+- Unity SDK
+- Unreal SDK
+- Full Screenplay Editor
+- Full Novel Editor
+- Video Generation
+- Avatar Generation
+- Complex Multi-Agent System
+- Neo4j
+- Enterprise SSO
+- Multi-region deployment
+
+
+이것들은 향후 Phase에서 구현한다.
+
+
+==================================================
+22. DEVELOPMENT RULES
+==================================================
+
+다음 원칙을 반드시 지켜라.
+
+1. Canonical Content First
+2. Schema First
+3. Content Graph First
+4. Platform Independent
+5. RoleplayX is an Adapter
+6. Versioning First
+7. Provenance First
+8. AI Output Must Be Validated
+9. Modular Monolith
+10. No Premature Abstraction
+11. No Premature Microservices
+12. No Premature Graph Database
+13. Do Not Rewrite Existing Code Blindly
+14. Keep Domain Logic Outside UI
+15. Keep AI Provider Replaceable
+
+
+==================================================
+23. DOCUMENTATION
+==================================================
+
+이번 작업에서 최소한 다음 문서를 만든다.
+
+docs/
+├── architecture-assessment.md
+├── architecture.md
+├── schema/
+│   ├── content.schema.json
+│   ├── entity.schema.json
+│   ├── relationship.schema.json
+│   ├── event.schema.json
+│   ├── narrative.schema.json
+│   ├── asset.schema.json
+│   ├── provenance.schema.json
+│   └── projection.schema.json
+└── projections/
+    └── roleplayx.md
+
+
+각 문서는 실제 구현과 일치해야 한다.
+
+문서만 만들고 구현과 다르게 작성하지 마라.
+
+
+==================================================
+24. EXECUTION ORDER
+==================================================
+
+반드시 다음 순서로 진행한다.
+
+STEP 1
+Repository inspection
+
+STEP 2
+Architecture assessment
+
+STEP 3
+Architecture design
+
+STEP 4
+Canonical schema
+
+STEP 5
+Database model
+
+STEP 6
+Content CRUD
+
+STEP 7
+Content Graph
+
+STEP 8
+Validation
+
+STEP 9
+Versioning
+
+STEP 10
+Canonical JSON export
+
+STEP 11
+RoleplayX Adapter
+
+STEP 12
+Tests
+
+STEP 13
+Typecheck
+
+STEP 14
+Build
+
+STEP 15
+Run the application
+
+STEP 16
+Final architecture review
+
+
+==================================================
+25. IMPORTANT BEHAVIOR
+==================================================
+
+한 번에 모든 기능을 구현하려고 하지 마라.
+
+각 단계가 끝날 때마다 현재 구현 상태를 검증한다.
+
+기존 기능을 깨뜨리는 변경이 필요한 경우 먼저 영향 범위를 분석한다.
+
+불확실한 부분은 임의로 결정하지 말고 architecture 문서에 "Open Decision"으로 기록한다.
+
+하지만 사소한 구현 세부사항까지 사용자에게 계속 질문하지 말고 합리적인 기본값으로 진행한다.
+
+
+==================================================
+26. FINAL ACCEPTANCE CRITERIA
+==================================================
+
+첫 번째 개발 단계가 완료되었을 때 다음 Demo가 실제로 동작해야 한다.
+
+1.
+사용자가 ContentX에 접속한다.
+
+2.
+다음 문장을 입력한다.
+
+"신제품 출시를 앞둔 회사에서 품질팀과 마케팅팀이 충돌한다."
+
+3.
+Content Graph가 생성된다.
+
+4.
+Character / Organization / Goal / Conflict / Event / Relationship을 확인할 수 있다.
+
+5.
+사용자가 Character 하나를 수정한다.
+
+6.
+Relationship 하나를 수정한다.
+
+7.
+Validate를 실행한다.
+
+8.
+새 Version이 생성된다.
+
+9.
+Canonical JSON을 Export한다.
+
+10.
+동일 Content를 RoleplayX Projection으로 변환한다.
+
+11.
+RoleplayX Scenario JSON을 Export한다.
+
+12.
+자동 테스트가 통과한다.
+
+13.
+Production Build가 성공한다.
+
+
+==================================================
+27. FINAL REPORT
+==================================================
+
+작업이 끝나면 다음 내용을 보고한다.
+
+1. Repository 분석 결과
+2. 현재 기술 스택
+3. 새 Architecture
+4. Canonical Content Model
+5. Database 구조
+6. 구현된 기능
+7. API
+8. RoleplayX Adapter
+9. 테스트 결과
+10. Build 결과
+11. 실행 방법
+12. 남은 문제
+13. 다음 개발 단계
+
+그리고 반드시 다음 질문에 답한다.
+
+"현재 Canonical Content Model이 향후 Movie / Novel / Game / Advertisement / Board Game / Roleplay 등으로 확장 가능한 구조인가?"
+
+확장에 문제가 있는 부분이 있다면 다음 단계로 넘어가기 전에 명확히 보고한다.
+
+
+==================================================
+START
+==================================================
+
+지금부터 시작하라.
+
+먼저 코드를 작성하지 말고 Repository를 분석하라.
+
+분석이 끝난 후 architecture-assessment.md를 작성하고,
+그 다음 Canonical Content Model을 설계한 뒤,
+최소 Vertical Slice를 구현하라.
+
+Marketplace나 고급 기능으로 확장하지 마라.
+
+이번 작업의 목표는 "많이 만드는 것"이 아니라
+"향후 전체 ContentX의 기반이 될 올바른 구조를 만드는 것"이다.

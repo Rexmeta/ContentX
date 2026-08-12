@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/narrative.schema.json",
+  "title": "ContentX Narrative",
+  "description": "A narrative is an entity of kind 'narrative' that sequences events/beats. Sequencing is expressed via relationships (contains, precedes) plus an optional ordered id list in attributes.",
+  "allOf": [{ "$ref": "./entity.schema.json" }],
+  "properties": {
+    "kind": { "const": "narrative" },
+    "attributes": {
+      "type": "object",
+      "properties": {
+        "beatIds": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^entity_[A-Za-z0-9_-]+$" },
+          "description": "Ordered stable IDs of events/beats. IDs, never array-index identity."
+        }
+      }
+    }
+  }
+}

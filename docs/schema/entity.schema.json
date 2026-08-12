@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/entity.schema.json",
+  "title": "ContentX Entity",
+  "description": "A node in the Content Graph. Stable IDs are mandatory; array indexes are never identity.",
+  "type": "object",
+  "required": ["id", "kind", "name"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^entity_[A-Za-z0-9_-]+$" },
+    "kind": {
+      "type": "string",
+      "description": "Content primitive kind.",
+      "enum": [
+        "character", "organization", "location", "object", "event",
+        "concept", "theme", "goal", "conflict", "emotion", "action",
+        "dialogue", "narrative", "rule", "constraint", "outcome", "world"
+      ]
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": ["string", "null"] },
+    "attributes": { "type": "object" }
+  },
+  "additionalProperties": false
+}

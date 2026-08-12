@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "ContentX"
+description = "ContentX is a platform-independent AI Content Engine / Content Intelligence Platform. It creates structured Content Graphs (characters, organizations, goals, conflicts, events, relationships) from natural language prompts, lets users inspect and edit entities and relationships, validate the graph, version content, export canonical JSON, and project content to external platforms such as RoleplayX."
+version = "1.0.0"
+id = "artifacts/contentx"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24643
+
+[services.development]
+run = "pnpm --filter @workspace/contentx run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/contentx", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/contentx/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24643"
+BASE_PATH = "/"

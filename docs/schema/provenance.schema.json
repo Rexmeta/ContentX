@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contentx.dev/schema/provenance.schema.json",
+  "title": "ContentX Provenance",
+  "description": "Origin and transformation history. Imported, extracted, remixed, transformed, or AI-generated content must preserve provenance.",
+  "type": "object",
+  "required": ["operation", "createdAt"],
+  "properties": {
+    "operation": {
+      "type": "string",
+      "enum": ["generate", "extract", "split", "compose", "merge", "remix", "transform", "import", "manual"]
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "sourceType": { "type": ["string", "null"], "examples": ["prompt", "url", "file", "content"] },
+    "sourceUri": { "type": ["string", "null"] },
+    "sourceTitle": { "type": ["string", "null"] },
+    "license": { "type": ["string", "null"] },
+    "sourceContentIds": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^content_[A-Za-z0-9_-]+$" },
+      "description": "Canonical IDs of source contents for remix/merge/compose."
+    },
+    "generatedByProvider": { "type": ["string", "null"] },
+    "generatedByModel": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}
