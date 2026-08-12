@@ -17,7 +17,19 @@ import {
   ClassifyScenarioResponse,
   ReclassifyScenariosResponse,
   ListSimilarScenariosResponse,
+  SynthesizeScenarioBody,
+  SynthesizeScenarioResponse,
 } from "@workspace/api-zod";
+import {
+  synthesizeWithLLM,
+  SynthesisError,
+  type Lineage,
+  type ScenarioElement,
+} from "../domains/scenario/synthesizer";
+import {
+  validateLineage,
+  InvalidLineageError,
+} from "../domains/scenario/lineageService";
 import * as repo from "../domains/scenario/repository";
 import { listCategories } from "../domains/scenario/categoryService";
 import {
@@ -45,6 +57,7 @@ function toRecord(row: ScenarioRow) {
     idea: row.idea,
     scenario: row.scenario as DramaticScenario,
     classification: (row.classification as Classification | null) ?? null,
+    lineage: (row.lineage as Lineage | null) ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -103,6 +116,54 @@ router.get("/v1/categories", async (_req, res): Promise<void> => {
       })),
     ),
   );
+});
+
+router.post("/v1/scenarios/synthesize", async (req, res): Promise<void> => {
+  const parsed = SynthesizeScenarioBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const ids = parsed.data.sources.map((s) => s.scenarioId);
+  if (new Set(ids).size !== ids.length) {
+    res.status(400).json({ error: "Duplicate source scenario ids." });
+    return;
+  }
+  const rows = await Promise.all(ids.map((id) => repo.getScenario(id)));
+  const missing = ids.filter((_, i) => !rows[i]);
+  if (missing.length > 0) {
+    res
+      .status(400)
+      .json({ error: `Unknown source scenarios: ${missing.join(", ")}` });
+    return;
+  }
+  const sources = parsed.data.sources.map((s, i) => ({
+    scenario: rows[i]!.scenario as DramaticScenario,
+    elements: s.elements as ScenarioElement[],
+  }));
+  try {
+    const scenario = await synthesizeWithLLM(
+      sources,
+      parsed.data.instruction,
+    );
+    // Lineage is server-authoritative: derived from the validated sources.
+    const lineage: Lineage = {
+      parents: parsed.data.sources.map((s, i) => ({
+        scenarioId: s.scenarioId,
+        title: rows[i]!.title,
+        elements: s.elements as ScenarioElement[],
+      })),
+      instruction: parsed.data.instruction?.trim() || null,
+      synthesizedBy: scenario.amplifiedBy ?? null,
+    };
+    res.json(SynthesizeScenarioResponse.parse({ scenario, lineage }));
+  } catch (err) {
+    if (err instanceof SynthesisError) {
+      res.status(502).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
 });
 
 router.post("/v1/scenarios/reclassify", async (_req, res): Promise<void> => {
@@ -185,6 +246,20 @@ router.post("/v1/scenarios", async (req, res): Promise<void> => {
     res.status(400).json({ error: problem });
     return;
   }
+  // Lineage on save is server-authoritative: parents must exist, titles and
+  // synthesizer identity are rebuilt server-side (no forged provenance).
+  let lineage: Lineage | null = null;
+  if (parsed.data.lineage) {
+    try {
+      lineage = await validateLineage(parsed.data.lineage);
+    } catch (err) {
+      if (err instanceof InvalidLineageError) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      throw err;
+    }
+  }
   const classification = await tryClassify(parsed.data.scenario);
   const row = await repo.insertScenario({
     id: newId("scenario"),
@@ -192,6 +267,7 @@ router.post("/v1/scenarios", async (req, res): Promise<void> => {
     idea: parsed.data.idea,
     scenario: parsed.data.scenario,
     classification,
+    lineage,
   });
   res.status(201).json(CreateScenarioResponse.parse(toRecord(row)));
 });

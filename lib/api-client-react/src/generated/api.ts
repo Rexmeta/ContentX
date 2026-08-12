@@ -37,6 +37,8 @@ import type {
   ScenarioRecord,
   ScenarioSaveInput,
   ScenarioUpdateInput,
+  SynthesizeInput,
+  SynthesizeResult,
   ValidationReport,
   VersionInfo,
   VersionInput
@@ -810,6 +812,77 @@ export function useListCategories<TData = Awaited<ReturnType<typeof listCategori
 
 
 
+
+export const getSynthesizeScenarioUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios/synthesize`
+}
+
+/**
+ * @summary Synthesize a new scenario draft from elements of saved scenarios
+ */
+export const synthesizeScenario = async (synthesizeInput: SynthesizeInput, options?: Parameters<typeof customFetch>[1]): Promise<SynthesizeResult> => {
+
+  return customFetch<SynthesizeResult>(getSynthesizeScenarioUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(synthesizeInput)
+  }
+);}
+
+
+
+
+
+export const getSynthesizeScenarioMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof synthesizeScenario>>, TError,{data: BodyType<SynthesizeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof synthesizeScenario>>, TError,{data: BodyType<SynthesizeInput>}, TContext> => {
+
+const mutationKey = ['synthesizeScenario'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof synthesizeScenario>>, {data: BodyType<SynthesizeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  synthesizeScenario(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SynthesizeScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof synthesizeScenario>>>
+    export type SynthesizeScenarioMutationBody = BodyType<SynthesizeInput>
+    export type SynthesizeScenarioMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Synthesize a new scenario draft from elements of saved scenarios
+ */
+export const useSynthesizeScenario = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof synthesizeScenario>>, TError,{data: BodyType<SynthesizeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof synthesizeScenario>>,
+        TError,
+        {data: BodyType<SynthesizeInput>},
+        TContext
+      > => {
+      return useMutation(getSynthesizeScenarioMutationOptions(options));
+    }
 
 export const getReclassifyScenariosUrl = () => {
 

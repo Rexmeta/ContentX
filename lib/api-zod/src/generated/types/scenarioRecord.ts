@@ -7,6 +7,7 @@
  */
 import type { Classification } from './classification';
 import type { DramaticScenario } from './dramaticScenario';
+import type { Lineage } from './lineage';
 
 export interface ScenarioRecord {
   id: string;
@@ -14,6 +15,7 @@ export interface ScenarioRecord {
   idea: string;
   scenario: DramaticScenario;
   classification: Classification | null;
+  lineage: Lineage | null;
   createdAt: string;
   updatedAt: string;
 }

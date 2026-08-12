@@ -14,6 +14,8 @@ export const scenariosTable = pgTable("scenarios", {
   scenario: jsonb("scenario").notNull(),
   // Classification (domain/conflictType/tone/tags) — null = unclassified.
   classification: jsonb("classification"),
+  // Synthesis lineage (parent scenario IDs + borrowed elements) — null = original.
+  lineage: jsonb("lineage"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

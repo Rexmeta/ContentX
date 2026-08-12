@@ -47,11 +47,16 @@ export async function createFromPrompt(
   prompt: string,
   title?: string,
   scenario?: Parameters<typeof orchestrator.generateFromScenario>[1],
+  lineage?: import("../scenario/synthesizer").Lineage | null,
 ): Promise<ContentGraph> {
   // Confirmed scenario → compose graph from it; raw prompt → direct generate.
   const payload = scenario
     ? orchestrator.generateFromScenario(prompt, scenario)
     : await orchestrator.generate(prompt);
+  // Carry validated synthesis lineage into canonical provenance.
+  if (lineage && payload.provenance) {
+    payload.provenance = { ...payload.provenance, lineage };
+  }
   // Content row and its v1 snapshot are committed atomically.
   const row = await repo.insertContentWithInitialVersion(
     {

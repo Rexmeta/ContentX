@@ -5,6 +5,7 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { Lineage } from './lineage';
 
 export interface Provenance {
   operation: string;
@@ -20,4 +21,6 @@ export interface Provenance {
   generatedByProvider?: string | null;
   /** @nullable */
   generatedByModel?: string | null;
+  /** Synthesis lineage carried from a synthesized scenario, when the graph was built from one */
+  lineage?: null | Lineage;
 }

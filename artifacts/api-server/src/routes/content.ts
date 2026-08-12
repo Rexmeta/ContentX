@@ -18,6 +18,11 @@ import {
 } from "@workspace/api-zod";
 import * as repo from "../domains/content/repository";
 import * as service from "../domains/content/service";
+import {
+  validateLineage,
+  InvalidLineageError,
+} from "../domains/scenario/lineageService";
+import type { Lineage } from "../domains/scenario/synthesizer";
 
 const router: IRouter = Router();
 
@@ -36,12 +41,33 @@ router.post("/v1/content", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  // Lineage on a graph is only meaningful for scenario-built graphs, and is
+  // re-validated server-side so canonical provenance cannot be forged.
+  let lineage: Lineage | null = null;
+  if (parsed.data.lineage) {
+    if (!parsed.data.scenario) {
+      res
+        .status(400)
+        .json({ error: "Lineage requires a scenario to build the graph from." });
+      return;
+    }
+    try {
+      lineage = await validateLineage(parsed.data.lineage);
+    } catch (err) {
+      if (err instanceof InvalidLineageError) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      throw err;
+    }
+  }
   let graph;
   try {
     graph = await service.createFromPrompt(
       parsed.data.prompt,
       parsed.data.title,
       parsed.data.scenario,
+      lineage,
     );
   } catch (err) {
     if (err instanceof ScenarioValidationError) {

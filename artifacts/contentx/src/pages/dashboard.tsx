@@ -14,9 +14,11 @@ import {
   useClassifyScenario,
   useReclassifyScenarios,
   useListSimilarScenarios,
+  useSynthesizeScenario,
   getListScenariosQueryKey,
   getListCategoriesQueryKey,
-  ScenarioRecord
+  ScenarioRecord,
+  Lineage
 } from "@workspace/api-client-react";
 import { 
   Database, 
@@ -59,6 +61,7 @@ export default function Dashboard() {
   const deleteScenario = useDeleteScenario();
   const classifyScenario = useClassifyScenario();
   const reclassifyScenarios = useReclassifyScenarios();
+  const synthesizeScenario = useSynthesizeScenario();
   
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -68,10 +71,18 @@ export default function Dashboard() {
   const [title, setTitle] = useState("");
   const [step, setStep] = useState<'IDEA' | 'SCENARIO'>('IDEA');
   const [draft, setDraft] = useState<any>(null);
+  const [draftLineage, setDraftLineage] = useState<Lineage | null>(null);
   
   // currentScenario hold the entire ScenarioRecord when opened from library
   const [currentScenario, setCurrentScenario] = useState<ScenarioRecord | null>(null);
   const currentScenarioId = currentScenario?.id || null;
+
+  // Synthesize mode state
+  const [isSynthesizeMode, setIsSynthesizeMode] = useState(false);
+  const [selectedForSynthesis, setSelectedForSynthesis] = useState<string[]>([]);
+  const [isSynthesisPanelOpen, setIsSynthesisPanelOpen] = useState(false);
+  const [synthesisElements, setSynthesisElements] = useState<Record<string, ("characters"|"conflict"|"setting"|"twist"|"structure")[]>>({});
+  const [synthesisInstruction, setSynthesisInstruction] = useState("");
   
   // State for manual classification overrides in step-2
   const [editedClassification, setEditedClassification] = useState<{domain: string, conflictType: string, tone: string, tags: string}>({ domain: "", conflictType: "", tone: "", tags: "" });
@@ -121,6 +132,7 @@ export default function Dashboard() {
       {
         onSuccess: (res) => {
           setDraft(res);
+          setDraftLineage(null);
           // Initialize classification state if it was null
           setEditedClassification({ domain: "", conflictType: "", tone: "", tags: "" });
           setStep('SCENARIO');
@@ -166,7 +178,7 @@ export default function Dashboard() {
       // NOTE: Create scenario endpoint only takes idea and scenario currently, classification happens auto on backend.
       // If we need to pass manual override to create, it's not in the schema yet, so backend auto-classifies.
       createScenario.mutate(
-        { data: { idea: prompt, scenario: draft } },
+        { data: { idea: prompt, scenario: draft, lineage: draftLineage || undefined } },
         {
           onSuccess: (res) => {
             toast({ title: "Scenario saved to library & auto-classified" });
@@ -195,7 +207,7 @@ export default function Dashboard() {
   const handleConfirmGraph = () => {
     if (!draft) return;
     createContent.mutate(
-      { data: { prompt, title: draft.title || title.trim(), scenario: draft } },
+      { data: { prompt, title: draft.title || title.trim(), scenario: draft, lineage: (currentScenario?.lineage || draftLineage) || undefined } },
       {
         onSuccess: (newGraph) => {
           toast({ title: "Content graph generated successfully" });
@@ -245,6 +257,7 @@ export default function Dashboard() {
             if (currentScenarioId === id) {
               setStep('IDEA');
               setDraft(null);
+              setDraftLineage(null);
               setCurrentScenario(null);
             }
           }
@@ -257,6 +270,7 @@ export default function Dashboard() {
     setPrompt(record.idea);
     setTitle(record.title);
     setDraft(record.scenario);
+    setDraftLineage(null);
     setCurrentScenario(record);
     
     if (record.classification) {
@@ -310,6 +324,49 @@ export default function Dashboard() {
       },
       onError: (err) => {
         toast({ title: "Bulk reclassification failed", description: err.message, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleSynthesize = () => {
+    const sources = selectedForSynthesis.map(id => ({
+      scenarioId: id,
+      elements: synthesisElements[id] || []
+    })).filter(s => s.elements.length > 0);
+
+    if (sources.length < 2) {
+      toast({ title: "Validation Error", description: "Select elements from at least two sources", variant: "destructive" });
+      return;
+    }
+
+    synthesizeScenario.mutate({
+      data: {
+        sources,
+        instruction: synthesisInstruction.trim() || undefined
+      }
+    }, {
+      onSuccess: (res) => {
+        toast({ title: "Synthesis complete" });
+        setDraft(res.scenario);
+        setDraftLineage(res.lineage);
+        setCurrentScenario(null);
+        setEditedClassification({ domain: "", conflictType: "", tone: "", tags: "" });
+        
+        const parentTitles = res.lineage.parents.map(p => p.title).join(", ");
+        setPrompt(`Synthesis of: ${parentTitles}`);
+        setTitle(`Synthesis: ${parentTitles}`);
+        
+        setIsSynthesisPanelOpen(false);
+        setIsSynthesizeMode(false);
+        setSelectedForSynthesis([]);
+        setSynthesisElements({});
+        setSynthesisInstruction("");
+        
+        setStep('SCENARIO');
+        window.scrollTo(0, 0);
+      },
+      onError: (err) => {
+        toast({ title: "Synthesis failed", description: err.message, variant: "destructive" });
       }
     });
   };
@@ -471,6 +528,34 @@ export default function Dashboard() {
                   )}
                 </div>
               )}
+
+              {/* Lineage Panel */}
+              {(currentScenario?.lineage || draftLineage) && (
+                <div className="border border-border bg-card p-6 shadow-sm space-y-4">
+                  <h2 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center gap-2">
+                    <GitMerge className="h-4 w-4" /> Synthesis Lineage
+                  </h2>
+                  <div className="space-y-4">
+                    {(currentScenario?.lineage || draftLineage)?.parents.map((parent: any, i: number) => (
+                      <div key={i} className="flex flex-col gap-1.5 p-3 bg-muted/20 border border-border">
+                        <div className="text-sm font-bold">{parent.title}</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {parent.elements.map((el: string) => (
+                            <span key={el} className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">
+                              {el}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    {(currentScenario?.lineage || draftLineage)?.instruction && (
+                      <div className="text-xs text-muted-foreground italic border-l-2 border-border pl-3 mt-2">
+                        "{((currentScenario?.lineage || draftLineage) as any).instruction}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Column: Acts, Characters, Similar */}
@@ -521,6 +606,7 @@ export default function Dashboard() {
             onClick={() => {
               setStep('IDEA');
               setCurrentScenario(null);
+              setDraftLineage(null);
             }} 
             className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-4 py-2"
           >
@@ -729,7 +815,31 @@ export default function Dashboard() {
                   {uniqueTones.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
 
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                  <button 
+                    onClick={() => {
+                      setIsSynthesizeMode(!isSynthesizeMode);
+                      setSelectedForSynthesis([]);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1 font-bold border transition-colors ${
+                      isSynthesizeMode 
+                        ? 'bg-primary text-primary-foreground border-primary' 
+                        : 'bg-background border-border hover:border-primary hover:text-primary'
+                    }`}
+                  >
+                    <GitMerge className="h-3 w-3" />
+                    {isSynthesizeMode ? 'Cancel Synthesis' : 'Synthesize Mode'}
+                  </button>
+                  {isSynthesizeMode && (
+                    <button
+                      disabled={selectedForSynthesis.length < 2}
+                      onClick={() => setIsSynthesisPanelOpen(true)}
+                      className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-3 py-1 font-bold border border-secondary transition-colors disabled:opacity-50"
+                    >
+                      Synthesize ({selectedForSynthesis.length})
+                    </button>
+                  )}
+                  <div className="w-px h-4 bg-border mx-1"></div>
                   <button 
                     onClick={handleReclassifyAll}
                     disabled={reclassifyScenarios.isPending}
@@ -805,10 +915,38 @@ export default function Dashboard() {
                 ) : filteredScenarios && filteredScenarios.length > 0 ? (
                   <div className="divide-y divide-border">
                     {filteredScenarios.map((record) => (
-                      <div key={record.id} className="p-6 transition-colors hover:bg-muted group flex flex-col">
+                      <div 
+                        key={record.id} 
+                        className={`p-6 transition-colors group flex flex-col ${
+                          isSynthesizeMode && selectedForSynthesis.includes(record.id) 
+                            ? 'bg-secondary/10 border-l-4 border-secondary -ml-[1px]' 
+                            : 'hover:bg-muted'
+                        }`}
+                        onClick={() => {
+                          if (isSynthesizeMode) {
+                            setSelectedForSynthesis(prev => 
+                              prev.includes(record.id) ? prev.filter(id => id !== record.id) : [...prev, record.id]
+                            );
+                          }
+                        }}
+                      >
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{record.title || "Untitled Scenario"}</h3>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-3">
+                            {isSynthesizeMode && (
+                              <input 
+                                type="checkbox"
+                                checked={selectedForSynthesis.includes(record.id)}
+                                readOnly
+                                className="h-4 w-4 rounded-none border-border text-secondary focus:ring-secondary cursor-pointer"
+                              />
+                            )}
+                            <h3 className="text-lg font-bold group-hover:text-primary transition-colors cursor-pointer" onClick={(e) => {
+                               if (!isSynthesizeMode) {
+                                 handleOpenScenario(record);
+                               }
+                            }}>{record.title || "Untitled Scenario"}</h3>
+                          </div>
+                          <div className={`flex gap-2 transition-opacity ${isSynthesizeMode ? 'hidden' : 'opacity-0 group-hover:opacity-100'}`}>
                             <button 
                               onClick={(e) => handleReclassifySingle(record.id, e)}
                               disabled={classifyScenario.isPending}
@@ -829,6 +967,11 @@ export default function Dashboard() {
                         </div>
                         
                         <div className="flex flex-wrap gap-2 mb-3">
+                          {record.lineage && (
+                            <span className="bg-foreground text-background border border-foreground text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider flex items-center gap-1">
+                              <GitMerge className="h-2.5 w-2.5" /> SYNTHESIZED ({record.lineage.parents.length})
+                            </span>
+                          )}
                           {record.classification ? (
                             <>
                               <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">{record.classification.domain}</span>
@@ -853,12 +996,14 @@ export default function Dashboard() {
                             {format(new Date(record.updatedAt), "yyyy-MM-dd HH:mm")}
                           </span>
                           
-                          <button 
-                            onClick={() => handleOpenScenario(record)}
-                            className="flex items-center gap-2 bg-background border border-border px-3 py-1.5 text-xs font-semibold hover:border-primary hover:text-primary transition-colors"
-                          >
-                            <FileText className="h-3 w-3" /> Edit / Build Graph
-                          </button>
+                          {!isSynthesizeMode && (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleOpenScenario(record); }}
+                              className="flex items-center gap-2 bg-background border border-border px-3 py-1.5 text-xs font-semibold hover:border-primary hover:text-primary transition-colors"
+                            >
+                              <FileText className="h-3 w-3" /> Edit / Build Graph
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -879,6 +1024,109 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* Synthesis Panel Overlay */}
+      {isSynthesisPanelOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
+          <div className="bg-card border border-border w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-4 border-b border-border bg-muted/30 flex justify-between items-center">
+              <h2 className="text-sm font-mono font-bold uppercase tracking-wider flex items-center gap-2">
+                <GitMerge className="h-4 w-4" /> Synthesize Scenarios
+              </h2>
+              <button 
+                onClick={() => setIsSynthesisPanelOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-6 space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Select the structural elements to extract from each source scenario. At least one element must be selected per source.
+              </p>
+              
+              <div className="space-y-4">
+                {selectedForSynthesis.map(id => {
+                  const record = scenarios?.find(s => s.id === id);
+                  if (!record) return null;
+                  
+                  const toggleElement = (el: "characters"|"conflict"|"setting"|"twist"|"structure") => {
+                    setSynthesisElements(prev => {
+                      const current = prev[id] || [];
+                      const updated = current.includes(el) ? current.filter(e => e !== el) : [...current, el];
+                      return { ...prev, [id]: updated };
+                    });
+                  };
+                  
+                  const selectedCount = (synthesisElements[id] || []).length;
+                  
+                  return (
+                    <div key={id} className="border border-border p-4">
+                      <div className="font-bold text-sm mb-3 flex items-center justify-between">
+                        <span>{record.title || "Untitled"}</span>
+                        <span className={`text-[10px] font-mono ${selectedCount === 0 ? 'text-destructive' : 'text-primary'}`}>
+                          {selectedCount} SELECTED
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {(["characters", "conflict", "setting", "twist", "structure"] as const).map(el => {
+                          const isSelected = (synthesisElements[id] || []).includes(el);
+                          return (
+                            <button
+                              key={el}
+                              onClick={() => toggleElement(el)}
+                              className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider border transition-colors ${
+                                isSelected 
+                                  ? 'bg-primary/20 border-primary text-primary' 
+                                  : 'bg-background border-border text-muted-foreground hover:border-primary/50'
+                              }`}
+                            >
+                              {el}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold uppercase text-muted-foreground">Synthesis Instruction (Optional)</label>
+                <textarea 
+                  value={synthesisInstruction}
+                  onChange={(e) => setSynthesisInstruction(e.target.value)}
+                  placeholder="e.g. Combine the setting from Source A with the characters from Source B, but make the tone much darker..."
+                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono min-h-[80px]"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-border bg-muted/10 flex justify-end gap-3">
+              <button 
+                onClick={() => setIsSynthesisPanelOpen(false)}
+                className="px-4 py-2 text-sm font-semibold border border-transparent hover:bg-muted transition-colors"
+                disabled={synthesizeScenario.isPending}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSynthesize}
+                disabled={synthesizeScenario.isPending || selectedForSynthesis.some(id => (synthesisElements[id] || []).length === 0)}
+                className="flex items-center gap-2 bg-secondary text-secondary-foreground px-6 py-2 text-sm font-bold border border-secondary transition-colors hover:bg-secondary/90 disabled:opacity-50"
+              >
+                {synthesizeScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitMerge className="h-4 w-4" />}
+                {synthesizeScenario.isPending ? 'Synthesizing (takes ~1 min)...' : 'Run Synthesis'}
+              </button>
+            </div>
+            
+            {synthesizeScenario.isPending && (
+              <div className="absolute bottom-0 left-0 h-1 bg-secondary animate-pulse w-full"></div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

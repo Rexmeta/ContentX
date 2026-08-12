@@ -38,6 +38,9 @@ export const ListContentResponse = zod.array(ListContentResponseItem)
  */
 
 
+export const createContentBodyLineageParentsMin = 2;
+
+
 
 export const CreateContentBody = zod.object({
   "prompt": zod.string().min(1),
@@ -61,8 +64,22 @@ export const CreateContentBody = zod.object({
 })),
   "sourceIdea": zod.string().optional(),
   "amplifiedBy": zod.string().optional()
+}).optional(),
+  "lineage": zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(createContentBodyLineageParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
 }).optional()
 })
+
+
+export const createContentResponseProvenanceLineageTwoParentsMin = 2;
+
+
 
 export const CreateContentResponse = zod.object({
   "id": zod.string(),
@@ -93,7 +110,16 @@ export const CreateContentResponse = zod.object({
   "sourceTitle": zod.string().nullish(),
   "sourceContentIds": zod.array(zod.string()).optional(),
   "generatedByProvider": zod.string().nullish(),
-  "generatedByModel": zod.string().nullish()
+  "generatedByModel": zod.string().nullish(),
+  "lineage": zod.union([zod.null(),zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(createContentResponseProvenanceLineageTwoParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+})]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
 
@@ -134,6 +160,11 @@ export const DraftScenarioResponse = zod.object({
 /**
  * @summary List saved scenarios
  */
+
+export const listScenariosResponseLineageOneParentsMin = 2;
+
+
+
 export const ListScenariosResponseItem = zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -165,6 +196,15 @@ export const ListScenariosResponseItem = zod.object({
   "tags": zod.array(zod.string()),
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
+  "lineage": zod.union([zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(listScenariosResponseLineageOneParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -174,6 +214,9 @@ export const ListScenariosResponse = zod.array(ListScenariosResponseItem)
 /**
  * @summary Save a scenario to the scenario library
  */
+
+
+export const createScenarioBodyLineageParentsMin = 2;
 
 
 
@@ -198,8 +241,22 @@ export const CreateScenarioBody = zod.object({
 })),
   "sourceIdea": zod.string().optional(),
   "amplifiedBy": zod.string().optional()
+}),
+  "lineage": zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(createScenarioBodyLineageParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+}).optional()
 })
-})
+
+
+export const createScenarioResponseLineageOneParentsMin = 2;
+
+
 
 export const CreateScenarioResponse = zod.object({
   "id": zod.string(),
@@ -232,6 +289,15 @@ export const CreateScenarioResponse = zod.object({
   "tags": zod.array(zod.string()),
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
+  "lineage": zod.union([zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(createScenarioResponseLineageOneParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -243,6 +309,11 @@ export const CreateScenarioResponse = zod.object({
 export const GetScenarioParams = zod.object({
   "id": zod.coerce.string()
 })
+
+
+export const getScenarioResponseLineageOneParentsMin = 2;
+
+
 
 export const GetScenarioResponse = zod.object({
   "id": zod.string(),
@@ -274,6 +345,15 @@ export const GetScenarioResponse = zod.object({
   "tone": zod.string(),
   "tags": zod.array(zod.string()),
   "classifiedBy": zod.string().nullish()
+}),zod.null()]),
+  "lineage": zod.union([zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(getScenarioResponseLineageOneParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
 }),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -317,6 +397,11 @@ export const UpdateScenarioBody = zod.object({
 }).optional().describe('Manual classification override; when present it is stored as-is (no auto-classify)')
 })
 
+
+export const updateScenarioResponseLineageOneParentsMin = 2;
+
+
+
 export const UpdateScenarioResponse = zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -348,6 +433,15 @@ export const UpdateScenarioResponse = zod.object({
   "tags": zod.array(zod.string()),
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
+  "lineage": zod.union([zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(updateScenarioResponseLineageOneParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -377,6 +471,60 @@ export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem)
 
 
 /**
+ * @summary Synthesize a new scenario draft from elements of saved scenarios
+ */
+
+export const synthesizeScenarioBodySourcesMin = 2;
+
+
+
+export const SynthesizeScenarioBody = zod.object({
+  "sources": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(synthesizeScenarioBodySourcesMin),
+  "instruction": zod.string().optional().describe('Optional free-form guidance for the synthesis')
+})
+
+
+export const synthesizeScenarioResponseLineageParentsMin = 2;
+
+
+
+export const SynthesizeScenarioResponse = zod.object({
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "lineage": zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(synthesizeScenarioResponseLineageParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+})
+})
+
+
+/**
  * @summary Re-run classification for all scenarios
  */
 export const ReclassifyScenariosResponse = zod.object({
@@ -391,6 +539,11 @@ export const ReclassifyScenariosResponse = zod.object({
 export const ClassifyScenarioParams = zod.object({
   "id": zod.coerce.string()
 })
+
+
+export const classifyScenarioResponseLineageOneParentsMin = 2;
+
+
 
 export const ClassifyScenarioResponse = zod.object({
   "id": zod.string(),
@@ -423,6 +576,15 @@ export const ClassifyScenarioResponse = zod.object({
   "tags": zod.array(zod.string()),
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
+  "lineage": zod.union([zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(classifyScenarioResponseLineageOneParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -434,6 +596,11 @@ export const ClassifyScenarioResponse = zod.object({
 export const ListSimilarScenariosParams = zod.object({
   "id": zod.coerce.string()
 })
+
+
+export const listSimilarScenariosResponseLineageOneParentsMin = 2;
+
+
 
 export const ListSimilarScenariosResponseItem = zod.object({
   "id": zod.string(),
@@ -466,6 +633,15 @@ export const ListSimilarScenariosResponseItem = zod.object({
   "tags": zod.array(zod.string()),
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
+  "lineage": zod.union([zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(listSimilarScenariosResponseLineageOneParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -478,6 +654,11 @@ export const ListSimilarScenariosResponse = zod.array(ListSimilarScenariosRespon
 export const GetContentParams = zod.object({
   "id": zod.coerce.string()
 })
+
+
+export const getContentResponseProvenanceLineageTwoParentsMin = 2;
+
+
 
 export const GetContentResponse = zod.object({
   "id": zod.string(),
@@ -508,7 +689,16 @@ export const GetContentResponse = zod.object({
   "sourceTitle": zod.string().nullish(),
   "sourceContentIds": zod.array(zod.string()).optional(),
   "generatedByProvider": zod.string().nullish(),
-  "generatedByModel": zod.string().nullish()
+  "generatedByModel": zod.string().nullish(),
+  "lineage": zod.union([zod.null(),zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(getContentResponseProvenanceLineageTwoParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+})]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
 
@@ -540,6 +730,11 @@ export const UpdateEntityBody = zod.object({
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })
 
+
+export const updateEntityResponseProvenanceLineageTwoParentsMin = 2;
+
+
+
 export const UpdateEntityResponse = zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -569,7 +764,16 @@ export const UpdateEntityResponse = zod.object({
   "sourceTitle": zod.string().nullish(),
   "sourceContentIds": zod.array(zod.string()).optional(),
   "generatedByProvider": zod.string().nullish(),
-  "generatedByModel": zod.string().nullish()
+  "generatedByModel": zod.string().nullish(),
+  "lineage": zod.union([zod.null(),zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(updateEntityResponseProvenanceLineageTwoParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+})]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
 
@@ -591,6 +795,11 @@ export const UpdateRelationshipBody = zod.object({
   "source": zod.string().optional(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })
+
+
+export const updateRelationshipResponseProvenanceLineageTwoParentsMin = 2;
+
+
 
 export const UpdateRelationshipResponse = zod.object({
   "id": zod.string(),
@@ -621,7 +830,16 @@ export const UpdateRelationshipResponse = zod.object({
   "sourceTitle": zod.string().nullish(),
   "sourceContentIds": zod.array(zod.string()).optional(),
   "generatedByProvider": zod.string().nullish(),
-  "generatedByModel": zod.string().nullish()
+  "generatedByModel": zod.string().nullish(),
+  "lineage": zod.union([zod.null(),zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(updateRelationshipResponseProvenanceLineageTwoParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+})]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
 
@@ -699,6 +917,11 @@ export const ExportContentParams = zod.object({
   "id": zod.coerce.string()
 })
 
+
+export const exportContentResponseContentProvenanceLineageTwoParentsMin = 2;
+
+
+
 export const ExportContentResponse = zod.object({
   "schemaVersion": zod.string(),
   "exportedAt": zod.string(),
@@ -731,7 +954,16 @@ export const ExportContentResponse = zod.object({
   "sourceTitle": zod.string().nullish(),
   "sourceContentIds": zod.array(zod.string()).optional(),
   "generatedByProvider": zod.string().nullish(),
-  "generatedByModel": zod.string().nullish()
+  "generatedByModel": zod.string().nullish(),
+  "lineage": zod.union([zod.null(),zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(exportContentResponseContentProvenanceLineageTwoParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+})]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
 })

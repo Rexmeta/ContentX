@@ -35,6 +35,36 @@ export interface Relationship {
   attributes?: RelationshipAttributes;
 }
 
+/**
+ * Which element to borrow from a source scenario
+ */
+export type ScenarioElement = typeof ScenarioElement[keyof typeof ScenarioElement];
+
+
+export const ScenarioElement = {
+  characters: 'characters',
+  conflict: 'conflict',
+  setting: 'setting',
+  twist: 'twist',
+  structure: 'structure',
+} as const;
+
+export interface LineageParent {
+  scenarioId: string;
+  title: string;
+  /** @minItems 1 */
+  elements: ScenarioElement[];
+}
+
+export interface Lineage {
+  /** @minItems 2 */
+  parents: LineageParent[];
+  /** @nullable */
+  instruction?: string | null;
+  /** @nullable */
+  synthesizedBy?: string | null;
+}
+
 export interface Provenance {
   operation: string;
   createdAt: string;
@@ -49,6 +79,8 @@ export interface Provenance {
   generatedByProvider?: string | null;
   /** @nullable */
   generatedByModel?: string | null;
+  /** Synthesis lineage carried from a synthesized scenario, when the graph was built from one */
+  lineage?: null | Lineage;
 }
 
 export interface ContentGraph {
@@ -106,6 +138,7 @@ export interface ContentInput {
   prompt: string;
   title?: string;
   scenario?: DramaticScenario;
+  lineage?: Lineage;
 }
 
 export interface ScenarioDraftInput {
@@ -114,10 +147,29 @@ export interface ScenarioDraftInput {
   title?: string;
 }
 
+export interface SynthesisSource {
+  scenarioId: string;
+  /** @minItems 1 */
+  elements: ScenarioElement[];
+}
+
+export interface SynthesizeInput {
+  /** @minItems 2 */
+  sources: SynthesisSource[];
+  /** Optional free-form guidance for the synthesis */
+  instruction?: string;
+}
+
+export interface SynthesizeResult {
+  scenario: DramaticScenario;
+  lineage: Lineage;
+}
+
 export interface ScenarioSaveInput {
   /** @minLength 1 */
   idea: string;
   scenario: DramaticScenario;
+  lineage?: Lineage;
 }
 
 export interface Classification {
@@ -172,6 +224,7 @@ export interface ScenarioRecord {
   idea: string;
   scenario: DramaticScenario;
   classification: Classification | null;
+  lineage: Lineage | null;
   createdAt: string;
   updatedAt: string;
 }

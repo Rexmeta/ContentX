@@ -215,6 +215,36 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Category"
+  /v1/scenarios/synthesize:
+    post:
+      operationId: synthesizeScenario
+      tags: [content]
+      summary: Synthesize a new scenario draft from elements of saved scenarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SynthesizeInput"
+      responses:
+        "200":
+          description: Synthesized scenario draft with lineage (not yet persisted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SynthesizeResult"
+        "400":
+          description: Invalid input or unknown source scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "502":
+          description: AI synthesis failed (provider error or invalid AI output)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/scenarios/reclassify:
     post:
       operationId: reclassifyScenarios
@@ -568,6 +598,11 @@ components:
           items: { type: string }
         generatedByProvider: { type: ["string", "null"] }
         generatedByModel: { type: ["string", "null"] }
+        lineage:
+          description: Synthesis lineage carried from a synthesized scenario, when the graph was built from one
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/Lineage"
     ContentGraph:
       type: object
       required: [id, title, version, createdAt, updatedAt, entities, relationships]
@@ -611,6 +646,8 @@ components:
           type: string
         scenario:
           $ref: "#/components/schemas/DramaticScenario"
+        lineage:
+          $ref: "#/components/schemas/Lineage"
     ScenarioDraftInput:
       type: object
       required: [prompt]
@@ -656,6 +693,62 @@ components:
             $ref: "#/components/schemas/ScenarioCharacter"
         sourceIdea: { type: string }
         amplifiedBy: { type: string }
+    ScenarioElement:
+      type: string
+      enum: [characters, conflict, setting, twist, structure]
+      description: Which element to borrow from a source scenario
+    SynthesisSource:
+      type: object
+      required: [scenarioId, elements]
+      properties:
+        scenarioId: { type: string }
+        elements:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ScenarioElement"
+    SynthesizeInput:
+      type: object
+      required: [sources]
+      properties:
+        sources:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/SynthesisSource"
+        instruction:
+          type: string
+          description: Optional free-form guidance for the synthesis
+    LineageParent:
+      type: object
+      required: [scenarioId, title, elements]
+      properties:
+        scenarioId: { type: string }
+        title: { type: string }
+        elements:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ScenarioElement"
+    Lineage:
+      type: object
+      required: [parents]
+      properties:
+        parents:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/LineageParent"
+        instruction: { type: ["string", "null"] }
+        synthesizedBy: { type: ["string", "null"] }
+    SynthesizeResult:
+      type: object
+      required: [scenario, lineage]
+      properties:
+        scenario:
+          $ref: "#/components/schemas/DramaticScenario"
+        lineage:
+          $ref: "#/components/schemas/Lineage"
     ScenarioSaveInput:
       type: object
       required: [idea, scenario]
@@ -665,6 +758,8 @@ components:
           minLength: 1
         scenario:
           $ref: "#/components/schemas/DramaticScenario"
+        lineage:
+          $ref: "#/components/schemas/Lineage"
     ScenarioUpdateInput:
       type: object
       properties:
@@ -705,7 +800,7 @@ components:
         failed: { type: integer }
     ScenarioRecord:
       type: object
-      required: [id, title, idea, scenario, classification, createdAt, updatedAt]
+      required: [id, title, idea, scenario, classification, lineage, createdAt, updatedAt]
       properties:
         id: { type: string }
         title: { type: string }
@@ -715,6 +810,10 @@ components:
         classification:
           oneOf:
             - $ref: "#/components/schemas/Classification"
+            - type: "null"
+        lineage:
+          oneOf:
+            - $ref: "#/components/schemas/Lineage"
             - type: "null"
         createdAt: { type: string }
         updatedAt: { type: string }

@@ -8,9 +8,7 @@
 import type { DramaticScenario } from './dramaticScenario';
 import type { Lineage } from './lineage';
 
-export interface ScenarioSaveInput {
-  /** @minLength 1 */
-  idea: string;
+export interface SynthesizeResult {
   scenario: DramaticScenario;
-  lineage?: Lineage;
+  lineage: Lineage;
 }

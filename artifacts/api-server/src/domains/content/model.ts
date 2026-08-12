@@ -51,6 +51,7 @@ export interface Provenance {
   sourceContentIds?: string[];
   generatedByProvider?: string | null;
   generatedByModel?: string | null;
+  lineage?: import("../scenario/synthesizer").Lineage | null;
 }
 
 /** The graph payload persisted as JSONB (without DB metadata). */

@@ -6,10 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DramaticScenario } from './dramaticScenario';
+import type { Lineage } from './lineage';
 
 export interface ContentInput {
   /** @minLength 1 */
   prompt: string;
   title?: string;
   scenario?: DramaticScenario;
+  lineage?: Lineage;
 }
