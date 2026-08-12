@@ -84,6 +84,20 @@ export default function Dashboard() {
   const [isSynthesisPanelOpen, setIsSynthesisPanelOpen] = useState(false);
   const [synthesisElements, setSynthesisElements] = useState<Record<string, ("characters"|"conflict"|"setting"|"twist"|"structure")[]>>({});
   const [synthesisInstruction, setSynthesisInstruction] = useState("");
+
+  // Re-roll & candidate comparison state
+  type SynthesisElement = "characters"|"conflict"|"setting"|"twist"|"structure";
+  const [synthesisRecipe, setSynthesisRecipe] = useState<{ sources: { scenarioId: string, elements: SynthesisElement[] }[], instruction?: string } | null>(null);
+  const [candidates, setCandidates] = useState<{ scenario: any, lineage: Lineage }[]>([]);
+  const [activeCandidate, setActiveCandidate] = useState(0);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  const clearCandidates = () => {
+    setSynthesisRecipe(null);
+    setCandidates([]);
+    setActiveCandidate(0);
+    setIsCompareOpen(false);
+  };
   
   // State for manual classification overrides in step-2
   const [editedClassification, setEditedClassification] = useState<{domain: string, conflictType: string, tone: string, tags: string}>({ domain: "", conflictType: "", tone: "", tags: "" });
@@ -134,6 +148,7 @@ export default function Dashboard() {
         onSuccess: (res) => {
           setDraft(res);
           setDraftLineage(null);
+          clearCandidates();
           // Initialize classification state if it was null
           setEditedClassification({ domain: "", conflictType: "", tone: "", tags: "" });
           setStep('SCENARIO');
@@ -184,6 +199,7 @@ export default function Dashboard() {
           onSuccess: (res) => {
             toast({ title: "Scenario saved to library & auto-classified" });
             setCurrentScenario(res);
+            clearCandidates();
             refetchScenarios();
             refetchCategories();
             setActiveTab('SCENARIOS');
@@ -273,6 +289,7 @@ export default function Dashboard() {
     setDraft(record.scenario);
     setDraftLineage(null);
     setCurrentScenario(record);
+    clearCandidates();
     
     if (record.classification) {
       setEditedClassification({
@@ -340,14 +357,20 @@ export default function Dashboard() {
       return;
     }
 
+    const recipe = {
+      sources,
+      instruction: synthesisInstruction.trim() || undefined
+    };
+
     synthesizeScenario.mutate({
-      data: {
-        sources,
-        instruction: synthesisInstruction.trim() || undefined
-      }
+      data: recipe
     }, {
       onSuccess: (res) => {
         toast({ title: "Synthesis complete" });
+        setSynthesisRecipe(recipe);
+        setCandidates([{ scenario: res.scenario, lineage: res.lineage }]);
+        setActiveCandidate(0);
+        setIsCompareOpen(false);
         setDraft(res.scenario);
         setDraftLineage(res.lineage);
         setCurrentScenario(null);
@@ -370,6 +393,41 @@ export default function Dashboard() {
         toast({ title: "Synthesis failed", description: err.message, variant: "destructive" });
       }
     });
+  };
+
+  const handleReroll = () => {
+    if (!synthesisRecipe || synthesizeScenario.isPending) return;
+    synthesizeScenario.mutate({ data: synthesisRecipe }, {
+      onSuccess: (res) => {
+        toast({ title: "Re-run complete", description: `Candidate ${candidates.length + 1} added.` });
+        const newIndex = candidates.length;
+        setCandidates(prev => {
+          const copy = [...prev];
+          // Persist any manual edits made to the currently viewed candidate
+          if (copy[activeCandidate]) copy[activeCandidate] = { scenario: draft, lineage: draftLineage! };
+          return [...copy, { scenario: res.scenario, lineage: res.lineage }];
+        });
+        setActiveCandidate(newIndex);
+        setDraft(res.scenario);
+        setDraftLineage(res.lineage);
+        window.scrollTo(0, 0);
+      },
+      onError: (err) => {
+        toast({ title: "Re-run failed", description: err.message, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleSelectCandidate = (index: number) => {
+    if (index === activeCandidate || !candidates[index]) return;
+    setCandidates(prev => {
+      const copy = [...prev];
+      if (copy[activeCandidate]) copy[activeCandidate] = { scenario: draft, lineage: draftLineage! };
+      return copy;
+    });
+    setActiveCandidate(index);
+    setDraft(candidates[index].scenario);
+    setDraftLineage(candidates[index].lineage);
   };
 
   const handleDraftChange = (field: string, value: string) => {
@@ -397,6 +455,86 @@ export default function Dashboard() {
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground flex items-center gap-2"><Network className="h-4 w-4" /> 3. GRAPH GENERATION</span>
           </div>
+
+          {/* Synthesis Candidates Bar */}
+          {synthesisRecipe && candidates.length > 0 && !currentScenarioId && (
+            <div className="border border-secondary/40 bg-card shadow-sm">
+              <div className="p-4 flex flex-wrap items-center gap-3">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-secondary flex items-center gap-2">
+                  <GitMerge className="h-4 w-4" /> Candidates
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {candidates.map((c, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSelectCandidate(i)}
+                      className={`px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider border transition-colors ${
+                        i === activeCandidate
+                          ? 'bg-secondary text-secondary-foreground border-secondary'
+                          : 'bg-background border-border text-muted-foreground hover:border-secondary hover:text-secondary'
+                      }`}
+                      title={c.scenario?.title}
+                    >
+                      #{i + 1}
+                    </button>
+                  ))}
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  {candidates.length > 1 && (
+                    <button
+                      onClick={() => setIsCompareOpen(o => !o)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                        isCompareOpen ? 'bg-muted border-border' : 'bg-background border-border hover:border-primary hover:text-primary'
+                      }`}
+                    >
+                      <Search className="h-3 w-3" /> {isCompareOpen ? 'Hide Comparison' : 'Compare'}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleReroll}
+                    disabled={synthesizeScenario.isPending}
+                    className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-1.5 text-xs font-bold border border-secondary transition-colors hover:bg-secondary/90 disabled:opacity-50"
+                  >
+                    {synthesizeScenario.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                    {synthesizeScenario.isPending ? 'Re-rolling (takes ~1 min)...' : 'Re-run Same Ingredients'}
+                  </button>
+                </div>
+              </div>
+              {synthesizeScenario.isPending && (
+                <div className="h-1 bg-secondary animate-pulse w-full"></div>
+              )}
+              {isCompareOpen && candidates.length > 1 && (
+                <div className="border-t border-border p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/10">
+                  {candidates.map((c, i) => {
+                    const s = i === activeCandidate ? draft : c.scenario;
+                    return (
+                      <div key={i} className={`border p-4 flex flex-col gap-2 bg-card ${i === activeCandidate ? 'border-secondary' : 'border-border'}`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground">Candidate #{i + 1}{i === activeCandidate ? ' — VIEWING' : ''}</span>
+                          {i !== activeCandidate && (
+                            <button
+                              onClick={() => handleSelectCandidate(i)}
+                              className="text-[10px] font-mono font-bold uppercase tracking-wider text-secondary hover:underline"
+                            >
+                              View / Edit →
+                            </button>
+                          )}
+                        </div>
+                        <div className="font-bold text-sm">{s?.title || 'Untitled'}</div>
+                        {s?.logline && <p className="text-xs text-muted-foreground font-serif leading-relaxed">{s.logline}</p>}
+                        {s?.twist && (
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            <span className="font-mono font-bold uppercase text-[9px] tracking-wider text-primary mr-1">Twist</span>
+                            {s.twist}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column: Editable Core Structure */}
@@ -608,6 +746,7 @@ export default function Dashboard() {
               setStep('IDEA');
               setCurrentScenario(null);
               setDraftLineage(null);
+              clearCandidates();
             }} 
             className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-4 py-2"
           >
