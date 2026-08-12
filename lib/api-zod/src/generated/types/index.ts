@@ -8,6 +8,10 @@
 
 export * from './apiMessage';
 export * from './canonicalExport';
+export * from './category';
+export * from './categoryAxis';
+export * from './categoryOrigin';
+export * from './classification';
 export * from './contentGraph';
 export * from './contentInput';
 export * from './contentSummary';
@@ -20,6 +24,7 @@ export * from './entityUpdate';
 export * from './entityUpdateAttributes';
 export * from './healthStatus';
 export * from './provenance';
+export * from './reclassifyResult';
 export * from './relationship';
 export * from './relationshipAttributes';
 export * from './relationshipUpdate';

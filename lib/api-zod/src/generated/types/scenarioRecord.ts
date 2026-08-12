@@ -5,6 +5,7 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { Classification } from './classification';
 import type { DramaticScenario } from './dramaticScenario';
 
 export interface ScenarioRecord {
@@ -12,6 +13,7 @@ export interface ScenarioRecord {
   title: string;
   idea: string;
   scenario: DramaticScenario;
+  classification: Classification | null;
   createdAt: string;
   updatedAt: string;
 }

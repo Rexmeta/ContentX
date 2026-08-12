@@ -22,6 +22,7 @@ import type {
 import type {
   ApiMessage,
   CanonicalExport,
+  Category,
   ContentGraph,
   ContentInput,
   ContentSummary,
@@ -29,6 +30,7 @@ import type {
   DramaticScenario,
   EntityUpdate,
   HealthStatus,
+  ReclassifyResult,
   RelationshipUpdate,
   RoleplayXScenario,
   ScenarioDraftInput,
@@ -731,6 +733,302 @@ export const useDeleteScenario = <TError = ErrorType<ApiMessage>,
       > => {
       return useMutation(getDeleteScenarioMutationOptions(options));
     }
+
+export const getListCategoriesUrl = () => {
+
+
+
+
+  return `/api/v1/categories`
+}
+
+/**
+ * @summary List all categories (seed + auto-discovered)
+ */
+export const listCategories = async ( options?: Parameters<typeof customFetch>[1]): Promise<Category[]> => {
+
+  return customFetch<Category[]>(getListCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCategoriesQueryKey = () => {
+    return [
+    `/api/v1/categories`
+    ] as const;
+    }
+
+
+export const getListCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof listCategories>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCategoriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCategories>>> = ({ signal }) => listCategories({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof listCategories>>>
+export type ListCategoriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all categories (seed + auto-discovered)
+ */
+
+export function useListCategories<TData = Awaited<ReturnType<typeof listCategories>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCategoriesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReclassifyScenariosUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios/reclassify`
+}
+
+/**
+ * @summary Re-run classification for all scenarios
+ */
+export const reclassifyScenarios = async ( options?: Parameters<typeof customFetch>[1]): Promise<ReclassifyResult> => {
+
+  return customFetch<ReclassifyResult>(getReclassifyScenariosUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReclassifyScenariosMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reclassifyScenarios>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reclassifyScenarios>>, TError,void, TContext> => {
+
+const mutationKey = ['reclassifyScenarios'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reclassifyScenarios>>, void> = () => {
+
+
+          return  reclassifyScenarios(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReclassifyScenariosMutationResult = NonNullable<Awaited<ReturnType<typeof reclassifyScenarios>>>
+
+    export type ReclassifyScenariosMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Re-run classification for all scenarios
+ */
+export const useReclassifyScenarios = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reclassifyScenarios>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reclassifyScenarios>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getReclassifyScenariosMutationOptions(options));
+    }
+
+export const getClassifyScenarioUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/scenarios/${id}/classify`
+}
+
+/**
+ * @summary Classify (or re-classify) a saved scenario
+ */
+export const classifyScenario = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ScenarioRecord> => {
+
+  return customFetch<ScenarioRecord>(getClassifyScenarioUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getClassifyScenarioMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof classifyScenario>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof classifyScenario>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['classifyScenario'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof classifyScenario>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  classifyScenario(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClassifyScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof classifyScenario>>>
+
+    export type ClassifyScenarioMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Classify (or re-classify) a saved scenario
+ */
+export const useClassifyScenario = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof classifyScenario>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof classifyScenario>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getClassifyScenarioMutationOptions(options));
+    }
+
+export const getListSimilarScenariosUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/scenarios/${id}/similar`
+}
+
+/**
+ * @summary Scenarios sharing category axes with the given scenario
+ */
+export const listSimilarScenarios = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ScenarioRecord[]> => {
+
+  return customFetch<ScenarioRecord[]>(getListSimilarScenariosUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSimilarScenariosQueryKey = (id: string,) => {
+    return [
+    `/api/v1/scenarios/${id}/similar`
+    ] as const;
+    }
+
+
+export const getListSimilarScenariosQueryOptions = <TData = Awaited<ReturnType<typeof listSimilarScenarios>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSimilarScenarios>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSimilarScenariosQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSimilarScenarios>>> = ({ signal }) => listSimilarScenarios(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSimilarScenarios>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSimilarScenariosQueryResult = NonNullable<Awaited<ReturnType<typeof listSimilarScenarios>>>
+export type ListSimilarScenariosQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Scenarios sharing category axes with the given scenario
+ */
+
+export function useListSimilarScenarios<TData = Awaited<ReturnType<typeof listSimilarScenarios>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSimilarScenarios>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSimilarScenariosQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetContentUrl = (id: string,) => {
 

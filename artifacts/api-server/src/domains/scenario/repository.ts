@@ -1,6 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { db, scenariosTable, type ScenarioRow } from "@workspace/db";
 import type { DramaticScenario } from "../ai/scenarioAmplifier";
+import type { Classification } from "./taxonomy";
 
 /** Persistence boundary for the scenario library. */
 
@@ -26,6 +27,7 @@ export async function insertScenario(row: {
   title: string;
   idea: string;
   scenario: DramaticScenario;
+  classification: Classification | null;
 }): Promise<ScenarioRow> {
   const [inserted] = await db.insert(scenariosTable).values(row).returning();
   if (!inserted) throw new Error("Failed to insert scenario");
@@ -34,7 +36,11 @@ export async function insertScenario(row: {
 
 export async function updateScenario(
   id: string,
-  patch: { title: string; scenario: DramaticScenario },
+  patch: {
+    title?: string;
+    scenario?: DramaticScenario;
+    classification?: Classification | null;
+  },
 ): Promise<ScenarioRow | undefined> {
   const [updated] = await db
     .update(scenariosTable)

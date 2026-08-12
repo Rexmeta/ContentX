@@ -158,6 +158,13 @@ export const ListScenariosResponseItem = zod.object({
   "sourceIdea": zod.string().optional(),
   "amplifiedBy": zod.string().optional()
 }),
+  "classification": zod.union([zod.object({
+  "domain": zod.string(),
+  "conflictType": zod.string(),
+  "tone": zod.string(),
+  "tags": zod.array(zod.string()),
+  "classifiedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -218,6 +225,13 @@ export const CreateScenarioResponse = zod.object({
   "sourceIdea": zod.string().optional(),
   "amplifiedBy": zod.string().optional()
 }),
+  "classification": zod.union([zod.object({
+  "domain": zod.string(),
+  "conflictType": zod.string(),
+  "tone": zod.string(),
+  "tags": zod.array(zod.string()),
+  "classifiedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -254,6 +268,13 @@ export const GetScenarioResponse = zod.object({
   "sourceIdea": zod.string().optional(),
   "amplifiedBy": zod.string().optional()
 }),
+  "classification": zod.union([zod.object({
+  "domain": zod.string(),
+  "conflictType": zod.string(),
+  "tone": zod.string(),
+  "tags": zod.array(zod.string()),
+  "classifiedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -286,7 +307,14 @@ export const UpdateScenarioBody = zod.object({
 })),
   "sourceIdea": zod.string().optional(),
   "amplifiedBy": zod.string().optional()
-}).optional()
+}).optional(),
+  "classification": zod.object({
+  "domain": zod.string(),
+  "conflictType": zod.string(),
+  "tone": zod.string(),
+  "tags": zod.array(zod.string()),
+  "classifiedBy": zod.string().nullish()
+}).optional().describe('Manual classification override; when present it is stored as-is (no auto-classify)')
 })
 
 export const UpdateScenarioResponse = zod.object({
@@ -313,6 +341,13 @@ export const UpdateScenarioResponse = zod.object({
   "sourceIdea": zod.string().optional(),
   "amplifiedBy": zod.string().optional()
 }),
+  "classification": zod.union([zod.object({
+  "domain": zod.string(),
+  "conflictType": zod.string(),
+  "tone": zod.string(),
+  "tags": zod.array(zod.string()),
+  "classifiedBy": zod.string().nullish()
+}),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -326,6 +361,115 @@ export const DeleteScenarioParams = zod.object({
 })
 
 export const DeleteScenarioResponse = zod.void()
+
+
+/**
+ * @summary List all categories (seed + auto-discovered)
+ */
+export const ListCategoriesResponseItem = zod.object({
+  "id": zod.string(),
+  "axis": zod.enum(['domain', 'conflictType', 'tone']),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "origin": zod.enum(['seed', 'auto'])
+})
+export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem)
+
+
+/**
+ * @summary Re-run classification for all scenarios
+ */
+export const ReclassifyScenariosResponse = zod.object({
+  "classified": zod.int(),
+  "failed": zod.int()
+})
+
+
+/**
+ * @summary Classify (or re-classify) a saved scenario
+ */
+export const ClassifyScenarioParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ClassifyScenarioResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "idea": zod.string(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "classification": zod.union([zod.object({
+  "domain": zod.string(),
+  "conflictType": zod.string(),
+  "tone": zod.string(),
+  "tags": zod.array(zod.string()),
+  "classifiedBy": zod.string().nullish()
+}),zod.null()]),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Scenarios sharing category axes with the given scenario
+ */
+export const ListSimilarScenariosParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListSimilarScenariosResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "idea": zod.string(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "classification": zod.union([zod.object({
+  "domain": zod.string(),
+  "conflictType": zod.string(),
+  "tone": zod.string(),
+  "tags": zod.array(zod.string()),
+  "classifiedBy": zod.string().nullish()
+}),zod.null()]),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListSimilarScenariosResponse = zod.array(ListSimilarScenariosResponseItem)
 
 
 /**

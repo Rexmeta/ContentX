@@ -5,8 +5,11 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { Classification } from './classification';
 import type { DramaticScenario } from './dramaticScenario';
 
 export interface ScenarioUpdateInput {
   scenario?: DramaticScenario;
+  /** Manual classification override; when present it is stored as-is (no auto-classify) */
+  classification?: Classification;
 }

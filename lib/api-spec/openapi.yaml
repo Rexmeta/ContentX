@@ -201,6 +201,86 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/categories:
+    get:
+      operationId: listCategories
+      tags: [content]
+      summary: List all categories (seed + auto-discovered)
+      responses:
+        "200":
+          description: Category list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+  /v1/scenarios/reclassify:
+    post:
+      operationId: reclassifyScenarios
+      tags: [content]
+      summary: Re-run classification for all scenarios
+      responses:
+        "200":
+          description: Bulk reclassification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReclassifyResult"
+  /v1/scenarios/{id}/classify:
+    post:
+      operationId: classifyScenario
+      tags: [content]
+      summary: Classify (or re-classify) a saved scenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Scenario with fresh classification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioRecord"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "502":
+          description: AI classification failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/scenarios/{id}/similar:
+    get:
+      operationId: listSimilarScenarios
+      tags: [content]
+      summary: Scenarios sharing category axes with the given scenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Similar scenarios (shared domain or conflict type)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScenarioRecord"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/content/{id}:
     get:
       operationId: getContent
@@ -590,15 +670,52 @@ components:
       properties:
         scenario:
           $ref: "#/components/schemas/DramaticScenario"
+        classification:
+          description: Manual classification override; when present it is stored as-is (no auto-classify)
+          $ref: "#/components/schemas/Classification"
+    Classification:
+      type: object
+      required: [domain, conflictType, tone, tags]
+      properties:
+        domain: { type: string }
+        conflictType: { type: string }
+        tone: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        classifiedBy: { type: ["string", "null"] }
+    Category:
+      type: object
+      required: [id, axis, name, origin]
+      properties:
+        id: { type: string }
+        axis:
+          type: string
+          enum: [domain, conflictType, tone]
+        name: { type: string }
+        description: { type: ["string", "null"] }
+        origin:
+          type: string
+          enum: [seed, auto]
+    ReclassifyResult:
+      type: object
+      required: [classified, failed]
+      properties:
+        classified: { type: integer }
+        failed: { type: integer }
     ScenarioRecord:
       type: object
-      required: [id, title, idea, scenario, createdAt, updatedAt]
+      required: [id, title, idea, scenario, classification, createdAt, updatedAt]
       properties:
         id: { type: string }
         title: { type: string }
         idea: { type: string }
         scenario:
           $ref: "#/components/schemas/DramaticScenario"
+        classification:
+          oneOf:
+            - $ref: "#/components/schemas/Classification"
+            - type: "null"
         createdAt: { type: string }
         updatedAt: { type: string }
     EntityUpdate:

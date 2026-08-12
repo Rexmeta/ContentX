@@ -120,8 +120,50 @@ export interface ScenarioSaveInput {
   scenario: DramaticScenario;
 }
 
+export interface Classification {
+  domain: string;
+  conflictType: string;
+  tone: string;
+  tags: string[];
+  /** @nullable */
+  classifiedBy?: string | null;
+}
+
 export interface ScenarioUpdateInput {
   scenario?: DramaticScenario;
+  /** Manual classification override; when present it is stored as-is (no auto-classify) */
+  classification?: Classification;
+}
+
+export type CategoryAxis = typeof CategoryAxis[keyof typeof CategoryAxis];
+
+
+export const CategoryAxis = {
+  domain: 'domain',
+  conflictType: 'conflictType',
+  tone: 'tone',
+} as const;
+
+export type CategoryOrigin = typeof CategoryOrigin[keyof typeof CategoryOrigin];
+
+
+export const CategoryOrigin = {
+  seed: 'seed',
+  auto: 'auto',
+} as const;
+
+export interface Category {
+  id: string;
+  axis: CategoryAxis;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  origin: CategoryOrigin;
+}
+
+export interface ReclassifyResult {
+  classified: number;
+  failed: number;
 }
 
 export interface ScenarioRecord {
@@ -129,6 +171,7 @@ export interface ScenarioRecord {
   title: string;
   idea: string;
   scenario: DramaticScenario;
+  classification: Classification | null;
   createdAt: string;
   updatedAt: string;
 }

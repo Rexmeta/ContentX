@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   useListContent, 
@@ -10,7 +10,13 @@ import {
   useCreateScenario,
   useUpdateScenario,
   useDeleteScenario,
-  getListScenariosQueryKey
+  useListCategories,
+  useClassifyScenario,
+  useReclassifyScenarios,
+  useListSimilarScenarios,
+  getListScenariosQueryKey,
+  getListCategoriesQueryKey,
+  ScenarioRecord
 } from "@workspace/api-client-react";
 import { 
   Database, 
@@ -28,7 +34,12 @@ import {
   Save,
   RotateCcw,
   BookOpen,
-  FileText
+  FileText,
+  Tag,
+  Search,
+  Filter,
+  RefreshCw,
+  GitMerge
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -38,6 +49,7 @@ export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading, refetch: refetchSummary } = useGetDashboardSummary();
   const { data: contents, isLoading: isContentsLoading, refetch: refetchContents } = useListContent();
   const { data: scenarios, isLoading: isScenariosLoading, refetch: refetchScenarios } = useListScenarios();
+  const { data: categories, isLoading: isCategoriesLoading, refetch: refetchCategories } = useListCategories();
   
   const createContent = useCreateContent();
   const deleteContent = useDeleteContent();
@@ -45,6 +57,8 @@ export default function Dashboard() {
   const createScenario = useCreateScenario();
   const updateScenario = useUpdateScenario();
   const deleteScenario = useDeleteScenario();
+  const classifyScenario = useClassifyScenario();
+  const reclassifyScenarios = useReclassifyScenarios();
   
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -54,9 +68,49 @@ export default function Dashboard() {
   const [title, setTitle] = useState("");
   const [step, setStep] = useState<'IDEA' | 'SCENARIO'>('IDEA');
   const [draft, setDraft] = useState<any>(null);
-  const [currentScenarioId, setCurrentScenarioId] = useState<string | null>(null);
   
+  // currentScenario hold the entire ScenarioRecord when opened from library
+  const [currentScenario, setCurrentScenario] = useState<ScenarioRecord | null>(null);
+  const currentScenarioId = currentScenario?.id || null;
+  
+  // State for manual classification overrides in step-2
+  const [editedClassification, setEditedClassification] = useState<{domain: string, conflictType: string, tone: string, tags: string}>({ domain: "", conflictType: "", tone: "", tags: "" });
+
   const [activeTab, setActiveTab] = useState<'CONTENT' | 'SCENARIOS'>('CONTENT');
+
+  // Filtering state
+  const [filterDomain, setFilterDomain] = useState("All");
+  const [filterConflict, setFilterConflict] = useState("All");
+  const [filterTone, setFilterTone] = useState("All");
+
+  const filteredScenarios = useMemo(() => {
+    if (!scenarios) return [];
+    return scenarios.filter(s => {
+      const cls = s.classification;
+      if (filterDomain !== "All" && (!cls || cls.domain !== filterDomain)) return false;
+      if (filterConflict !== "All" && (!cls || cls.conflictType !== filterConflict)) return false;
+      if (filterTone !== "All" && (!cls || cls.tone !== filterTone)) return false;
+      return true;
+    });
+  }, [scenarios, filterDomain, filterConflict, filterTone]);
+
+  const uniqueDomains = useMemo(() => Array.from(new Set(categories?.filter(c => c.axis === 'domain').map(c => c.name) || [])), [categories]);
+  const uniqueConflicts = useMemo(() => Array.from(new Set(categories?.filter(c => c.axis === 'conflictType').map(c => c.name) || [])), [categories]);
+  const uniqueTones = useMemo(() => Array.from(new Set(categories?.filter(c => c.axis === 'tone').map(c => c.name) || [])), [categories]);
+
+  const parsedTags = useMemo(() => editedClassification.tags.split(',').map(t => t.trim()).filter(Boolean), [editedClassification.tags]);
+  const isFullyClassified = Boolean(
+    editedClassification.domain && 
+    editedClassification.conflictType && 
+    editedClassification.tone && 
+    parsedTags.length > 0
+  );
+  const showClassificationHint = !isFullyClassified && Boolean(
+    editedClassification.domain || 
+    editedClassification.conflictType || 
+    editedClassification.tone || 
+    editedClassification.tags.trim()
+  );
 
   const handleAmplify = (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
@@ -67,6 +121,8 @@ export default function Dashboard() {
       {
         onSuccess: (res) => {
           setDraft(res);
+          // Initialize classification state if it was null
+          setEditedClassification({ domain: "", conflictType: "", tone: "", tags: "" });
           setStep('SCENARIO');
           window.scrollTo(0, 0);
         },
@@ -84,13 +140,22 @@ export default function Dashboard() {
   const handleSaveToLibrary = () => {
     if (!draft) return;
     
+    const classificationPayload = isFullyClassified ? {
+      domain: editedClassification.domain,
+      conflictType: editedClassification.conflictType,
+      tone: editedClassification.tone,
+      tags: parsedTags
+    } : undefined;
+
     if (currentScenarioId) {
       updateScenario.mutate(
-        { id: currentScenarioId, data: { scenario: draft } },
+        { id: currentScenarioId, data: { scenario: draft, classification: classificationPayload } },
         {
-          onSuccess: () => {
+          onSuccess: (updatedRecord) => {
             toast({ title: "Scenario changes saved" });
+            setCurrentScenario(updatedRecord);
             refetchScenarios();
+            refetchCategories();
           },
           onError: (err) => {
             toast({ title: "Failed to save scenario", description: err.message, variant: "destructive" });
@@ -98,14 +163,26 @@ export default function Dashboard() {
         }
       );
     } else {
+      // NOTE: Create scenario endpoint only takes idea and scenario currently, classification happens auto on backend.
+      // If we need to pass manual override to create, it's not in the schema yet, so backend auto-classifies.
       createScenario.mutate(
         { data: { idea: prompt, scenario: draft } },
         {
           onSuccess: (res) => {
-            toast({ title: "Scenario saved to library" });
-            setCurrentScenarioId(res.id);
+            toast({ title: "Scenario saved to library & auto-classified" });
+            setCurrentScenario(res);
             refetchScenarios();
+            refetchCategories();
             setActiveTab('SCENARIOS');
+            // Populate our edit form with whatever the backend classified it as
+            if (res.classification) {
+              setEditedClassification({
+                domain: res.classification.domain,
+                conflictType: res.classification.conflictType,
+                tone: res.classification.tone,
+                tags: res.classification.tags.join(', ')
+              });
+            }
           },
           onError: (err) => {
             toast({ title: "Failed to save scenario", description: err.message, variant: "destructive" });
@@ -164,10 +241,11 @@ export default function Dashboard() {
           onSuccess: () => {
             toast({ title: "Scenario deleted successfully" });
             refetchScenarios();
+            refetchCategories();
             if (currentScenarioId === id) {
               setStep('IDEA');
               setDraft(null);
-              setCurrentScenarioId(null);
+              setCurrentScenario(null);
             }
           }
         }
@@ -175,13 +253,65 @@ export default function Dashboard() {
     }
   };
 
-  const handleOpenScenario = (record: any) => {
+  const handleOpenScenario = (record: ScenarioRecord) => {
     setPrompt(record.idea);
     setTitle(record.title);
     setDraft(record.scenario);
-    setCurrentScenarioId(record.id);
+    setCurrentScenario(record);
+    
+    if (record.classification) {
+      setEditedClassification({
+        domain: record.classification.domain,
+        conflictType: record.classification.conflictType,
+        tone: record.classification.tone,
+        tags: record.classification.tags.join(', ')
+      });
+    } else {
+      setEditedClassification({ domain: "", conflictType: "", tone: "", tags: "" });
+    }
+    
     setStep('SCENARIO');
     window.scrollTo(0, 0);
+  };
+
+  const handleReclassifySingle = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    classifyScenario.mutate({ id }, {
+      onSuccess: (updated) => {
+        toast({ title: "Reclassified successfully" });
+        refetchScenarios();
+        refetchCategories();
+        if (currentScenarioId === id) {
+          setCurrentScenario(updated);
+          if (updated.classification) {
+             setEditedClassification({
+                domain: updated.classification.domain,
+                conflictType: updated.classification.conflictType,
+                tone: updated.classification.tone,
+                tags: updated.classification.tags.join(', ')
+             });
+          }
+        }
+      },
+      onError: (err) => {
+        toast({ title: "Reclassification failed", description: err.message, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleReclassifyAll = () => {
+    if (!confirm("Are you sure? This will trigger LLM analysis for all unclassified or existing scenarios. It may take some time.")) return;
+    reclassifyScenarios.mutate(undefined, {
+      onSuccess: (res) => {
+        toast({ title: "Bulk reclassification complete", description: `${res.classified} classified, ${res.failed} failed.` });
+        refetchScenarios();
+        refetchCategories();
+      },
+      onError: (err) => {
+        toast({ title: "Bulk reclassification failed", description: err.message, variant: "destructive" });
+      }
+    });
   };
 
   const handleDraftChange = (field: string, value: string) => {
@@ -210,14 +340,14 @@ export default function Dashboard() {
             <span className="text-muted-foreground flex items-center gap-2"><Network className="h-4 w-4" /> 3. GRAPH GENERATION</span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column: Editable Core Structure */}
-            <div className="space-y-6">
+            <div className="lg:col-span-7 space-y-6">
               <div className="border border-border bg-card p-6 shadow-sm space-y-4">
                 <h2 className="text-sm font-mono font-bold text-primary uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center justify-between">
                   <span className="flex items-center gap-2"><Wand2 className="h-4 w-4" /> Core Scenario</span>
                   {currentScenarioId && (
-                    <span className="bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold">SAVED IN LIBRARY</span>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold border border-primary/20">SAVED IN LIBRARY</span>
                   )}
                 </h2>
                 
@@ -282,10 +412,69 @@ export default function Dashboard() {
                   />
                 </div>
               </div>
+
+              {/* Classification Panel (Only visible for saved scenarios) */}
+              {currentScenarioId && (
+                <div className="border border-border bg-card p-6 shadow-sm space-y-4">
+                   <h2 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center gap-2">
+                    <Tag className="h-4 w-4" /> Categorization Mapping
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-mono mb-1 uppercase text-muted-foreground">Domain</label>
+                      <select 
+                        value={editedClassification.domain} 
+                        onChange={e => setEditedClassification(p => ({...p, domain: e.target.value}))}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
+                      >
+                        <option value="">(Select Domain)</option>
+                        {uniqueDomains.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono mb-1 uppercase text-muted-foreground">Conflict Type</label>
+                      <select 
+                        value={editedClassification.conflictType} 
+                        onChange={e => setEditedClassification(p => ({...p, conflictType: e.target.value}))}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
+                      >
+                        <option value="">(Select Conflict)</option>
+                        {uniqueConflicts.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono mb-1 uppercase text-muted-foreground">Tone</label>
+                      <select 
+                        value={editedClassification.tone} 
+                        onChange={e => setEditedClassification(p => ({...p, tone: e.target.value}))}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
+                      >
+                        <option value="">(Select Tone)</option>
+                        {uniqueTones.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-mono mb-1 uppercase text-muted-foreground">Tags (comma separated)</label>
+                    <input 
+                      type="text" 
+                      value={editedClassification.tags}
+                      onChange={e => setEditedClassification(p => ({...p, tags: e.target.value}))}
+                      placeholder="e.g. survival, fast-paced"
+                      className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary transition-colors"
+                    />
+                  </div>
+                  {showClassificationHint && (
+                    <p className="text-[10px] text-orange-500 font-mono mt-2 uppercase tracking-wider">
+                      Select all three axes and at least one tag to override auto-classification.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Right Column: Acts and Characters */}
-            <div className="space-y-6">
+            {/* Right Column: Acts, Characters, Similar */}
+            <div className="lg:col-span-5 space-y-6">
               <div className="space-y-4">
                 <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
                   Structural Beats (Read-only)
@@ -320,6 +509,8 @@ export default function Dashboard() {
                   ))}
                 </div>
               </div>
+
+              {currentScenarioId && <SimilarScenariosPanel scenarioId={currentScenarioId} onOpen={handleOpenScenario} />}
             </div>
           </div>
         </main>
@@ -329,7 +520,7 @@ export default function Dashboard() {
           <button 
             onClick={() => {
               setStep('IDEA');
-              setCurrentScenarioId(null);
+              setCurrentScenario(null);
             }} 
             className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-4 py-2"
           >
@@ -380,10 +571,10 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="relative z-10 max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="relative z-10 max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Generator & Stats */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-4 space-y-6">
           
           {/* Generator Panel */}
           <div className="border border-border bg-card p-6 shadow-sm">
@@ -484,7 +675,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column: Library Tabs */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-8">
           <div className="border border-border bg-card flex flex-col h-full min-h-[600px] shadow-sm">
             
             <div className="flex border-b border-border">
@@ -505,6 +696,51 @@ export default function Dashboard() {
                 <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{scenarios?.length || 0}</span>
               </button>
             </div>
+
+            {/* Filter Bar (Only shown for scenarios) */}
+            {activeTab === 'SCENARIOS' && (
+              <div className="border-b border-border bg-muted/10 p-3 flex flex-wrap items-center gap-4 text-xs font-mono">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground uppercase">Filter:</span>
+                </div>
+                
+                <select 
+                  value={filterDomain} onChange={(e) => setFilterDomain(e.target.value)}
+                  className="bg-background border border-border px-2 py-1 focus:border-primary appearance-none cursor-pointer"
+                >
+                  <option value="All">Domain: All</option>
+                  {uniqueDomains.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+
+                <select 
+                  value={filterConflict} onChange={(e) => setFilterConflict(e.target.value)}
+                  className="bg-background border border-border px-2 py-1 focus:border-primary appearance-none cursor-pointer"
+                >
+                  <option value="All">Conflict: All</option>
+                  {uniqueConflicts.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+
+                <select 
+                  value={filterTone} onChange={(e) => setFilterTone(e.target.value)}
+                  className="bg-background border border-border px-2 py-1 focus:border-primary appearance-none cursor-pointer"
+                >
+                  <option value="All">Tone: All</option>
+                  {uniqueTones.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+
+                <div className="ml-auto">
+                  <button 
+                    onClick={handleReclassifyAll}
+                    disabled={reclassifyScenarios.isPending}
+                    className="flex items-center gap-1.5 bg-background border border-border px-2 py-1 hover:text-primary hover:border-primary transition-colors disabled:opacity-50"
+                  >
+                    {reclassifyScenarios.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    Reclassify All
+                  </button>
+                </div>
+              </div>
+            )}
             
             <div className="flex-1 overflow-auto bg-background/50 relative">
               {activeTab === 'CONTENT' && (
@@ -533,13 +769,13 @@ export default function Dashboard() {
                               "{item.sourcePrompt}"
                             </p>
                           )}
-                          <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-4 text-[11px] font-mono text-muted-foreground">
                             <span className="flex items-center gap-1.5"><Box className="h-3 w-3"/> {item.entityCount}</span>
                             <span className="flex items-center gap-1.5"><Network className="h-3 w-3"/> {item.relationshipCount}</span>
-                            <span className="flex items-center gap-1.5 bg-border/50 px-1.5 py-0.5">v{item.version}</span>
+                            <span className="flex items-center gap-1.5 bg-border/50 px-1.5 py-0.5 border border-border">v{item.version}</span>
                             <span>{format(new Date(item.updatedAt), "yyyy-MM-dd HH:mm")}</span>
                             
-                            <div className="ml-auto flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity font-sans font-semibold">
+                            <div className="ml-auto flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity font-sans font-semibold text-sm">
                               Enter Workspace <ArrowRight className="ml-1 h-3 w-3" />
                             </div>
                           </div>
@@ -561,32 +797,59 @@ export default function Dashboard() {
               )}
 
               {activeTab === 'SCENARIOS' && (
-                isScenariosLoading ? (
+                isScenariosLoading || isCategoriesLoading ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
                     <Loader2 className="h-8 w-8 animate-spin mb-4" />
                     <span className="font-mono text-sm">Fetching scenarios...</span>
                   </div>
-                ) : scenarios && scenarios.length > 0 ? (
+                ) : filteredScenarios && filteredScenarios.length > 0 ? (
                   <div className="divide-y divide-border">
-                    {scenarios.map((record) => (
+                    {filteredScenarios.map((record) => (
                       <div key={record.id} className="p-6 transition-colors hover:bg-muted group flex flex-col">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{record.title || "Untitled Scenario"}</h3>
-                          <button 
-                            onClick={(e) => handleDeleteScenario(record.id, e)}
-                            className="text-muted-foreground hover:text-destructive p-2 -mr-2 transition-colors opacity-0 group-hover:opacity-100"
-                            title="Delete Scenario"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={(e) => handleReclassifySingle(record.id, e)}
+                              disabled={classifyScenario.isPending}
+                              className="text-xs font-mono text-muted-foreground hover:text-primary border border-transparent hover:border-primary/20 px-2 py-1 flex items-center gap-1 disabled:opacity-50"
+                              title="Reclassify"
+                            >
+                              {classifyScenario.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                              Reclassify
+                            </button>
+                            <button 
+                              onClick={(e) => handleDeleteScenario(record.id, e)}
+                              className="text-muted-foreground hover:text-destructive p-2 -mr-2 transition-colors"
+                              title="Delete Scenario"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {record.classification ? (
+                            <>
+                              <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">{record.classification.domain}</span>
+                              <span className="bg-secondary/10 text-secondary border border-secondary/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">{record.classification.conflictType}</span>
+                              <span className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">{record.classification.tone}</span>
+                              {record.classification.tags?.slice(0, 3).map(t => (
+                                <span key={t} className="bg-muted text-muted-foreground border border-border text-[10px] font-mono px-1.5 py-0.5 flex items-center gap-1"><Tag className="h-2 w-2"/> {t}</span>
+                              ))}
+                            </>
+                          ) : (
+                            <span className="bg-destructive/10 text-destructive border border-destructive/20 text-[10px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">UNCLASSIFIED</span>
+                          )}
+                        </div>
+
                         {record.scenario?.logline && (
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-serif">
                             {record.scenario.logline}
                           </p>
                         )}
                         <div className="flex items-center justify-between mt-auto">
-                          <span className="text-xs font-mono text-muted-foreground">
+                          <span className="text-[11px] font-mono text-muted-foreground">
                             {format(new Date(record.updatedAt), "yyyy-MM-dd HH:mm")}
                           </span>
                           
@@ -605,9 +868,9 @@ export default function Dashboard() {
                     <div className="w-16 h-16 border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
                       <BookOpen className="h-8 w-8" />
                     </div>
-                    <h3 className="text-lg font-bold mb-2">Scenario Library is Empty</h3>
+                    <h3 className="text-lg font-bold mb-2">No Matching Scenarios</h3>
                     <p className="text-muted-foreground text-sm max-w-md mb-6">
-                      Amplify an idea into a dramatic scenario and save it to review or build upon later.
+                      Adjust your filters or amplify a new idea into a scenario.
                     </p>
                   </div>
                 )
@@ -616,6 +879,44 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function SimilarScenariosPanel({ scenarioId, onOpen }: { scenarioId: string, onOpen: (r: ScenarioRecord) => void }) {
+  const { data: similar, isLoading } = useListSimilarScenarios(scenarioId);
+
+  if (isLoading) {
+    return (
+      <div className="border border-border bg-card p-6 shadow-sm flex justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!similar || similar.length === 0) return null;
+
+  return (
+    <div className="border border-border bg-card shadow-sm">
+      <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest border-b border-border p-4 bg-muted/10 flex items-center gap-2">
+        <GitMerge className="h-4 w-4" /> Similar Scenarios in Library
+      </h3>
+      <div className="divide-y divide-border max-h-64 overflow-y-auto">
+        {similar.map(record => (
+          <div key={record.id} className="p-4 hover:bg-muted/50 transition-colors flex flex-col gap-2 group cursor-pointer" onClick={() => onOpen(record)}>
+            <div className="font-bold text-sm group-hover:text-primary transition-colors">{record.title}</div>
+            
+            <div className="flex flex-wrap gap-1.5">
+              {record.classification && (
+                <>
+                  <span className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono px-1 py-px uppercase truncate max-w-[100px]">{record.classification.domain}</span>
+                  <span className="bg-secondary/10 text-secondary border border-secondary/20 text-[9px] font-mono px-1 py-px uppercase truncate max-w-[100px]">{record.classification.conflictType}</span>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
