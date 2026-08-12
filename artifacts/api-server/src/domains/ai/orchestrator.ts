@@ -3,7 +3,17 @@ import { validateGraph } from "../validation/validator";
 import type { AIProvider } from "./provider";
 import { MockProvider } from "./mockProvider";
 import { amplifyIdea, type DramaticScenario } from "./scenarioAmplifier";
+import { amplifyIdeaWithLLM } from "./llmAmplifier";
 import { buildGraphFromScenario } from "./scenarioGraphBuilder";
+
+export type Amplifier = (
+  idea: string,
+  title?: string,
+) => Promise<DramaticScenario>;
+
+/** Deterministic mock amplifier, used in tests. */
+export const mockAmplifier: Amplifier = async (idea, title) =>
+  amplifyIdea(idea, title);
 
 /** Thrown when a confirmed scenario lacks minimum dramatic structure (→ 400). */
 export class ScenarioValidationError extends Error {}
@@ -47,7 +57,10 @@ export function checkScenarioCompleteness(
  * Repairer) plug in here without changing callers.
  */
 export class ContentOrchestrator {
-  constructor(private readonly provider: AIProvider = new MockProvider()) {}
+  constructor(
+    private readonly provider: AIProvider = new MockProvider(),
+    private readonly amplifier: Amplifier = amplifyIdeaWithLLM,
+  ) {}
 
   /**
    * Generate a graph payload from a prompt. Output is schema/reference
@@ -83,8 +96,8 @@ export class ContentOrchestrator {
    * Amplify a raw idea into a dramatic scenario draft. Nothing is persisted;
    * the user confirms (possibly after editing) before commit.
    */
-  amplify(idea: string, title?: string): DramaticScenario {
-    return amplifyIdea(idea, title);
+  amplify(idea: string, title?: string): Promise<DramaticScenario> {
+    return this.amplifier(idea, title);
   }
 
   /**

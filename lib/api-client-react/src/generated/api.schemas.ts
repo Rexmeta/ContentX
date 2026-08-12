@@ -114,6 +114,25 @@ export interface ScenarioDraftInput {
   title?: string;
 }
 
+export interface ScenarioSaveInput {
+  /** @minLength 1 */
+  idea: string;
+  scenario: DramaticScenario;
+}
+
+export interface ScenarioUpdateInput {
+  scenario?: DramaticScenario;
+}
+
+export interface ScenarioRecord {
+  id: string;
+  title: string;
+  idea: string;
+  scenario: DramaticScenario;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type EntityUpdateAttributes = { [key: string]: unknown };
 
 export interface EntityUpdate {

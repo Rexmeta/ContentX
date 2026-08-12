@@ -8,7 +8,8 @@ export type IdPrefix =
   | "narrative"
   | "asset"
   | "projection"
-  | "version";
+  | "version"
+  | "scenario";
 
 /** Stable prefixed identifiers. Never use array indexes as identity. */
 export function newId(prefix: IdPrefix): string {

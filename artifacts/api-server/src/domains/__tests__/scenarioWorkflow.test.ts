@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { amplifyIdea } from "../ai/scenarioAmplifier";
 import { buildGraphFromScenario } from "../ai/scenarioGraphBuilder";
-import { ContentOrchestrator } from "../ai/orchestrator";
+import { ContentOrchestrator, mockAmplifier } from "../ai/orchestrator";
+import { MockProvider } from "../ai/mockProvider";
+
+const makeOrchestrator = () =>
+  new ContentOrchestrator(new MockProvider(), mockAmplifier);
 import { validateGraph } from "../validation/validator";
 
 const DEMO_IDEA = "신제품 출시를 앞둔 회사에서 품질팀과 마케팅팀이 충돌한다.";
@@ -39,9 +43,9 @@ describe("idea → amplify → confirm → commit workflow", () => {
     expect(validateGraph({ ...graph }).valid).toBe(true);
   });
 
-  it("rejects structurally empty confirmed scenarios before commit", () => {
-    const orchestratorInstance = new ContentOrchestrator();
-    const scenario = orchestratorInstance.amplify(DEMO_IDEA);
+  it("rejects structurally empty confirmed scenarios before commit", async () => {
+    const orchestratorInstance = makeOrchestrator();
+    const scenario = await orchestratorInstance.amplify(DEMO_IDEA);
     expect(() =>
       orchestratorInstance.generateFromScenario(DEMO_IDEA, {
         ...scenario,
@@ -62,9 +66,9 @@ describe("idea → amplify → confirm → commit workflow", () => {
     ).toThrow(/logline/);
   });
 
-  it("provenance is server-authoritative, ignoring client scenario metadata", () => {
-    const orchestratorInstance = new ContentOrchestrator();
-    const scenario = orchestratorInstance.amplify(DEMO_IDEA);
+  it("provenance is server-authoritative, ignoring client scenario metadata", async () => {
+    const orchestratorInstance = makeOrchestrator();
+    const scenario = await orchestratorInstance.amplify(DEMO_IDEA);
     const tampered = {
       ...scenario,
       sourceIdea: "fake source",
@@ -75,9 +79,9 @@ describe("idea → amplify → confirm → commit workflow", () => {
     expect(payload.provenance?.generatedByModel).toBe("contentx-amplifier-v1");
   });
 
-  it("orchestrator records amplification provenance on commit", () => {
-    const orchestratorInstance = new ContentOrchestrator();
-    const scenario = orchestratorInstance.amplify(DEMO_IDEA);
+  it("orchestrator records amplification provenance on commit", async () => {
+    const orchestratorInstance = makeOrchestrator();
+    const scenario = await orchestratorInstance.amplify(DEMO_IDEA);
     const payload = orchestratorInstance.generateFromScenario(DEMO_IDEA, scenario);
     expect(payload.provenance?.operation).toBe("compose");
     expect(payload.provenance?.sourceType).toBe("scenario");

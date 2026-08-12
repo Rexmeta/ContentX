@@ -32,6 +32,9 @@ import type {
   RelationshipUpdate,
   RoleplayXScenario,
   ScenarioDraftInput,
+  ScenarioRecord,
+  ScenarioSaveInput,
+  ScenarioUpdateInput,
   ValidationReport,
   VersionInfo,
   VersionInput
@@ -316,7 +319,7 @@ export const draftScenario = async (scenarioDraftInput: ScenarioDraftInput, opti
 
 
 
-export const getDraftScenarioMutationOptions = <TError = ErrorType<unknown>,
+export const getDraftScenarioMutationOptions = <TError = ErrorType<ApiMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftScenario>>, TError,{data: BodyType<ScenarioDraftInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof draftScenario>>, TError,{data: BodyType<ScenarioDraftInput>}, TContext> => {
 
@@ -345,12 +348,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DraftScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof draftScenario>>>
     export type DraftScenarioMutationBody = BodyType<ScenarioDraftInput>
-    export type DraftScenarioMutationError = ErrorType<unknown>
+    export type DraftScenarioMutationError = ErrorType<ApiMessage>
 
     /**
  * @summary Amplify a raw idea into a dramatic scenario draft for user confirmation
  */
-export const useDraftScenario = <TError = ErrorType<unknown>,
+export const useDraftScenario = <TError = ErrorType<ApiMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftScenario>>, TError,{data: BodyType<ScenarioDraftInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof draftScenario>>,
@@ -359,6 +362,374 @@ export const useDraftScenario = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDraftScenarioMutationOptions(options));
+    }
+
+export const getListScenariosUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios`
+}
+
+/**
+ * @summary List saved scenarios
+ */
+export const listScenarios = async ( options?: Parameters<typeof customFetch>[1]): Promise<ScenarioRecord[]> => {
+
+  return customFetch<ScenarioRecord[]>(getListScenariosUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListScenariosQueryKey = () => {
+    return [
+    `/api/v1/scenarios`
+    ] as const;
+    }
+
+
+export const getListScenariosQueryOptions = <TData = Awaited<ReturnType<typeof listScenarios>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listScenarios>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListScenariosQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listScenarios>>> = ({ signal }) => listScenarios({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listScenarios>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListScenariosQueryResult = NonNullable<Awaited<ReturnType<typeof listScenarios>>>
+export type ListScenariosQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List saved scenarios
+ */
+
+export function useListScenarios<TData = Awaited<ReturnType<typeof listScenarios>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listScenarios>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListScenariosQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateScenarioUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios`
+}
+
+/**
+ * @summary Save a scenario to the scenario library
+ */
+export const createScenario = async (scenarioSaveInput: ScenarioSaveInput, options?: Parameters<typeof customFetch>[1]): Promise<ScenarioRecord> => {
+
+  return customFetch<ScenarioRecord>(getCreateScenarioUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(scenarioSaveInput)
+  }
+);}
+
+
+
+
+
+export const getCreateScenarioMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScenario>>, TError,{data: BodyType<ScenarioSaveInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createScenario>>, TError,{data: BodyType<ScenarioSaveInput>}, TContext> => {
+
+const mutationKey = ['createScenario'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createScenario>>, {data: BodyType<ScenarioSaveInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createScenario(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof createScenario>>>
+    export type CreateScenarioMutationBody = BodyType<ScenarioSaveInput>
+    export type CreateScenarioMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Save a scenario to the scenario library
+ */
+export const useCreateScenario = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScenario>>, TError,{data: BodyType<ScenarioSaveInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createScenario>>,
+        TError,
+        {data: BodyType<ScenarioSaveInput>},
+        TContext
+      > => {
+      return useMutation(getCreateScenarioMutationOptions(options));
+    }
+
+export const getGetScenarioUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/scenarios/${id}`
+}
+
+/**
+ * @summary Get a saved scenario
+ */
+export const getScenario = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ScenarioRecord> => {
+
+  return customFetch<ScenarioRecord>(getGetScenarioUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetScenarioQueryKey = (id: string,) => {
+    return [
+    `/api/v1/scenarios/${id}`
+    ] as const;
+    }
+
+
+export const getGetScenarioQueryOptions = <TData = Awaited<ReturnType<typeof getScenario>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScenario>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetScenarioQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getScenario>>> = ({ signal }) => getScenario(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScenario>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetScenarioQueryResult = NonNullable<Awaited<ReturnType<typeof getScenario>>>
+export type GetScenarioQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a saved scenario
+ */
+
+export function useGetScenario<TData = Awaited<ReturnType<typeof getScenario>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScenario>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetScenarioQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateScenarioUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/scenarios/${id}`
+}
+
+/**
+ * @summary Update a saved scenario
+ */
+export const updateScenario = async (id: string,
+    scenarioUpdateInput: ScenarioUpdateInput, options?: Parameters<typeof customFetch>[1]): Promise<ScenarioRecord> => {
+
+  return customFetch<ScenarioRecord>(getUpdateScenarioUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(scenarioUpdateInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateScenarioMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateScenario>>, TError,{id: string;data: BodyType<ScenarioUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateScenario>>, TError,{id: string;data: BodyType<ScenarioUpdateInput>}, TContext> => {
+
+const mutationKey = ['updateScenario'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateScenario>>, {id: string;data: BodyType<ScenarioUpdateInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateScenario(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof updateScenario>>>
+    export type UpdateScenarioMutationBody = BodyType<ScenarioUpdateInput>
+    export type UpdateScenarioMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Update a saved scenario
+ */
+export const useUpdateScenario = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateScenario>>, TError,{id: string;data: BodyType<ScenarioUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateScenario>>,
+        TError,
+        {id: string;data: BodyType<ScenarioUpdateInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateScenarioMutationOptions(options));
+    }
+
+export const getDeleteScenarioUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/scenarios/${id}`
+}
+
+/**
+ * @summary Delete a saved scenario
+ */
+export const deleteScenario = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteScenarioUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteScenarioMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteScenario>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteScenario>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteScenario'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteScenario>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteScenario(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof deleteScenario>>>
+
+    export type DeleteScenarioMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Delete a saved scenario
+ */
+export const useDeleteScenario = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteScenario>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteScenario>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteScenarioMutationOptions(options));
     }
 
 export const getGetContentUrl = (id: string,) => {

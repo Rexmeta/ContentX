@@ -5,7 +5,12 @@ import {
   useGetDashboardSummary, 
   useCreateContent, 
   useDeleteContent,
-  useDraftScenario
+  useDraftScenario,
+  useListScenarios,
+  useCreateScenario,
+  useUpdateScenario,
+  useDeleteScenario,
+  getListScenariosQueryKey
 } from "@workspace/api-client-react";
 import { 
   Database, 
@@ -21,17 +26,27 @@ import {
   ChevronDown,
   Wand2,
   Save,
-  RotateCcw
+  RotateCcw,
+  BookOpen,
+  FileText
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading, refetch: refetchSummary } = useGetDashboardSummary();
   const { data: contents, isLoading: isContentsLoading, refetch: refetchContents } = useListContent();
+  const { data: scenarios, isLoading: isScenariosLoading, refetch: refetchScenarios } = useListScenarios();
+  
   const createContent = useCreateContent();
   const deleteContent = useDeleteContent();
   const draftScenario = useDraftScenario();
+  const createScenario = useCreateScenario();
+  const updateScenario = useUpdateScenario();
+  const deleteScenario = useDeleteScenario();
+  
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -39,6 +54,9 @@ export default function Dashboard() {
   const [title, setTitle] = useState("");
   const [step, setStep] = useState<'IDEA' | 'SCENARIO'>('IDEA');
   const [draft, setDraft] = useState<any>(null);
+  const [currentScenarioId, setCurrentScenarioId] = useState<string | null>(null);
+  
+  const [activeTab, setActiveTab] = useState<'CONTENT' | 'SCENARIOS'>('CONTENT');
 
   const handleAmplify = (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
@@ -63,6 +81,40 @@ export default function Dashboard() {
     );
   };
 
+  const handleSaveToLibrary = () => {
+    if (!draft) return;
+    
+    if (currentScenarioId) {
+      updateScenario.mutate(
+        { id: currentScenarioId, data: { scenario: draft } },
+        {
+          onSuccess: () => {
+            toast({ title: "Scenario changes saved" });
+            refetchScenarios();
+          },
+          onError: (err) => {
+            toast({ title: "Failed to save scenario", description: err.message, variant: "destructive" });
+          }
+        }
+      );
+    } else {
+      createScenario.mutate(
+        { data: { idea: prompt, scenario: draft } },
+        {
+          onSuccess: (res) => {
+            toast({ title: "Scenario saved to library" });
+            setCurrentScenarioId(res.id);
+            refetchScenarios();
+            setActiveTab('SCENARIOS');
+          },
+          onError: (err) => {
+            toast({ title: "Failed to save scenario", description: err.message, variant: "destructive" });
+          }
+        }
+      );
+    }
+  };
+
   const handleConfirmGraph = () => {
     if (!draft) return;
     createContent.mutate(
@@ -85,7 +137,7 @@ export default function Dashboard() {
     );
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDeleteContent = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this content graph? This action is irreversible.")) {
@@ -100,6 +152,36 @@ export default function Dashboard() {
         }
       );
     }
+  };
+
+  const handleDeleteScenario = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete this scenario?")) {
+      deleteScenario.mutate(
+        { id },
+        {
+          onSuccess: () => {
+            toast({ title: "Scenario deleted successfully" });
+            refetchScenarios();
+            if (currentScenarioId === id) {
+              setStep('IDEA');
+              setDraft(null);
+              setCurrentScenarioId(null);
+            }
+          }
+        }
+      );
+    }
+  };
+
+  const handleOpenScenario = (record: any) => {
+    setPrompt(record.idea);
+    setTitle(record.title);
+    setDraft(record.scenario);
+    setCurrentScenarioId(record.id);
+    setStep('SCENARIO');
+    window.scrollTo(0, 0);
   };
 
   const handleDraftChange = (field: string, value: string) => {
@@ -132,8 +214,11 @@ export default function Dashboard() {
             {/* Left Column: Editable Core Structure */}
             <div className="space-y-6">
               <div className="border border-border bg-card p-6 shadow-sm space-y-4">
-                <h2 className="text-sm font-mono font-bold text-primary uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center gap-2">
-                  <Wand2 className="h-4 w-4" /> Core Scenario
+                <h2 className="text-sm font-mono font-bold text-primary uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center justify-between">
+                  <span className="flex items-center gap-2"><Wand2 className="h-4 w-4" /> Core Scenario</span>
+                  {currentScenarioId && (
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold">SAVED IN LIBRARY</span>
+                  )}
                 </h2>
                 
                 <div>
@@ -242,20 +327,31 @@ export default function Dashboard() {
         {/* Floating Action Bar */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-md border-t border-border z-50 flex items-center justify-between px-6">
           <button 
-            onClick={() => setStep('IDEA')} 
+            onClick={() => {
+              setStep('IDEA');
+              setCurrentScenarioId(null);
+            }} 
             className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-4 py-2"
           >
-            <ArrowRight className="h-4 w-4 rotate-180" /> Back to Idea
+            <ArrowRight className="h-4 w-4 rotate-180" /> Back to Library / Idea
           </button>
           
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <button 
               onClick={handleAmplify} 
               disabled={draftScenario.isPending}
-              className="flex items-center justify-center gap-2 bg-muted text-foreground border border-border h-10 px-6 font-semibold text-sm transition-colors hover:bg-muted/80 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-muted text-foreground border border-border h-10 px-4 font-semibold text-sm transition-colors hover:bg-muted/80 disabled:opacity-50"
             >
               {draftScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
               Re-Amplify
+            </button>
+            <button 
+              onClick={handleSaveToLibrary}
+              disabled={createScenario.isPending || updateScenario.isPending}
+              className="flex items-center justify-center gap-2 bg-card text-foreground border border-border h-10 px-4 font-semibold text-sm transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              {createScenario.isPending || updateScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
+              {currentScenarioId ? "Save Changes" : "Save to Library"}
             </button>
             <button 
               onClick={handleConfirmGraph}
@@ -311,7 +407,8 @@ export default function Dashboard() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Project Orion"
-                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  disabled={draftScenario.isPending}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-50"
                 />
               </div>
               <div>
@@ -323,16 +420,25 @@ export default function Dashboard() {
                   placeholder="Describe a core concept. We'll amplify it into a full dramatic scenario..."
                   rows={5}
                   required
-                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono"
+                  disabled={draftScenario.isPending}
+                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono disabled:opacity-50"
                 />
               </div>
+              
               <button 
                 type="submit"
                 disabled={draftScenario.isPending || !prompt.trim()}
-                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground h-10 px-4 font-semibold text-sm transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex flex-col items-center justify-center gap-1 bg-primary text-primary-foreground h-12 px-4 font-semibold text-sm transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
               >
-                {draftScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-                Amplify to Scenario
+                {draftScenario.isPending ? (
+                  <>
+                    <div className="flex items-center gap-2 z-10"><Loader2 className="h-4 w-4 animate-spin" /> Amplifying Idea...</div>
+                    <div className="text-[10px] z-10 opacity-80 font-mono">This involves deep reasoning (takes ~30 seconds)</div>
+                    <div className="absolute bottom-0 left-0 h-1 bg-white/30 animate-pulse w-full"></div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2"><Wand2 className="h-4 w-4" /> Amplify to Scenario</div>
+                )}
               </button>
             </form>
           </div>
@@ -354,6 +460,12 @@ export default function Dashboard() {
                 </div>
                 <div className="p-4 bg-background border border-border">
                   <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
+                    <BookOpen className="h-3 w-3" /> Scenarios
+                  </div>
+                  <div className="text-2xl font-bold font-mono">{scenarios?.length || 0}</div>
+                </div>
+                <div className="p-4 bg-background border border-border">
+                  <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                     <Box className="h-3 w-3" /> Entities
                   </div>
                   <div className="text-2xl font-bold font-mono">{summary.entityCount}</div>
@@ -364,12 +476,6 @@ export default function Dashboard() {
                   </div>
                   <div className="text-2xl font-bold font-mono">{summary.relationshipCount}</div>
                 </div>
-                <div className="p-4 bg-background border border-border">
-                  <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
-                    <Activity className="h-3 w-3" /> Versions
-                  </div>
-                  <div className="text-2xl font-bold font-mono">{summary.versionCount}</div>
-                </div>
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">No telemetry available.</div>
@@ -377,69 +483,134 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column: Library */}
+        {/* Right Column: Library Tabs */}
         <div className="lg:col-span-2">
           <div className="border border-border bg-card flex flex-col h-full min-h-[600px] shadow-sm">
-            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-              <h2 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wider">
+            
+            <div className="flex border-b border-border">
+              <button 
+                onClick={() => setActiveTab('CONTENT')}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'CONTENT' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+              >
+                <Database className="h-4 w-4" />
                 Content Library
-              </h2>
-              <span className="text-xs font-mono bg-muted px-2 py-1 text-muted-foreground border border-border">
-                {contents?.length || 0} RECORDS
-              </span>
+                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{contents?.length || 0}</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('SCENARIOS')}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'SCENARIOS' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+              >
+                <BookOpen className="h-4 w-4" />
+                Scenario Library
+                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{scenarios?.length || 0}</span>
+              </button>
             </div>
             
-            <div className="flex-1 overflow-auto bg-background/50">
-              {isContentsLoading ? (
-                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                  <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                  <span className="font-mono text-sm">Fetching records...</span>
-                </div>
-              ) : contents && contents.length > 0 ? (
-                <div className="divide-y divide-border">
-                  {contents.map((item) => (
-                    <Link key={item.id} href={`/content/${item.id}`} className="block group">
-                      <div className="p-6 transition-colors hover:bg-muted hover:border-l-4 hover:border-l-primary hover:-ml-[1px] cursor-pointer">
+            <div className="flex-1 overflow-auto bg-background/50 relative">
+              {activeTab === 'CONTENT' && (
+                isContentsLoading ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                    <span className="font-mono text-sm">Fetching graphs...</span>
+                  </div>
+                ) : contents && contents.length > 0 ? (
+                  <div className="divide-y divide-border">
+                    {contents.map((item) => (
+                      <Link key={item.id} href={`/content/${item.id}`} className="block group">
+                        <div className="p-6 transition-colors hover:bg-muted hover:border-l-4 hover:border-l-primary hover:-ml-[1px] cursor-pointer">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{item.title}</h3>
+                            <button 
+                              onClick={(e) => handleDeleteContent(item.id, e)}
+                              className="text-muted-foreground hover:text-destructive p-2 -mr-2 transition-colors opacity-0 group-hover:opacity-100"
+                              title="Delete Graph"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                          {item.sourcePrompt && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-serif italic">
+                              "{item.sourcePrompt}"
+                            </p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-muted-foreground">
+                            <span className="flex items-center gap-1.5"><Box className="h-3 w-3"/> {item.entityCount}</span>
+                            <span className="flex items-center gap-1.5"><Network className="h-3 w-3"/> {item.relationshipCount}</span>
+                            <span className="flex items-center gap-1.5 bg-border/50 px-1.5 py-0.5">v{item.version}</span>
+                            <span>{format(new Date(item.updatedAt), "yyyy-MM-dd HH:mm")}</span>
+                            
+                            <div className="ml-auto flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity font-sans font-semibold">
+                              Enter Workspace <ArrowRight className="ml-1 h-3 w-3" />
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                    <div className="w-16 h-16 border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
+                      <Database className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">No Graphs Found</h3>
+                    <p className="text-muted-foreground text-sm max-w-md">
+                      Generate graphs from scenarios to start populating your library.
+                    </p>
+                  </div>
+                )
+              )}
+
+              {activeTab === 'SCENARIOS' && (
+                isScenariosLoading ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                    <span className="font-mono text-sm">Fetching scenarios...</span>
+                  </div>
+                ) : scenarios && scenarios.length > 0 ? (
+                  <div className="divide-y divide-border">
+                    {scenarios.map((record) => (
+                      <div key={record.id} className="p-6 transition-colors hover:bg-muted group flex flex-col">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{item.title}</h3>
+                          <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{record.title || "Untitled Scenario"}</h3>
                           <button 
-                            onClick={(e) => handleDelete(item.id, e)}
+                            onClick={(e) => handleDeleteScenario(record.id, e)}
                             className="text-muted-foreground hover:text-destructive p-2 -mr-2 transition-colors opacity-0 group-hover:opacity-100"
-                            title="Delete Graph"
+                            title="Delete Scenario"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        {item.sourcePrompt && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-serif italic">
-                            "{item.sourcePrompt}"
+                        {record.scenario?.logline && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-serif">
+                            {record.scenario.logline}
                           </p>
                         )}
-                        <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><Box className="h-3 w-3"/> {item.entityCount}</span>
-                          <span className="flex items-center gap-1.5"><Network className="h-3 w-3"/> {item.relationshipCount}</span>
-                          <span className="flex items-center gap-1.5 bg-border/50 px-1.5 py-0.5">v{item.version}</span>
-                          <span>{format(new Date(item.updatedAt), "yyyy-MM-dd HH:mm")}</span>
+                        <div className="flex items-center justify-between mt-auto">
+                          <span className="text-xs font-mono text-muted-foreground">
+                            {format(new Date(record.updatedAt), "yyyy-MM-dd HH:mm")}
+                          </span>
                           
-                          <div className="ml-auto flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity font-sans font-semibold">
-                            Enter Workspace <ArrowRight className="ml-1 h-3 w-3" />
-                          </div>
+                          <button 
+                            onClick={() => handleOpenScenario(record)}
+                            className="flex items-center gap-2 bg-background border border-border px-3 py-1.5 text-xs font-semibold hover:border-primary hover:text-primary transition-colors"
+                          >
+                            <FileText className="h-3 w-3" /> Edit / Build Graph
+                          </button>
                         </div>
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-8">
-                  <div className="w-16 h-16 border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
-                    <Database className="h-8 w-8" />
+                    ))}
                   </div>
-                  <h3 className="text-lg font-bold mb-2">Library is Empty</h3>
-                  <p className="text-muted-foreground text-sm max-w-md mb-6">
-                    The intelligence platform requires input to construct its first narrative graph. 
-                    Use the generator panel to initialize structural content.
-                  </p>
-                </div>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                    <div className="w-16 h-16 border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
+                      <BookOpen className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">Scenario Library is Empty</h3>
+                    <p className="text-muted-foreground text-sm max-w-md mb-6">
+                      Amplify an idea into a dramatic scenario and save it to review or build upon later.
+                    </p>
+                  </div>
+                )
               )}
             </div>
           </div>

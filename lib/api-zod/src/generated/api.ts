@@ -132,6 +132,203 @@ export const DraftScenarioResponse = zod.object({
 
 
 /**
+ * @summary List saved scenarios
+ */
+export const ListScenariosResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "idea": zod.string(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListScenariosResponse = zod.array(ListScenariosResponseItem)
+
+
+/**
+ * @summary Save a scenario to the scenario library
+ */
+
+
+
+export const CreateScenarioBody = zod.object({
+  "idea": zod.string().min(1),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+})
+})
+
+export const CreateScenarioResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "idea": zod.string(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get a saved scenario
+ */
+export const GetScenarioParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetScenarioResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "idea": zod.string(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update a saved scenario
+ */
+export const UpdateScenarioParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateScenarioBody = zod.object({
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}).optional()
+})
+
+export const UpdateScenarioResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "idea": zod.string(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a saved scenario
+ */
+export const DeleteScenarioParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteScenarioResponse = zod.void()
+
+
+/**
  * @summary Get a content graph (current version)
  */
 export const GetContentParams = zod.object({

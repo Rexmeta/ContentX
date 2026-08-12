@@ -77,6 +77,130 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DramaticScenario"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "502":
+          description: AI amplification failed (provider error or invalid AI output)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/scenarios:
+    get:
+      operationId: listScenarios
+      tags: [content]
+      summary: List saved scenarios
+      responses:
+        "200":
+          description: Scenario list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScenarioRecord"
+    post:
+      operationId: createScenario
+      tags: [content]
+      summary: Save a scenario to the scenario library
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioSaveInput"
+      responses:
+        "201":
+          description: Saved scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioRecord"
+        "400":
+          description: Invalid scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/scenarios/{id}:
+    get:
+      operationId: getScenario
+      tags: [content]
+      summary: Get a saved scenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioRecord"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    patch:
+      operationId: updateScenario
+      tags: [content]
+      summary: Update a saved scenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioUpdateInput"
+      responses:
+        "200":
+          description: Updated scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioRecord"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "400":
+          description: Invalid scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    delete:
+      operationId: deleteScenario
+      tags: [content]
+      summary: Delete a saved scenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/content/{id}:
     get:
       operationId: getContent
@@ -452,6 +576,31 @@ components:
             $ref: "#/components/schemas/ScenarioCharacter"
         sourceIdea: { type: string }
         amplifiedBy: { type: string }
+    ScenarioSaveInput:
+      type: object
+      required: [idea, scenario]
+      properties:
+        idea:
+          type: string
+          minLength: 1
+        scenario:
+          $ref: "#/components/schemas/DramaticScenario"
+    ScenarioUpdateInput:
+      type: object
+      properties:
+        scenario:
+          $ref: "#/components/schemas/DramaticScenario"
+    ScenarioRecord:
+      type: object
+      required: [id, title, idea, scenario, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        idea: { type: string }
+        scenario:
+          $ref: "#/components/schemas/DramaticScenario"
+        createdAt: { type: string }
+        updatedAt: { type: string }
     EntityUpdate:
       type: object
       properties:
