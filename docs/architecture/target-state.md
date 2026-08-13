@@ -2,12 +2,58 @@
 
 ContentX is an **AI-native canonical content graph and world modeling platform**: it represents people, characters, populations, worlds, relationships, events, goals, conflicts, behaviors and rules, then uses AI agents to generate, simulate, transform, evaluate and project that canonical model into multiple content/runtime formats.
 
-Core pipeline:
+Core pipeline (final structure):
 
 ```
-Population → Character/Entity → Relationship → World/Context → Agent
-  → Simulation → Behavior/Event/Outcome → Canonical Content Graph → Projection
+                DATA / KNOWLEDGE
+                       │
+                ┌──────▼──────┐
+                │ Canonical   │
+                │ Content     │
+                │ Graph       │
+                └──────┬──────┘
+                       │
+             ┌─────────▼─────────┐
+             │ Population Domain │
+             │ Dimensions        │
+             │ Distributions     │
+             │ Dependencies      │
+             └─────────┬─────────┘
+                       │
+                    Sampling
+                       │
+                       ▼
+                   Character
+                       │
+                   Snapshot
+                       │
+                       ▼
+                     Agent
+                       │
+                 Agent Runtime
+                       │
+                       ▼
+                 Environment
+                       │
+                       ▼
+                  Simulation
+                       │
+                       ▼
+                Behavior Trace
+                       │
+                       ▼
+                  Evaluation
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+         Roleplay              Novel
+        Projection           Projection
 ```
+
+Current implementation status per stage is documented in
+`current-state-audit.md` and the per-domain docs (`character-snapshot.md`,
+`sampling-run.md`, `agent-runtime.md`, `simulation-runtime.md`,
+`evaluation.md`, `matraix-semantic-mapping.md`).
 
 ## Architectural decisions (binding)
 
