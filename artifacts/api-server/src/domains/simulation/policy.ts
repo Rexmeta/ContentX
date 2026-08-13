@@ -11,25 +11,21 @@
 import { z } from "zod/v4";
 import type { Rng } from "../population/prng";
 import type { CharacterSnapshot } from "../character/snapshotModel";
-import type { Goal } from "../agent/model";
 import { AGENT_STATE_CATEGORIES } from "../agent/model";
 import {
   PolicyExecutionError,
   type ProposedBehavior,
 } from "./model";
 import type { Observation } from "./environment";
+import type { PolicyContext } from "./runtime";
 import { completeJSON, LLM_MODEL_ID, LLMRequestError } from "../ai/llmClient";
 
-export interface PolicyContext {
-  agentId: string;
-  name: string;
-  role: string;
-  snapshot: CharacterSnapshot;
-  goals: Goal[];
-  /** Current runtime state values, keyed category → dimension. */
-  state: Record<string, Record<string, number>>;
-}
+export type { PolicyContext } from "./runtime";
 
+/**
+ * Legacy flat negotiation policy contract (NegotiationPolicy). Adapted
+ * onto the generic runtime Policy via engine.toRuntimePolicy.
+ */
 export interface AgentPolicy {
   readonly type: "heuristic" | "llm";
   /** Model id recorded in provenance; null for deterministic policies. */
@@ -40,6 +36,9 @@ export interface AgentPolicy {
     rng: Rng,
   ): Promise<ProposedBehavior>;
 }
+
+/** Spec-facing alias: negotiation's policy implementation contract. */
+export type NegotiationPolicy = AgentPolicy;
 
 function riskToleranceOf(snapshot: CharacterSnapshot): number {
   const raw = snapshot.behavioralProfile.psychological["risk_tolerance"];

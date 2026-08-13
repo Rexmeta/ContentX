@@ -1,3 +1,4 @@
 - [Orval emits zod v4 syntax](orval-zod-v4.md) — generated Zod file must import `zod/v4`; the codegen script's sed step handles it, don't remove.
 - [Orval ignores additionalProperties:false](orval-strict-objects.md) — generated zod strips unknown keys; validate raw body in the domain layer when unknown keys must 400.
 - [Zod v4 enum-keyed records](zod-v4-enum-records.md) — z.record over an enum demands ALL keys; use z.partialRecord for subsets.
+- [Simulation runtime layering](simulation-runtime-layering.md) — interaction_events payload field names are a compat contract; action objects spread into payloads, never rename their fields.
