@@ -519,6 +519,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/projections:
+    post:
+      operationId: createProjection
+      tags: [projection]
+      summary: Project canonical content and/or simulation results to a runtime target
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectionInput"
+      responses:
+        "200":
+          description: Projection result (computed, not persisted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectionResult"
+        "400":
+          description: Invalid projection request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Content or simulation not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "502":
+          description: Projection generation failed (provider error or invalid output)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/projections/roleplayx/{id}:
     get:
       operationId: projectRoleplayX
@@ -2296,6 +2332,89 @@ components:
         provenance:
           $ref: "#/components/schemas/EvaluationProvenance"
         createdAt: { type: string }
+    ProjectionInput:
+      type: object
+      required: [target]
+      properties:
+        target:
+          type: string
+          enum: [roleplayx, novel]
+        contentId:
+          type: string
+          minLength: 1
+        simulationId:
+          type: string
+          minLength: 1
+      anyOf:
+        - required: [contentId]
+        - required: [simulationId]
+      description: At least one of contentId or simulationId must be provided.
+    CanonicalProvenanceLink:
+      type: object
+      required: [layer, contentId, contentVersion]
+      properties:
+        layer:
+          type: string
+          enum: [canonical]
+        contentId:
+          type: string
+        contentVersion:
+          type: integer
+    SimulationProvenanceLink:
+      type: object
+      required: [layer, simulationId, seed, snapshotIds, evaluationIds]
+      properties:
+        layer:
+          type: string
+          enum: [simulation]
+        simulationId:
+          type: string
+        seed:
+          type: number
+        snapshotIds:
+          type: array
+          items: { type: string }
+        evaluationIds:
+          type: array
+          items: { type: string }
+    ProjectionProvenanceLink:
+      type: object
+      required: [layer, adapter, adapterVersion, modelVersion, projectedAt]
+      properties:
+        layer:
+          type: string
+          enum: [projection]
+        adapter:
+          type: string
+        adapterVersion:
+          type: string
+        modelVersion:
+          type: [string, "null"]
+          description: LLM model id, or null for deterministic adapters.
+        projectedAt:
+          type: string
+    ProvenanceLink:
+      oneOf:
+        - $ref: "#/components/schemas/CanonicalProvenanceLink"
+        - $ref: "#/components/schemas/SimulationProvenanceLink"
+        - $ref: "#/components/schemas/ProjectionProvenanceLink"
+    ProjectionResult:
+      type: object
+      required: [target, payload, provenance]
+      properties:
+        target:
+          type: string
+          enum: [roleplayx, novel]
+        payload:
+          type: object
+          additionalProperties: true
+          description: Runtime-specific JSON owned entirely by the adapter.
+        provenance:
+          type: array
+          minItems: 2
+          description: Ordered canonical → simulation → projection; always ends with a projection link.
+          items:
+            $ref: "#/components/schemas/ProvenanceLink"
     EntityUpdate:
       type: object
       properties:

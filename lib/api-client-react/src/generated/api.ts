@@ -49,6 +49,8 @@ import type {
   ListEvaluationsParams,
   Population,
   PopulationInput,
+  ProjectionInput,
+  ProjectionResult,
   ReclassifyResult,
   RelationshipUpdate,
   RoleplayXScenario,
@@ -1719,6 +1721,77 @@ export function useExportContent<TData = Awaited<ReturnType<typeof exportContent
 
 
 
+
+export const getCreateProjectionUrl = () => {
+
+
+
+
+  return `/api/v1/projections`
+}
+
+/**
+ * @summary Project canonical content and/or simulation results to a runtime target
+ */
+export const createProjection = async (projectionInput: ProjectionInput, options?: Parameters<typeof customFetch>[1]): Promise<ProjectionResult> => {
+
+  return customFetch<ProjectionResult>(getCreateProjectionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(projectionInput)
+  }
+);}
+
+
+
+
+
+export const getCreateProjectionMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjection>>, TError,{data: BodyType<ProjectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjection>>, TError,{data: BodyType<ProjectionInput>}, TContext> => {
+
+const mutationKey = ['createProjection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjection>>, {data: BodyType<ProjectionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProjection(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectionMutationResult = NonNullable<Awaited<ReturnType<typeof createProjection>>>
+    export type CreateProjectionMutationBody = BodyType<ProjectionInput>
+    export type CreateProjectionMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Project canonical content and/or simulation results to a runtime target
+ */
+export const useCreateProjection = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjection>>, TError,{data: BodyType<ProjectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProjection>>,
+        TError,
+        {data: BodyType<ProjectionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProjectionMutationOptions(options));
+    }
 
 export const getProjectRoleplayXUrl = (id: string,) => {
 

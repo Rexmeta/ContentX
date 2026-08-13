@@ -1,12 +1,19 @@
 # RoleplayX Projection
 
-`RoleplayXAdapter` (`artifacts/api-server/src/domains/projection/roleplayxAdapter.ts`)
-maps the canonical Content Graph to RoleplayX-compatible Scenario JSON.
-RoleplayX fields exist only in this adapter — never in the canonical schema.
+`roleplayxAdapter` v2 (`artifacts/api-server/src/domains/projection/roleplayxAdapter.ts`)
+implements the shared Projection contract (`docs/architecture/projection-model.md`)
+and maps canonical Content Graphs and/or simulation results to
+RoleplayX-compatible Scenario JSON. RoleplayX fields exist only in this
+adapter — never in the canonical schema.
 
-Endpoint: `GET /api/v1/projections/roleplayx/:contentId`
+Endpoints:
 
-## Mapping
+- `POST /api/v1/projections` `{ target: "roleplayx", contentId?, simulationId? }`
+  → `ProjectionResult` with provenance chain (preferred)
+- `GET /api/v1/projections/roleplayx/:contentId` — legacy v1 shape (graph-only,
+  flat `meta`), internally runs the v2 adapter
+
+## Mapping (canonical graph source)
 
 | Canonical source | RoleplayX field | Rule |
 | --- | --- | --- |
@@ -17,6 +24,19 @@ Endpoint: `GET /api/v1/projections/roleplayx/:contentId`
 | `outcome` entities (fallback: `conflict` entities) | `successCriteria[]` | Outcomes verbatim; if none, "Resolve {conflict} ..." |
 | `event` entities + `involves` relationships of conflicts | `recommendedFlow[]` | Ordered scene beats |
 | Content id / version / timestamp | `meta` | `sourceContentId`, `sourceVersion`, `projectedAt`, `adapter: "roleplayx@1"` |
+
+## Mapping (simulation source, v2)
+
+| Runtime source | RoleplayX field | Rule |
+| --- | --- | --- |
+| Participants + snapshot behavioral profiles | `personas[]` | traits from psychological/behavioral profile values |
+| Simulation config (topic, maxTurns) | `objectives[]`, `environment` | "Reach an agreement on {topic} within {maxTurns} turns" |
+| Simulation outcome | `successCriteria[]` | reference-run benchmark (match/beat turns used) |
+| Trace utterances + outcome event | `recommendedFlow[]` | turn-ordered scene beats |
+| Evaluation kinds | `evaluationContract` | kinds + human-readable criteria |
+
+When both sources are given, graph-derived fields lead and simulation
+fields extend them (flow, environment, evaluation contract).
 
 ## Guarantees
 

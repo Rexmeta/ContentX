@@ -988,6 +988,46 @@ export const ExportContentResponse = zod.object({
 
 
 /**
+ * @summary Project canonical content and/or simulation results to a runtime target
+ */
+
+
+
+
+export const CreateProjectionBody = zod.union([zod.unknown(),zod.unknown()]).and(zod.object({
+  "target": zod.enum(['roleplayx', 'novel']),
+  "contentId": zod.string().min(1).optional(),
+  "simulationId": zod.string().min(1).optional()
+})).describe('At least one of contentId or simulationId must be provided.')
+
+export const createProjectionResponseProvenanceMin = 2;
+
+
+
+export const CreateProjectionResponse = zod.object({
+  "target": zod.enum(['roleplayx', 'novel']),
+  "payload": zod.record(zod.string(), zod.unknown()).describe('Runtime-specific JSON owned entirely by the adapter.'),
+  "provenance": zod.array(zod.union([zod.object({
+  "layer": zod.enum(['canonical']),
+  "contentId": zod.string(),
+  "contentVersion": zod.int()
+}),zod.object({
+  "layer": zod.enum(['simulation']),
+  "simulationId": zod.string(),
+  "seed": zod.number(),
+  "snapshotIds": zod.array(zod.string()),
+  "evaluationIds": zod.array(zod.string())
+}),zod.object({
+  "layer": zod.enum(['projection']),
+  "adapter": zod.string(),
+  "adapterVersion": zod.string(),
+  "modelVersion": zod.string().nullable().describe('LLM model id, or null for deterministic adapters.'),
+  "projectedAt": zod.string()
+})])).min(createProjectionResponseProvenanceMin).describe('Ordered canonical → simulation → projection; always ends with a projection link.')
+})
+
+
+/**
  * @summary Project a content graph to RoleplayX Scenario JSON
  */
 export const ProjectRoleplayXParams = zod.object({

@@ -947,6 +947,98 @@ export interface Evaluation {
   createdAt: string;
 }
 
+export type ProjectionInputTarget = typeof ProjectionInputTarget[keyof typeof ProjectionInputTarget];
+
+
+export const ProjectionInputTarget = {
+  roleplayx: 'roleplayx',
+  novel: 'novel',
+} as const;
+
+/**
+ * At least one of contentId or simulationId must be provided.
+ */
+export type ProjectionInput = (unknown & {
+  target: ProjectionInputTarget;
+  /** @minLength 1 */
+  contentId?: string;
+  /** @minLength 1 */
+  simulationId?: string;
+});
+
+export type CanonicalProvenanceLinkLayer = typeof CanonicalProvenanceLinkLayer[keyof typeof CanonicalProvenanceLinkLayer];
+
+
+export const CanonicalProvenanceLinkLayer = {
+  canonical: 'canonical',
+} as const;
+
+export interface CanonicalProvenanceLink {
+  layer: CanonicalProvenanceLinkLayer;
+  contentId: string;
+  contentVersion: number;
+}
+
+export type SimulationProvenanceLinkLayer = typeof SimulationProvenanceLinkLayer[keyof typeof SimulationProvenanceLinkLayer];
+
+
+export const SimulationProvenanceLinkLayer = {
+  simulation: 'simulation',
+} as const;
+
+export interface SimulationProvenanceLink {
+  layer: SimulationProvenanceLinkLayer;
+  simulationId: string;
+  seed: number;
+  snapshotIds: string[];
+  evaluationIds: string[];
+}
+
+export type ProjectionProvenanceLinkLayer = typeof ProjectionProvenanceLinkLayer[keyof typeof ProjectionProvenanceLinkLayer];
+
+
+export const ProjectionProvenanceLinkLayer = {
+  projection: 'projection',
+} as const;
+
+export interface ProjectionProvenanceLink {
+  layer: ProjectionProvenanceLinkLayer;
+  adapter: string;
+  adapterVersion: string;
+  /**
+     * LLM model id, or null for deterministic adapters.
+     * @nullable
+     */
+  modelVersion: string | null;
+  projectedAt: string;
+}
+
+export type ProvenanceLink = CanonicalProvenanceLink | SimulationProvenanceLink | ProjectionProvenanceLink;
+
+export type ProjectionResultTarget = typeof ProjectionResultTarget[keyof typeof ProjectionResultTarget];
+
+
+export const ProjectionResultTarget = {
+  roleplayx: 'roleplayx',
+  novel: 'novel',
+} as const;
+
+/**
+ * Runtime-specific JSON owned entirely by the adapter.
+ */
+export type ProjectionResultPayload = { [key: string]: unknown };
+
+export interface ProjectionResult {
+  target: ProjectionResultTarget;
+  /** Runtime-specific JSON owned entirely by the adapter. */
+  payload: ProjectionResultPayload;
+  /**
+     * Ordered canonical → simulation → projection; always ends with a projection link.
+     * @minItems 2
+     */
+  provenance: ProvenanceLink[];
+}
+
 export type EntityUpdateAttributes = { [key: string]: unknown };
 
 export interface EntityUpdate {
