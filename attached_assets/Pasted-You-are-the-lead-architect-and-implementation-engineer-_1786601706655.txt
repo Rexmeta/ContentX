@@ -1,0 +1,1782 @@
+You are the lead architect and implementation engineer for ContentX.
+
+Repository:
+https://github.com/Rexmeta/ContentX
+
+You are working directly inside the ContentX repository.
+
+IMPORTANT:
+ContentX is still at an early stage.
+You are explicitly allowed to make substantial architectural changes, rename modules, move files, introduce new domains, remove premature abstractions, and redesign schemas when necessary.
+
+Do NOT optimize for backward compatibility with the current prototype if that compatibility conflicts with the target architecture.
+
+The goal is to establish the correct foundational architecture now, before the project becomes difficult to change.
+
+==================================================
+1. PRODUCT VISION
+==================================================
+
+ContentX must NOT become merely:
+
+- an AI content generator
+- a CMS
+- a prompt management system
+- a roleplay scenario builder
+- a collection of independent content tools
+
+ContentX should become:
+
+"An AI-native canonical content graph and world modeling platform that can represent people, characters, populations, worlds, relationships, events, goals, conflicts, behaviors and rules, then use AI agents to generate, simulate, transform, evaluate and project that canonical model into multiple content/runtime formats."
+
+The core conceptual pipeline is:
+
+Population
+    ↓
+Character / Entity
+    ↓
+Relationship / Dependency
+    ↓
+World / Context
+    ↓
+Agent
+    ↓
+Simulation
+    ↓
+Behavior / Event / Outcome
+    ↓
+Canonical Content Graph
+    ↓
+Projection
+
+Possible projections:
+
+- Roleplay
+- Training
+- Novel
+- Movie
+- Game
+- Interactive fiction
+- Marketing
+- Education
+- Simulation
+- Future unknown formats
+
+RoleplayX / RoleplayBot is a downstream projection/runtime.
+It must NOT become the canonical domain model of ContentX.
+
+==================================================
+2. IMPORTANT RESEARCH REFERENCE: MatrAIx
+==================================================
+
+Use the MatrAIx project as an architectural research reference.
+
+The relevant concepts are:
+
+Persona Schema
+→ Dependency Graph
+→ Persona Sampling
+→ Persona Snapshot
+→ Agent Runtime
+→ Environment
+→ Behavior
+→ Evaluation
+→ Population-level analysis
+
+MatrAIx represents large populations of synthetic humans using structured dimensions and dependency-aware sampling.
+
+DO NOT copy MatrAIx literally.
+
+DO NOT create an 8.3B-person database.
+
+DO NOT blindly copy 1,290 dimensions.
+
+Instead, extract the architectural principles:
+
+1. Structured persona/character attributes
+2. Dependency-aware attributes
+3. Population distributions
+4. Conditional sampling
+5. Reproducible sampling
+6. Persona/character snapshots
+7. Stable separation between identity and runtime state
+8. Agent runtime
+9. Environment abstraction
+10. Event/action/observation traces
+11. Behavior evaluation
+12. Provenance and reproducibility
+
+ContentX must generalize these concepts beyond "persona".
+
+==================================================
+3. NEW CORE ARCHITECTURAL MODEL
+==================================================
+
+The target architecture is:
+
+ContentX
+│
+├── Canonical Graph
+│   ├── Entity
+│   ├── Relationship
+│   ├── Attribute
+│   ├── Provenance
+│   └── Version
+│
+├── Population
+│   ├── Population
+│   ├── Dimension
+│   ├── Distribution
+│   ├── Dependency Rule
+│   ├── Constraint
+│   └── Sampler
+│
+├── Character
+│   ├── Identity
+│   ├── Attributes
+│   ├── Behavioral Profile
+│   ├── Goals
+│   ├── Values
+│   ├── Capabilities
+│   └── Relationships
+│
+├── Agent
+│   ├── Agent
+│   ├── State
+│   ├── Memory
+│   ├── Goal
+│   ├── Policy
+│   ├── Observation
+│   └── Action
+│
+├── Simulation
+│   ├── Environment
+│   ├── Event
+│   ├── Interaction
+│   ├── State Transition
+│   ├── Outcome
+│   └── Trace
+│
+├── AI Engine
+│   ├── Planner
+│   ├── Generator
+│   ├── Extractor
+│   ├── Transformer
+│   ├── Critic
+│   └── Repairer
+│
+└── Projection
+    ├── Roleplay
+    ├── Novel
+    ├── Movie
+    ├── Game
+    └── Other runtimes
+
+This architecture is the target.
+
+==================================================
+4. FUNDAMENTAL DESIGN PRINCIPLE
+==================================================
+
+Separate these concepts strictly:
+
+CANONICAL DATA
+vs
+RUNTIME STATE
+vs
+PROJECTION
+
+For example:
+
+Character
+    ≠
+Agent
+    ≠
+AgentState
+    ≠
+RoleplayScenario
+
+A Character is a persistent canonical entity.
+
+An Agent is a runtime actor instantiated from a Character.
+
+AgentState is mutable runtime state.
+
+A RoleplayScenario is a projection/task/runtime-specific representation.
+
+Do not mix them.
+
+==================================================
+5. CANONICAL ENTITY MODEL
+==================================================
+
+Expand the existing Entity model into a flexible but typed canonical model.
+
+Core entity kinds should support at least:
+
+character
+person
+organization
+location
+world
+object
+event
+concept
+theme
+goal
+conflict
+emotion
+value
+trait
+capability
+action
+dialogue
+narrative
+rule
+constraint
+outcome
+population
+
+Do not hardcode every possible future type into separate tables.
+
+Use a stable typed Entity abstraction with extensible attributes.
+
+Recommended conceptual model:
+
+Entity
+- id
+- kind
+- canonicalName
+- aliases
+- attributes
+- metadata
+- provenance
+- createdAt
+- updatedAt
+
+Use JSONB/extensible attributes where appropriate, but do not turn the entire system into untyped JSON.
+
+Core semantics must remain typed.
+
+==================================================
+6. CHARACTER MODEL
+==================================================
+
+Introduce Character as a first-class conceptual domain built on top of Entity.
+
+Character should support:
+
+identity
+demographics
+professional
+psychological
+behavioral
+values
+motivations
+fears
+preferences
+capabilities
+goals
+constraints
+communication
+social
+technology
+domain-specific attributes
+
+Example:
+
+Character
+{
+  identity: {
+    name,
+    ageBand,
+    gender,
+    location
+  },
+
+  professional: {
+    occupation,
+    industry,
+    seniority,
+    experience
+  },
+
+  psychological: {
+    traits,
+    values,
+    motivations,
+    fears
+  },
+
+  behavioral: {
+    decisionStyle,
+    conflictStyle,
+    riskTolerance,
+    assertiveness,
+    empathy,
+    adaptability
+  },
+
+  capabilities: {...},
+
+  preferences: {...},
+
+  goals: [...],
+
+  constraints: [...]
+}
+
+IMPORTANT:
+
+Do not make MBTI the core personality model.
+
+MBTI may exist as:
+
+- derived classification
+- optional framework
+- imported attribute
+- projection
+
+But ContentX must use a general behavioral/psychological attribute model.
+
+==================================================
+7. PERSONA MODEL
+==================================================
+
+Do NOT create a separate "Persona universe" disconnected from Character.
+
+Persona should be treated as a behavioral/profile representation of a Character.
+
+Conceptually:
+
+Character
+    +
+Behavioral Profile
+    =
+Persona representation
+
+If the existing code has a Persona model, refactor it toward this architecture.
+
+Do not allow Persona to become a parallel canonical identity model.
+
+==================================================
+8. POPULATION MODEL
+==================================================
+
+Introduce Population as a first-class domain.
+
+A Population represents a distribution or cohort of possible entities/characters.
+
+Example:
+
+Korean Sales Managers
+Senior Software Engineers
+Hospital Patients
+University Students
+Retail Customers
+Startup Founders
+
+Population should support:
+
+- id
+- name
+- description
+- domain
+- schemaVersion
+- dimensions
+- distributions
+- dependencies
+- constraints
+- provenance
+- source
+- sampling configuration
+
+Example:
+
+Population:
+"Korean Sales Managers"
+
+dimensions:
+
+ageBand
+gender
+occupation
+seniority
+education
+incomeBand
+riskTolerance
+assertiveness
+technologyAffinity
+conflictStyle
+decisionStyle
+etc.
+
+==================================================
+9. PERSONA/CHARACTER DIMENSIONS
+==================================================
+
+Create a reusable Dimension system.
+
+A Dimension should support:
+
+- id
+- name
+- category
+- dataType
+- allowedValues
+- description
+- source
+- version
+
+Example:
+
+Dimension:
+riskTolerance
+
+values:
+
+low
+medium
+high
+
+Do not start with 1,290 dimensions.
+
+Start with a practical core set of approximately 50–150 dimensions.
+
+Organize dimensions into:
+
+demographic
+professional
+psychological
+behavioral
+social
+preference
+capability
+technology
+domain
+
+Make the system extensible so additional dimensions can be registered later.
+
+==================================================
+10. DEPENDENCY GRAPH
+==================================================
+
+This is one of the most important new capabilities.
+
+Introduce a dependency rule system.
+
+There are TWO different kinds of graph relationships and they MUST NOT be confused.
+
+A. Semantic Relationship Graph
+
+Example:
+
+Character A
+    worksAt
+Organization B
+
+Character A
+    reportsTo
+Character C
+
+Character A
+    conflictsWith
+Character D
+
+B. Statistical / Generative Dependency Graph
+
+Example:
+
+occupation = manager
+    →
+authorityLevel = high
+
+occupation = engineer
+    →
+technicalAffinity = high
+
+ageBand = 45-54
+    →
+careerStage = senior
+
+These must be represented separately.
+
+Recommended domains:
+
+SemanticRelationship
+DependencyRule
+
+Do not use one generic relationship type to represent both semantics and probability.
+
+==================================================
+11. DEPENDENCY RULE MODEL
+==================================================
+
+A DependencyRule should support:
+
+- id
+- sourceDimension
+- targetDimension
+- type
+- strength
+- conditions
+- probability/distribution
+- constraints
+- provenance
+- version
+
+Example:
+
+occupation = manager
+
+authorityLevel:
+high: 0.72
+medium: 0.25
+low: 0.03
+
+The system must support conditional dependencies.
+
+The architecture should eventually support:
+
+- correlation
+- conditional distribution
+- constraint
+- exclusion
+- implication
+- dependency chain
+
+Do not build a full statistical research platform yet.
+
+Build the domain abstraction correctly.
+
+==================================================
+12. SAMPLING ENGINE
+==================================================
+
+Introduce a Population Sampler.
+
+Conceptual API:
+
+samplePopulation(request)
+
+Request:
+
+{
+  populationId,
+  sampleSize,
+  constraints,
+  targetDistribution,
+  strategy,
+  seed
+}
+
+Strategies:
+
+random
+weighted
+conditional
+stratified
+
+The sampler must be deterministic when a seed is supplied.
+
+Store:
+
+- populationId
+- schemaVersion
+- dependencyGraphVersion
+- seed
+- samplingStrategy
+- requestedDistribution
+- achievedDistribution
+- samplingAudit
+
+This is critical for reproducibility.
+
+==================================================
+13. CHARACTER SNAPSHOT
+==================================================
+
+Introduce immutable CharacterSnapshot / PersonaSnapshot.
+
+A snapshot represents exactly what an Agent was instantiated from.
+
+It must contain:
+
+- characterId
+- populationId
+- schemaVersion
+- dependencyGraphVersion
+- samplingSeed
+- resolved attributes
+- generated behavioral profile
+- provenance
+- createdAt
+
+Once used by a simulation, the snapshot must not silently change.
+
+This is required for experiment reproducibility.
+
+==================================================
+14. CHARACTER VS AGENT
+==================================================
+
+Introduce an Agent abstraction.
+
+Agent:
+
+{
+  id,
+  characterSnapshotId,
+  goals,
+  policy,
+  runtimeConfig,
+  state,
+  memory
+}
+
+Agent state MUST be separated from canonical character data.
+
+Example:
+
+Character:
+
+riskTolerance = low
+empathy = high
+
+AgentState:
+
+trust = 0.42
+stress = 0.76
+rapport = 0.31
+cooperativeness = 0.55
+
+Do not write mutable runtime values back into the canonical Character.
+
+==================================================
+15. AGENT STATE
+==================================================
+
+Create a generic AgentState model.
+
+Initial categories:
+
+affective
+relational
+motivational
+cognitive
+behavioral
+
+Example:
+
+affective:
+- valence
+- arousal
+- intensity
+- stress
+
+relational:
+- trust
+- rapport
+- hostility
+
+motivational:
+- interest
+- cooperation
+- resistance
+
+cognitive:
+- confusion
+- cognitiveLoad
+- uncertainty
+
+behavioral:
+- persistence
+- escalation
+- openness
+
+The model must be extensible.
+
+==================================================
+16. GOALS AND CONSTRAINTS
+==================================================
+
+Goals and Constraints must become first-class concepts.
+
+Agent goals:
+
+- objective
+- priority
+- urgency
+- success criteria
+
+Constraints:
+
+- hard constraint
+- soft constraint
+- policy
+- environmental constraint
+
+Example:
+
+Character goal:
+"protect engineering team"
+
+Scenario constraint:
+"budget cannot increase"
+
+Agent behavior emerges from:
+
+Character
++
+Goals
++
+Constraints
++
+State
++
+Environment
++
+History
+
+This is much more powerful than a static prompt-based persona.
+
+==================================================
+17. ENVIRONMENT ABSTRACTION
+==================================================
+
+Introduce Environment as a runtime abstraction.
+
+Environment should not mean only a UI.
+
+It is the world/context in which an Agent observes and acts.
+
+Interface:
+
+initialize()
+observe()
+act()
+getState()
+reset()
+
+Environment implementations may eventually include:
+
+TextEnvironment
+VoiceEnvironment
+WebEnvironment
+AppEnvironment
+RoleplayEnvironment
+SimulationEnvironment
+GameEnvironment
+
+Do not tightly couple the core Agent runtime to voice, avatar or UI.
+
+==================================================
+18. SIMULATION MODEL
+==================================================
+
+Introduce Simulation as a first-class domain.
+
+A Simulation contains:
+
+- simulationId
+- world/context
+- agents
+- environment
+- initialState
+- configuration
+- seed
+- version
+
+Simulation should produce an immutable trace.
+
+==================================================
+19. EVENT / INTERACTION TRACE
+==================================================
+
+Create a generic event/trace model.
+
+InteractionEvent:
+
+- id
+- simulationId
+- turn/index
+- timestamp
+- actorId
+- type
+- payload
+- stateBefore
+- stateAfter
+
+Types should include:
+
+observation
+action
+utterance
+decision
+toolCall
+stateChange
+interaction
+event
+outcome
+
+The trace becomes the source for:
+
+evaluation
+analytics
+replay
+debugging
+training data
+behavior analysis
+
+Do not make conversation logs the only trace format.
+
+==================================================
+20. BEHAVIOR MODEL
+==================================================
+
+Behavior must be represented independently from text.
+
+An Agent may produce:
+
+Action
+Decision
+Utterance
+StateChange
+GoalChange
+RelationshipChange
+
+The text is only one possible manifestation.
+
+This is critical for future:
+
+- game
+- simulation
+- robotics
+- training
+- autonomous agents
+
+projections.
+
+==================================================
+21. EVALUATION
+==================================================
+
+Create a generic Evaluation abstraction.
+
+Evaluation must support at least:
+
+BehaviorEvaluation
+PersonaFidelityEvaluation
+OutcomeEvaluation
+TaskEvaluation
+ContentEvaluation
+
+Separate:
+
+Agent behavior evaluation
+
+from
+
+User/learner performance evaluation.
+
+Do not force Roleplay-specific scoring into the canonical model.
+
+Example:
+
+PersonaFidelity:
+expected:
+  riskTolerance = low
+
+observed:
+  avoidance = high
+  negotiation resistance = high
+
+fidelityScore = 0.87
+
+==================================================
+22. CANONICAL GRAPH
+==================================================
+
+The canonical graph remains the center of ContentX.
+
+A graph can contain:
+
+World
+Characters
+Organizations
+Locations
+Events
+Goals
+Conflicts
+Relationships
+Rules
+Constraints
+Outcomes
+
+Example:
+
+World
+ ├── Organization
+ │      ├── Character A
+ │      └── Character B
+ │
+ ├── Conflict
+ ├── Event
+ ├── Goal
+ └── Constraint
+
+Do not encode relationships as hidden prose.
+
+Relationships must remain first-class.
+
+==================================================
+23. PROVENANCE
+==================================================
+
+Strengthen the existing provenance architecture.
+
+Every generated or imported entity should be traceable to:
+
+- source
+- operation
+- generator
+- model
+- prompt/template where appropriate
+- parent content
+- source content IDs
+- timestamp
+- version
+
+Support provenance chains:
+
+MatrAIx
+  ↓
+Imported Persona
+  ↓
+Normalized Character
+  ↓
+User Modified
+  ↓
+AI Generated Relationship
+  ↓
+Simulation
+  ↓
+Projection
+
+Never lose origin information.
+
+==================================================
+24. VERSIONING
+==================================================
+
+Versioning is a first-class requirement.
+
+The following should be versionable:
+
+- Content
+- Entity
+- Population
+- Dimension Schema
+- Dependency Graph
+- Character Snapshot
+- Scenario/Task
+- Simulation
+- Evaluation Profile
+
+Simulation results must be reproducible from:
+
+contentVersion
++
+populationVersion
++
+schemaVersion
++
+dependencyVersion
++
+snapshot
++
+modelVersion
++
+seed
+
+==================================================
+25. SCENARIO MUST NOT BECOME THE CORE MODEL
+==================================================
+
+This is a major architectural rule.
+
+Do not make Scenario the canonical top-level object.
+
+Instead:
+
+Canonical World/Graph
+        ↓
+Task / Scenario Definition
+        ↓
+Projection
+        ↓
+Runtime
+
+A scenario is a task or runtime-specific projection of canonical content.
+
+For example:
+
+Canonical Graph:
+CEO
+CTO
+Investor
+Conflict
+Goal
+Budget Constraint
+
+Roleplay Projection:
+CEO vs CTO negotiation
+
+Novel Projection:
+Chapter about conflict
+
+Movie Projection:
+Boardroom scene
+
+Game Projection:
+Negotiation quest
+
+==================================================
+26. ROLEPLAYX PROJECTION
+==================================================
+
+RoleplayX / RoleplayBot is downstream.
+
+ContentX must provide a clean projection/adapter layer.
+
+Conceptually:
+
+ContentX Canonical Graph
+        ↓
+Roleplay Projection
+        ↓
+Roleplay Runtime
+
+The Roleplay projection can contain:
+
+- scenario
+- actors
+- goals
+- constraints
+- environment
+- evaluation contract
+
+But these must be generated from canonical ContentX data.
+
+Canonical ContentX must never depend on RoleplayX-specific structures.
+
+==================================================
+27. REMIX
+==================================================
+
+Treat Remix as a first-class future capability.
+
+Example:
+
+Content A
++
+Content B
++
+Population
++
+Constraints
++
+Style
+=
+New Canonical Graph
+
+Every remix must preserve:
+
+sourceContentIds
+sourceEntityIds
+operation
+provenance
+version
+
+Do not implement a huge remix engine immediately.
+
+But make the canonical model capable of supporting it.
+
+==================================================
+28. AI ORCHESTRATION
+==================================================
+
+Keep the AIProvider abstraction.
+
+Do not couple domain logic to a specific LLM provider.
+
+AI operations should conceptually include:
+
+extract
+generate
+transform
+plan
+critic
+repair
+summarize
+infer
+simulate
+
+Architecture:
+
+AI Orchestrator
+    ↓
+Task
+    ↓
+Provider
+    ↓
+Structured Output
+    ↓
+Validation
+    ↓
+Canonical Graph Mutation
+    ↓
+Version / Provenance
+
+AI-generated data must NEVER bypass schema validation.
+
+==================================================
+29. STRUCTURED AI OUTPUT
+==================================================
+
+Prefer structured JSON outputs over free-form text whenever modifying canonical data.
+
+Example:
+
+AI Character Generator
+
+input:
+population
+constraints
+
+output:
+CharacterDraft
+
+then:
+
+validate
+normalize
+commit
+
+Do not allow the LLM to directly mutate database records.
+
+==================================================
+30. VALIDATION
+==================================================
+
+Strengthen validation at three levels:
+
+1. Schema validation
+2. Semantic validation
+3. Graph consistency validation
+
+Examples:
+
+Schema:
+required fields
+
+Semantic:
+age and occupation consistency
+
+Graph:
+relationship references existing entities
+
+Population:
+sample distribution is valid
+
+Simulation:
+event references valid agent
+
+==================================================
+31. DATA MODELING PRINCIPLES
+==================================================
+
+Follow these rules:
+
+1. Stable IDs
+2. Immutable snapshots
+3. Explicit versioning
+4. First-class relationships
+5. Explicit provenance
+6. Typed core models
+7. Extensible attributes
+8. Runtime state separated from canonical state
+9. AI output validated before persistence
+10. Projection-specific logic isolated
+11. No circular dependency from canonical model to projection
+12. Deterministic simulation when seed is provided
+
+==================================================
+32. REPOSITORY RESTRUCTURING
+==================================================
+
+First inspect the entire repository.
+
+Do NOT start coding immediately.
+
+Read:
+
+AGENTS.md
+CONTENTX_RULES.md
+CONTENTX_FIRST_PROMPT.md
+replit.md
+README
+docs/**
+lib/**
+package.json
+database/schema files
+API definitions
+tests
+
+Then produce:
+
+docs/architecture/current-state.md
+
+and:
+
+docs/architecture/target-state.md
+
+and:
+
+docs/architecture/migration-plan.md
+
+The migration plan must explicitly identify:
+
+KEEP
+MODIFY
+MOVE
+RENAME
+DEPRECATE
+DELETE
+CREATE
+
+Do not preserve abstractions merely because they already exist.
+
+==================================================
+33. TARGET DOCUMENTATION
+==================================================
+
+Create/update:
+
+docs/
+├── architecture/
+│   ├── current-state.md
+│   ├── target-state.md
+│   ├── domain-model.md
+│   ├── runtime-model.md
+│   ├── graph-model.md
+│   ├── population-model.md
+│   ├── agent-runtime.md
+│   ├── simulation-model.md
+│   ├── projection-model.md
+│   └── migration-plan.md
+│
+├── schemas/
+│   ├── entity.schema.json
+│   ├── relationship.schema.json
+│   ├── character.schema.json
+│   ├── population.schema.json
+│   ├── dimension.schema.json
+│   ├── dependency-rule.schema.json
+│   ├── character-snapshot.schema.json
+│   ├── agent.schema.json
+│   ├── agent-state.schema.json
+│   ├── simulation.schema.json
+│   ├── interaction-event.schema.json
+│   └── evaluation.schema.json
+│
+└── examples/
+    ├── population-example.json
+    ├── character-example.json
+    ├── dependency-example.json
+    ├── simulation-example.json
+    └── roleplay-projection-example.json
+
+Update the canonical architecture documentation so that the repository explains the new model.
+
+==================================================
+34. IMPLEMENTATION ORDER
+==================================================
+
+Implement in this order.
+
+PHASE 0
+Repository audit
+
+PHASE 1
+Canonical Entity / Relationship cleanup
+
+PHASE 2
+Character + Behavioral Profile
+
+PHASE 3
+Dimension system
+
+PHASE 4
+Population model
+
+PHASE 5
+Dependency Rule Graph
+
+PHASE 6
+Deterministic Sampler
+
+PHASE 7
+Character Snapshot
+
+PHASE 8
+Agent abstraction
+
+PHASE 9
+Agent State / Goal / Memory
+
+PHASE 10
+Environment abstraction
+
+PHASE 11
+Simulation + Interaction Trace
+
+PHASE 12
+Evaluation abstraction
+
+PHASE 13
+Projection layer
+
+PHASE 14
+RoleplayX adapter
+
+PHASE 15
+MatrAIx-compatible import/normalization pipeline
+
+Do not implement the MatrAIx 1M dataset import before the foundational architecture works.
+
+==================================================
+35. MINIMUM WORKING DEMONSTRATION
+==================================================
+
+Before considering the architecture complete, create one end-to-end example.
+
+Example population:
+
+"Korean Sales Managers"
+
+Sample:
+
+10 characters
+
+Each character must have:
+
+- demographics
+- occupation
+- seniority
+- behavioral profile
+- goals
+- constraints
+
+The sampler must use:
+
+- dependency rules
+- deterministic seed
+
+Then instantiate 2 characters as Agents.
+
+Create a simple Environment:
+
+"budget negotiation"
+
+Agent A:
+Sales Manager
+
+Agent B:
+Finance Manager
+
+Goals:
+
+A:
+maximize sales budget
+
+B:
+reduce cost
+
+Constraints:
+
+fixed total budget
+
+Run a simulation.
+
+The system must produce:
+
+Character snapshots
+↓
+Agent instances
+↓
+Observations
+↓
+Actions
+↓
+Dialogue/actions
+↓
+State transitions
+↓
+Outcome
+↓
+Interaction trace
+↓
+Evaluation
+
+Then generate a Roleplay projection from the same canonical graph.
+
+This demonstration is the architectural proof.
+
+==================================================
+36. TESTING REQUIREMENTS
+==================================================
+
+Add tests for:
+
+Character creation
+Population creation
+Dimension validation
+Dependency validation
+Deterministic sampling
+Sampling distribution
+Snapshot immutability
+Agent instantiation
+Agent state isolation
+Environment lifecycle
+Simulation determinism
+Interaction trace
+Evaluation
+Provenance
+Versioning
+Roleplay projection
+
+Important test:
+
+Given the same:
+
+populationVersion
+dependencyVersion
+seed
+constraints
+
+the same sampled characters must be reproduced.
+
+Important test:
+
+Changing AgentState must NOT modify Character.
+
+Important test:
+
+Roleplay-specific fields must NOT be required by canonical Character.
+
+==================================================
+37. API DESIGN
+==================================================
+
+Expose clean APIs around the new domains.
+
+Potential API groups:
+
+/api/entities
+/api/characters
+/api/populations
+/api/dimensions
+/api/dependencies
+/api/sampling
+/api/snapshots
+/api/agents
+/api/simulations
+/api/environments
+/api/events
+/api/evaluations
+/api/projections
+
+Do not create endpoints merely because they are listed here.
+
+Follow the repository's existing API conventions.
+
+The important requirement is clear domain boundaries.
+
+==================================================
+38. DATABASE DESIGN
+==================================================
+
+Use the existing database technology where appropriate.
+
+Do not create unnecessary microservices.
+
+A modular monolith is preferred at this stage.
+
+Introduce normalized relational structures for core concepts.
+
+JSON/JSONB may be used for extensible attributes and payloads.
+
+Do NOT put everything into a single giant JSONB column.
+
+At minimum, distinguish:
+
+canonical identity
+attributes
+relationships
+population metadata
+sampling metadata
+runtime state
+trace
+evaluation
+provenance
+version
+
+==================================================
+39. DO NOT OVERENGINEER
+==================================================
+
+This project is early.
+
+Do NOT implement:
+
+- distributed simulation clusters
+- 8.3B persona storage
+- graph database migration
+- Kafka
+- microservices
+- complex vector infrastructure
+- massive statistical inference infrastructure
+
+unless the existing codebase genuinely requires them.
+
+The goal is:
+
+Correct abstractions first.
+Simple implementation second.
+Scale later.
+
+==================================================
+40. IMPORTANT ARCHITECTURAL DECISIONS
+==================================================
+
+Make these decisions explicit in documentation.
+
+Decision 1:
+ContentX is the canonical model.
+
+Decision 2:
+Character is more fundamental than Persona.
+
+Decision 3:
+Persona is a behavioral/profile representation, not a separate identity system.
+
+Decision 4:
+Population is a first-class domain.
+
+Decision 5:
+Dependency Graph is separate from semantic Relationship Graph.
+
+Decision 6:
+Character is immutable-ish canonical state.
+
+Decision 7:
+AgentState is mutable runtime state.
+
+Decision 8:
+Scenario is not the canonical root.
+
+Decision 9:
+RoleplayX is a projection.
+
+Decision 10:
+Voice/avatar/UI are runtime capabilities, not canonical character identity.
+
+Decision 11:
+Provenance and versioning are mandatory.
+
+Decision 12:
+Deterministic sampling and simulation are mandatory for reproducibility.
+
+==================================================
+41. MIGRATION PHILOSOPHY
+==================================================
+
+Because ContentX is early-stage:
+
+Prefer clean architecture over compatibility.
+
+If an existing abstraction is fundamentally incompatible:
+
+REMOVE IT.
+
+If an existing schema is too generic:
+
+REPLACE IT.
+
+If an existing module mixes domains:
+
+SPLIT IT.
+
+If an existing name is misleading:
+
+RENAME IT.
+
+Do not create compatibility layers for code that is not yet production-critical.
+
+==================================================
+42. DEVELOPMENT PROCESS
+==================================================
+
+Work in small, verifiable steps.
+
+After each phase:
+
+1. Run type checking
+2. Run tests
+3. Run lint
+4. Verify build
+5. Update documentation
+6. Inspect dependency graph
+7. Check for circular dependencies
+
+Never continue blindly after a broken migration.
+
+==================================================
+43. FINAL ARCHITECTURAL TEST
+==================================================
+
+The architecture must allow this scenario:
+
+A user asks:
+
+"Create a realistic population of 1,000 Korean retail customers aged 30–50, with realistic demographic and behavioral correlations."
+
+ContentX should conceptually be able to:
+
+Population Definition
+    ↓
+Dimension Schema
+    ↓
+Dependency Rules
+    ↓
+Deterministic Sampling
+    ↓
+Character Population
+    ↓
+Snapshots
+
+Then:
+
+"Put 20 of them into a customer-service simulation."
+
+ContentX:
+
+Snapshots
+    ↓
+Agents
+    ↓
+Environment
+    ↓
+Simulation
+    ↓
+Interaction Trace
+    ↓
+Behavior Evaluation
+
+Then:
+
+"Create a roleplay training scenario from the simulation."
+
+ContentX:
+
+Canonical Graph
+    ↓
+Roleplay Projection
+    ↓
+RoleplayX
+
+Then:
+
+"Create a short story from the same world."
+
+ContentX:
+
+Canonical Graph
+    ↓
+Novel Projection
+
+The same canonical data must support all of these without duplicating the underlying world model.
+
+==================================================
+44. FIRST TASK
+==================================================
+
+Do NOT immediately implement everything.
+
+First:
+
+1. Audit the entire repository.
+2. Read all architecture/rules/agent documents.
+3. Identify the current canonical model.
+4. Identify current domain boundaries.
+5. Identify current coupling hotspots.
+6. Compare current architecture against the target architecture above.
+7. Produce a concrete migration plan.
+8. Identify files that should be:
+   KEEP
+   MODIFY
+   MOVE
+   RENAME
+   DELETE
+   CREATE
+9. Propose the new directory/module structure.
+10. Propose database schema changes.
+11. Propose API changes.
+12. Propose test strategy.
+
+Then begin implementation from Phase 1.
+
+Do not ask for permission to make architectural changes.
+
+Make reasonable decisions autonomously.
+
+When uncertain, prefer:
+
+Canonical Model
+→ Explicit Domain Boundaries
+→ Reproducibility
+→ Extensibility
+→ Simple Implementation
+
+over:
+
+Backward Compatibility
+→ Premature Optimization
+→ Roleplay-specific assumptions
+→ Provider-specific implementation
+
+==================================================
+45. SUCCESS CRITERIA
+==================================================
+
+The work is successful when:
+
+1. ContentX has a clear canonical graph model.
+2. Character is a first-class domain.
+3. Population is a first-class domain.
+4. Dependency-aware sampling works.
+5. Character snapshots are reproducible.
+6. Agent runtime is separated from canonical character data.
+7. Agent state is mutable without mutating canonical data.
+8. Simulation produces structured traces.
+9. Evaluation is generic.
+10. Roleplay is a projection rather than the canonical model.
+11. Provenance survives import → generation → simulation → projection.
+12. Versioning allows reproducibility.
+13. The architecture can support Novel/Movie/Game projections without redesigning the core.
+14. A working population → agent → simulation → evaluation → roleplay projection demo exists.
+15. Documentation accurately reflects the implementation.
+
+Start by auditing the repository and producing the architecture/migration plan.
+Then implement the changes phase by phase.
