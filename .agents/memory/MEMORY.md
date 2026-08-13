@@ -1,1 +1,2 @@
 - [Orval emits zod v4 syntax](orval-zod-v4.md) — generated Zod file must import `zod/v4`; the codegen script's sed step handles it, don't remove.
+- [Orval ignores additionalProperties:false](orval-strict-objects.md) — generated zod strips unknown keys; validate raw body in the domain layer when unknown keys must 400.

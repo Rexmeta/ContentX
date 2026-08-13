@@ -14,6 +14,8 @@ tags:
     description: Canonical content graph operations
   - name: projection
     description: Platform projections
+  - name: character
+    description: Canonical character and dimension registry operations
 paths:
   /healthz:
     get:
@@ -534,6 +536,161 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/dimensions:
+    get:
+      operationId: listDimensions
+      tags: [character]
+      summary: List all registered dimensions
+      responses:
+        "200":
+          description: Dimension list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dimension"
+    post:
+      operationId: createDimension
+      tags: [character]
+      summary: Register a new dimension in the registry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DimensionInput"
+      responses:
+        "201":
+          description: Registered dimension
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dimension"
+        "400":
+          description: Invalid dimension definition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "409":
+          description: Dimension name already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/characters:
+    get:
+      operationId: listCharacters
+      tags: [character]
+      summary: List canonical characters
+      responses:
+        "200":
+          description: Character list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Character"
+    post:
+      operationId: createCharacter
+      tags: [character]
+      summary: Create a canonical character (dimension-validated attributes)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterInput"
+      responses:
+        "201":
+          description: Created character
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+        "400":
+          description: Invalid character (unknown group/dimension, bad value, MBTI as core attribute)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/characters/{id}:
+    get:
+      operationId: getCharacter
+      tags: [character]
+      summary: Get a canonical character
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Character
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    patch:
+      operationId: updateCharacter
+      tags: [character]
+      summary: Update a canonical character
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterUpdate"
+      responses:
+        "200":
+          description: Updated character
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+        "400":
+          description: Invalid update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    delete:
+      operationId: deleteCharacter
+      tags: [character]
+      summary: Delete a canonical character
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -824,6 +981,130 @@ components:
             - type: "null"
         createdAt: { type: string }
         updatedAt: { type: string }
+    Dimension:
+      type: object
+      required: [id, name, category, dataType, source, version]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category:
+          type: string
+          enum: [demographic, professional, psychological, behavioral, social, preference, capability, technology, domain]
+        dataType:
+          type: string
+          enum: [string, number, boolean, enum, array]
+        allowedValues:
+          oneOf:
+            - type: array
+              items: { type: string }
+            - type: "null"
+        source: { type: string }
+        version: { type: integer }
+        description: { type: ["string", "null"] }
+    DimensionInput:
+      type: object
+      required: [name, category, dataType]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 64 }
+        category:
+          type: string
+          enum: [demographic, professional, psychological, behavioral, social, preference, capability, technology, domain]
+        dataType:
+          type: string
+          enum: [string, number, boolean, enum, array]
+        allowedValues:
+          type: array
+          items: { type: string }
+        description: { type: string }
+    AttributeMap:
+      type: object
+      additionalProperties: true
+    CharacterAttributes:
+      type: object
+      additionalProperties: false
+      properties:
+        identity:
+          $ref: "#/components/schemas/AttributeMap"
+        professional:
+          $ref: "#/components/schemas/AttributeMap"
+        psychological:
+          $ref: "#/components/schemas/AttributeMap"
+        behavioral:
+          $ref: "#/components/schemas/AttributeMap"
+        capabilities:
+          $ref: "#/components/schemas/AttributeMap"
+        preferences:
+          $ref: "#/components/schemas/AttributeMap"
+        goals:
+          type: array
+          items: { type: string, minLength: 1 }
+        constraints:
+          type: array
+          items: { type: string, minLength: 1 }
+    CharacterProvenance:
+      type: object
+      required: [operation, createdAt]
+      properties:
+        operation: { type: string }
+        createdAt: { type: string }
+        sourceType: { type: ["string", "null"] }
+        populationId: { type: ["string", "null"] }
+        seed: { type: ["number", "null"] }
+        generatedByProvider: { type: ["string", "null"] }
+        generatedByModel: { type: ["string", "null"] }
+    Character:
+      type: object
+      required: [id, name, attributes, provenance, schemaVersion, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        canonicalName: { type: ["string", "null"] }
+        aliases:
+          type: array
+          items: { type: string }
+        attributes:
+          $ref: "#/components/schemas/CharacterAttributes"
+        derivedClassifications:
+          oneOf:
+            - type: object
+              additionalProperties: { type: string }
+            - type: "null"
+        provenance:
+          $ref: "#/components/schemas/CharacterProvenance"
+        schemaVersion: { type: string }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    CharacterInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        canonicalName: { type: ["string", "null"] }
+        aliases:
+          type: array
+          items: { type: string, minLength: 1 }
+        attributes:
+          $ref: "#/components/schemas/CharacterAttributes"
+        derivedClassifications:
+          oneOf:
+            - type: object
+              additionalProperties: { type: string }
+            - type: "null"
+    CharacterUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        canonicalName: { type: ["string", "null"] }
+        aliases:
+          type: array
+          items: { type: string, minLength: 1 }
+        attributes:
+          $ref: "#/components/schemas/CharacterAttributes"
+        derivedClassifications:
+          oneOf:
+            - type: object
+              additionalProperties: { type: string }
+            - type: "null"
     EntityUpdate:
       type: object
       properties:

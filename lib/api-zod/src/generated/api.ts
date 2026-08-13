@@ -1018,6 +1018,267 @@ export const ProjectRoleplayXResponse = zod.object({
 
 
 /**
+ * @summary List all registered dimensions
+ */
+export const ListDimensionsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "category": zod.enum(['demographic', 'professional', 'psychological', 'behavioral', 'social', 'preference', 'capability', 'technology', 'domain']),
+  "dataType": zod.enum(['string', 'number', 'boolean', 'enum', 'array']),
+  "allowedValues": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "source": zod.string(),
+  "version": zod.int(),
+  "description": zod.string().nullish()
+})
+export const ListDimensionsResponse = zod.array(ListDimensionsResponseItem)
+
+
+/**
+ * @summary Register a new dimension in the registry
+ */
+export const createDimensionBodyNameMin = 2;
+export const createDimensionBodyNameMax = 64;
+
+
+
+export const CreateDimensionBody = zod.object({
+  "name": zod.string().min(createDimensionBodyNameMin).max(createDimensionBodyNameMax),
+  "category": zod.enum(['demographic', 'professional', 'psychological', 'behavioral', 'social', 'preference', 'capability', 'technology', 'domain']),
+  "dataType": zod.enum(['string', 'number', 'boolean', 'enum', 'array']),
+  "allowedValues": zod.array(zod.string()).optional(),
+  "description": zod.string().optional()
+})
+
+export const CreateDimensionResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "category": zod.enum(['demographic', 'professional', 'psychological', 'behavioral', 'social', 'preference', 'capability', 'technology', 'domain']),
+  "dataType": zod.enum(['string', 'number', 'boolean', 'enum', 'array']),
+  "allowedValues": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "source": zod.string(),
+  "version": zod.int(),
+  "description": zod.string().nullish()
+})
+
+
+/**
+ * @summary List canonical characters
+ */
+
+
+
+
+export const ListCharactersResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish(),
+  "aliases": zod.array(zod.string()).optional(),
+  "attributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}),
+  "derivedClassifications": zod.union([zod.record(zod.string(), zod.string()),zod.null()]).optional(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish(),
+  "populationId": zod.string().nullish(),
+  "seed": zod.number().nullish(),
+  "generatedByProvider": zod.string().nullish(),
+  "generatedByModel": zod.string().nullish()
+}),
+  "schemaVersion": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListCharactersResponse = zod.array(ListCharactersResponseItem)
+
+
+/**
+ * @summary Create a canonical character (dimension-validated attributes)
+ */
+
+
+
+
+
+
+export const CreateCharacterBody = zod.object({
+  "name": zod.string().min(1),
+  "canonicalName": zod.string().nullish(),
+  "aliases": zod.array(zod.string().min(1)).optional(),
+  "attributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}).optional(),
+  "derivedClassifications": zod.union([zod.record(zod.string(), zod.string()),zod.null()]).optional()
+})
+
+
+
+
+
+export const CreateCharacterResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish(),
+  "aliases": zod.array(zod.string()).optional(),
+  "attributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}),
+  "derivedClassifications": zod.union([zod.record(zod.string(), zod.string()),zod.null()]).optional(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish(),
+  "populationId": zod.string().nullish(),
+  "seed": zod.number().nullish(),
+  "generatedByProvider": zod.string().nullish(),
+  "generatedByModel": zod.string().nullish()
+}),
+  "schemaVersion": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get a canonical character
+ */
+export const GetCharacterParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+
+export const GetCharacterResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish(),
+  "aliases": zod.array(zod.string()).optional(),
+  "attributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}),
+  "derivedClassifications": zod.union([zod.record(zod.string(), zod.string()),zod.null()]).optional(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish(),
+  "populationId": zod.string().nullish(),
+  "seed": zod.number().nullish(),
+  "generatedByProvider": zod.string().nullish(),
+  "generatedByModel": zod.string().nullish()
+}),
+  "schemaVersion": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update a canonical character
+ */
+export const UpdateCharacterParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+
+
+
+export const UpdateCharacterBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "canonicalName": zod.string().nullish(),
+  "aliases": zod.array(zod.string().min(1)).optional(),
+  "attributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}).optional(),
+  "derivedClassifications": zod.union([zod.record(zod.string(), zod.string()),zod.null()]).optional()
+})
+
+
+
+
+
+export const UpdateCharacterResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish(),
+  "aliases": zod.array(zod.string()).optional(),
+  "attributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}),
+  "derivedClassifications": zod.union([zod.record(zod.string(), zod.string()),zod.null()]).optional(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish(),
+  "populationId": zod.string().nullish(),
+  "seed": zod.number().nullish(),
+  "generatedByProvider": zod.string().nullish(),
+  "generatedByModel": zod.string().nullish()
+}),
+  "schemaVersion": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a canonical character
+ */
+export const DeleteCharacterParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteCharacterResponse = zod.void()
+
+
+/**
  * @summary Aggregate stats across the content library
  */
 export const GetDashboardSummaryResponse = zod.object({

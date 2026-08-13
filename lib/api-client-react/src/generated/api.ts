@@ -23,10 +23,15 @@ import type {
   ApiMessage,
   CanonicalExport,
   Category,
+  Character,
+  CharacterInput,
+  CharacterUpdate,
   ContentGraph,
   ContentInput,
   ContentSummary,
   DashboardSummary,
+  Dimension,
+  DimensionInput,
   DramaticScenario,
   EntityUpdate,
   HealthStatus,
@@ -1772,6 +1777,522 @@ export function useProjectRoleplayX<TData = Awaited<ReturnType<typeof projectRol
 
 
 
+
+export const getListDimensionsUrl = () => {
+
+
+
+
+  return `/api/v1/dimensions`
+}
+
+/**
+ * @summary List all registered dimensions
+ */
+export const listDimensions = async ( options?: Parameters<typeof customFetch>[1]): Promise<Dimension[]> => {
+
+  return customFetch<Dimension[]>(getListDimensionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDimensionsQueryKey = () => {
+    return [
+    `/api/v1/dimensions`
+    ] as const;
+    }
+
+
+export const getListDimensionsQueryOptions = <TData = Awaited<ReturnType<typeof listDimensions>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDimensions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDimensionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDimensions>>> = ({ signal }) => listDimensions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDimensions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDimensionsQueryResult = NonNullable<Awaited<ReturnType<typeof listDimensions>>>
+export type ListDimensionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all registered dimensions
+ */
+
+export function useListDimensions<TData = Awaited<ReturnType<typeof listDimensions>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDimensions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDimensionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateDimensionUrl = () => {
+
+
+
+
+  return `/api/v1/dimensions`
+}
+
+/**
+ * @summary Register a new dimension in the registry
+ */
+export const createDimension = async (dimensionInput: DimensionInput, options?: Parameters<typeof customFetch>[1]): Promise<Dimension> => {
+
+  return customFetch<Dimension>(getCreateDimensionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(dimensionInput)
+  }
+);}
+
+
+
+
+
+export const getCreateDimensionMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDimension>>, TError,{data: BodyType<DimensionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDimension>>, TError,{data: BodyType<DimensionInput>}, TContext> => {
+
+const mutationKey = ['createDimension'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDimension>>, {data: BodyType<DimensionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDimension(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDimensionMutationResult = NonNullable<Awaited<ReturnType<typeof createDimension>>>
+    export type CreateDimensionMutationBody = BodyType<DimensionInput>
+    export type CreateDimensionMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Register a new dimension in the registry
+ */
+export const useCreateDimension = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDimension>>, TError,{data: BodyType<DimensionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDimension>>,
+        TError,
+        {data: BodyType<DimensionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDimensionMutationOptions(options));
+    }
+
+export const getListCharactersUrl = () => {
+
+
+
+
+  return `/api/v1/characters`
+}
+
+/**
+ * @summary List canonical characters
+ */
+export const listCharacters = async ( options?: Parameters<typeof customFetch>[1]): Promise<Character[]> => {
+
+  return customFetch<Character[]>(getListCharactersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCharactersQueryKey = () => {
+    return [
+    `/api/v1/characters`
+    ] as const;
+    }
+
+
+export const getListCharactersQueryOptions = <TData = Awaited<ReturnType<typeof listCharacters>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCharacters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCharactersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCharacters>>> = ({ signal }) => listCharacters({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCharacters>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCharactersQueryResult = NonNullable<Awaited<ReturnType<typeof listCharacters>>>
+export type ListCharactersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List canonical characters
+ */
+
+export function useListCharacters<TData = Awaited<ReturnType<typeof listCharacters>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCharacters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCharactersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateCharacterUrl = () => {
+
+
+
+
+  return `/api/v1/characters`
+}
+
+/**
+ * @summary Create a canonical character (dimension-validated attributes)
+ */
+export const createCharacter = async (characterInput: CharacterInput, options?: Parameters<typeof customFetch>[1]): Promise<Character> => {
+
+  return customFetch<Character>(getCreateCharacterUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(characterInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCharacterMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCharacter>>, TError,{data: BodyType<CharacterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCharacter>>, TError,{data: BodyType<CharacterInput>}, TContext> => {
+
+const mutationKey = ['createCharacter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCharacter>>, {data: BodyType<CharacterInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCharacter(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCharacterMutationResult = NonNullable<Awaited<ReturnType<typeof createCharacter>>>
+    export type CreateCharacterMutationBody = BodyType<CharacterInput>
+    export type CreateCharacterMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Create a canonical character (dimension-validated attributes)
+ */
+export const useCreateCharacter = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCharacter>>, TError,{data: BodyType<CharacterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCharacter>>,
+        TError,
+        {data: BodyType<CharacterInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCharacterMutationOptions(options));
+    }
+
+export const getGetCharacterUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/characters/${id}`
+}
+
+/**
+ * @summary Get a canonical character
+ */
+export const getCharacter = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Character> => {
+
+  return customFetch<Character>(getGetCharacterUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCharacterQueryKey = (id: string,) => {
+    return [
+    `/api/v1/characters/${id}`
+    ] as const;
+    }
+
+
+export const getGetCharacterQueryOptions = <TData = Awaited<ReturnType<typeof getCharacter>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCharacterQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCharacter>>> = ({ signal }) => getCharacter(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCharacter>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCharacterQueryResult = NonNullable<Awaited<ReturnType<typeof getCharacter>>>
+export type GetCharacterQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a canonical character
+ */
+
+export function useGetCharacter<TData = Awaited<ReturnType<typeof getCharacter>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCharacter>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCharacterQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateCharacterUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/characters/${id}`
+}
+
+/**
+ * @summary Update a canonical character
+ */
+export const updateCharacter = async (id: string,
+    characterUpdate: CharacterUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Character> => {
+
+  return customFetch<Character>(getUpdateCharacterUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(characterUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateCharacterMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCharacter>>, TError,{id: string;data: BodyType<CharacterUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCharacter>>, TError,{id: string;data: BodyType<CharacterUpdate>}, TContext> => {
+
+const mutationKey = ['updateCharacter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCharacter>>, {id: string;data: BodyType<CharacterUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateCharacter(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCharacterMutationResult = NonNullable<Awaited<ReturnType<typeof updateCharacter>>>
+    export type UpdateCharacterMutationBody = BodyType<CharacterUpdate>
+    export type UpdateCharacterMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Update a canonical character
+ */
+export const useUpdateCharacter = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCharacter>>, TError,{id: string;data: BodyType<CharacterUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCharacter>>,
+        TError,
+        {id: string;data: BodyType<CharacterUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateCharacterMutationOptions(options));
+    }
+
+export const getDeleteCharacterUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/characters/${id}`
+}
+
+/**
+ * @summary Delete a canonical character
+ */
+export const deleteCharacter = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteCharacterUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCharacterMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCharacter>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCharacter>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteCharacter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCharacter>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCharacter(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCharacterMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCharacter>>>
+
+    export type DeleteCharacterMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Delete a canonical character
+ */
+export const useDeleteCharacter = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCharacter>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCharacter>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteCharacterMutationOptions(options));
+    }
 
 export const getGetDashboardSummaryUrl = () => {
 

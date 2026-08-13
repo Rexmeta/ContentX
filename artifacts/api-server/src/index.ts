@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { ensureSeedDimensions } from "./domains/population/dimensionService";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +15,12 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+// Idempotent registration of the seed dimension set (unique on name).
+await ensureSeedDimensions().catch((err) => {
+  logger.error({ err }, "Failed to seed dimension registry");
+  process.exit(1);
+});
 
 app.listen(port, (err) => {
   if (err) {

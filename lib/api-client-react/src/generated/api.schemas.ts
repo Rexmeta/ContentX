@@ -239,6 +239,154 @@ export interface ScenarioRecord {
   updatedAt: string;
 }
 
+export type DimensionCategory = typeof DimensionCategory[keyof typeof DimensionCategory];
+
+
+export const DimensionCategory = {
+  demographic: 'demographic',
+  professional: 'professional',
+  psychological: 'psychological',
+  behavioral: 'behavioral',
+  social: 'social',
+  preference: 'preference',
+  capability: 'capability',
+  technology: 'technology',
+  domain: 'domain',
+} as const;
+
+export type DimensionDataType = typeof DimensionDataType[keyof typeof DimensionDataType];
+
+
+export const DimensionDataType = {
+  string: 'string',
+  number: 'number',
+  boolean: 'boolean',
+  enum: 'enum',
+  array: 'array',
+} as const;
+
+export interface Dimension {
+  id: string;
+  name: string;
+  category: DimensionCategory;
+  dataType: DimensionDataType;
+  allowedValues?: string[] | null;
+  source: string;
+  version: number;
+  /** @nullable */
+  description?: string | null;
+}
+
+export type DimensionInputCategory = typeof DimensionInputCategory[keyof typeof DimensionInputCategory];
+
+
+export const DimensionInputCategory = {
+  demographic: 'demographic',
+  professional: 'professional',
+  psychological: 'psychological',
+  behavioral: 'behavioral',
+  social: 'social',
+  preference: 'preference',
+  capability: 'capability',
+  technology: 'technology',
+  domain: 'domain',
+} as const;
+
+export type DimensionInputDataType = typeof DimensionInputDataType[keyof typeof DimensionInputDataType];
+
+
+export const DimensionInputDataType = {
+  string: 'string',
+  number: 'number',
+  boolean: 'boolean',
+  enum: 'enum',
+  array: 'array',
+} as const;
+
+export interface DimensionInput {
+  /**
+     * @minLength 2
+     * @maxLength 64
+     */
+  name: string;
+  category: DimensionInputCategory;
+  dataType: DimensionInputDataType;
+  allowedValues?: string[];
+  description?: string;
+}
+
+export interface AttributeMap { [key: string]: unknown }
+
+export interface CharacterAttributes {
+  identity?: AttributeMap;
+  professional?: AttributeMap;
+  psychological?: AttributeMap;
+  behavioral?: AttributeMap;
+  capabilities?: AttributeMap;
+  preferences?: AttributeMap;
+  /** @items.minLength 1 */
+  goals?: string[];
+  /** @items.minLength 1 */
+  constraints?: string[];
+}
+
+export interface CharacterProvenance {
+  operation: string;
+  createdAt: string;
+  /** @nullable */
+  sourceType?: string | null;
+  /** @nullable */
+  populationId?: string | null;
+  /** @nullable */
+  seed?: number | null;
+  /** @nullable */
+  generatedByProvider?: string | null;
+  /** @nullable */
+  generatedByModel?: string | null;
+}
+
+export type CharacterDerivedClassifications = {[key: string]: string} | null;
+
+export interface Character {
+  id: string;
+  name: string;
+  /** @nullable */
+  canonicalName?: string | null;
+  aliases?: string[];
+  attributes: CharacterAttributes;
+  derivedClassifications?: CharacterDerivedClassifications;
+  provenance: CharacterProvenance;
+  schemaVersion: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CharacterInputDerivedClassifications = {[key: string]: string} | null;
+
+export interface CharacterInput {
+  /** @minLength 1 */
+  name: string;
+  /** @nullable */
+  canonicalName?: string | null;
+  /** @items.minLength 1 */
+  aliases?: string[];
+  attributes?: CharacterAttributes;
+  derivedClassifications?: CharacterInputDerivedClassifications;
+}
+
+export type CharacterUpdateDerivedClassifications = {[key: string]: string} | null;
+
+export interface CharacterUpdate {
+  /** @minLength 1 */
+  name?: string;
+  /** @nullable */
+  canonicalName?: string | null;
+  /** @items.minLength 1 */
+  aliases?: string[];
+  attributes?: CharacterAttributes;
+  derivedClassifications?: CharacterUpdateDerivedClassifications;
+}
+
 export type EntityUpdateAttributes = { [key: string]: unknown };
 
 export interface EntityUpdate {
