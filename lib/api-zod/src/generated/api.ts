@@ -1700,6 +1700,520 @@ export const ListSamplingRunsResponse = zod.array(ListSamplingRunsResponseItem)
 
 
 /**
+ * @summary List character snapshots
+ */
+
+
+
+
+export const ListSnapshotsResponseItem = zod.object({
+  "id": zod.string(),
+  "characterId": zod.string(),
+  "populationId": zod.string().nullable(),
+  "schemaVersion": zod.string(),
+  "dependencyGraphVersion": zod.string().nullable(),
+  "seed": zod.number().nullable(),
+  "resolvedAttributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}),
+  "behavioralProfile": zod.object({
+  "psychological": zod.record(zod.string(), zod.unknown()),
+  "behavioral": zod.record(zod.string(), zod.unknown()),
+  "goals": zod.array(zod.string()),
+  "constraints": zod.array(zod.string())
+}),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "characterId": zod.string(),
+  "characterSchemaVersion": zod.string(),
+  "populationId": zod.string().nullish(),
+  "populationVersion": zod.int().nullish(),
+  "seed": zod.number().nullish(),
+  "dependencyGraphVersion": zod.string().nullish(),
+  "sampleIndex": zod.int().nullish(),
+  "strategy": zod.string().nullish()
+}),
+  "usedBySimulation": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListSnapshotsResponse = zod.array(ListSnapshotsResponseItem)
+
+
+/**
+ * @summary Create an immutable snapshot of a character (agent instantiation source)
+ */
+export const CreateSnapshotBody = zod.object({
+  "characterId": zod.string()
+})
+
+
+
+
+
+export const CreateSnapshotResponse = zod.object({
+  "id": zod.string(),
+  "characterId": zod.string(),
+  "populationId": zod.string().nullable(),
+  "schemaVersion": zod.string(),
+  "dependencyGraphVersion": zod.string().nullable(),
+  "seed": zod.number().nullable(),
+  "resolvedAttributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}),
+  "behavioralProfile": zod.object({
+  "psychological": zod.record(zod.string(), zod.unknown()),
+  "behavioral": zod.record(zod.string(), zod.unknown()),
+  "goals": zod.array(zod.string()),
+  "constraints": zod.array(zod.string())
+}),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "characterId": zod.string(),
+  "characterSchemaVersion": zod.string(),
+  "populationId": zod.string().nullish(),
+  "populationVersion": zod.int().nullish(),
+  "seed": zod.number().nullish(),
+  "dependencyGraphVersion": zod.string().nullish(),
+  "sampleIndex": zod.int().nullish(),
+  "strategy": zod.string().nullish()
+}),
+  "usedBySimulation": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Get a character snapshot
+ */
+export const GetSnapshotParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+
+export const GetSnapshotResponse = zod.object({
+  "id": zod.string(),
+  "characterId": zod.string(),
+  "populationId": zod.string().nullable(),
+  "schemaVersion": zod.string(),
+  "dependencyGraphVersion": zod.string().nullable(),
+  "seed": zod.number().nullable(),
+  "resolvedAttributes": zod.object({
+  "identity": zod.record(zod.string(), zod.unknown()).optional(),
+  "professional": zod.record(zod.string(), zod.unknown()).optional(),
+  "psychological": zod.record(zod.string(), zod.unknown()).optional(),
+  "behavioral": zod.record(zod.string(), zod.unknown()).optional(),
+  "capabilities": zod.record(zod.string(), zod.unknown()).optional(),
+  "preferences": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string().min(1)).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional()
+}),
+  "behavioralProfile": zod.object({
+  "psychological": zod.record(zod.string(), zod.unknown()),
+  "behavioral": zod.record(zod.string(), zod.unknown()),
+  "goals": zod.array(zod.string()),
+  "constraints": zod.array(zod.string())
+}),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "characterId": zod.string(),
+  "characterSchemaVersion": zod.string(),
+  "populationId": zod.string().nullish(),
+  "populationVersion": zod.int().nullish(),
+  "seed": zod.number().nullish(),
+  "dependencyGraphVersion": zod.string().nullish(),
+  "sampleIndex": zod.int().nullish(),
+  "strategy": zod.string().nullish()
+}),
+  "usedBySimulation": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a snapshot (only allowed while never used by a simulation)
+ */
+export const DeleteSnapshotParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteSnapshotResponse = zod.void()
+
+
+/**
+ * @summary List agents
+ */
+
+export const listAgentsResponseGoalsItemOnePriorityMax = 5;
+
+export const listAgentsResponseGoalsItemOneUrgencyMin = 0;
+export const listAgentsResponseGoalsItemOneUrgencyMax = 1;
+
+
+
+
+export const ListAgentsResponseItem = zod.object({
+  "id": zod.string(),
+  "snapshotId": zod.string(),
+  "name": zod.string(),
+  "goals": zod.array(zod.object({
+  "objective": zod.string().min(1),
+  "priority": zod.int().min(1).max(listAgentsResponseGoalsItemOnePriorityMax),
+  "urgency": zod.number().min(listAgentsResponseGoalsItemOneUrgencyMin).max(listAgentsResponseGoalsItemOneUrgencyMax),
+  "successCriteria": zod.array(zod.string())
+}).and(zod.object({
+  "id": zod.string()
+}))),
+  "constraints": zod.array(zod.object({
+  "type": zod.enum(['hard', 'soft', 'policy', 'environmental']),
+  "description": zod.string().min(1)
+}).and(zod.object({
+  "id": zod.string()
+}))),
+  "policy": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "runtimeConfig": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "memory": zod.array(zod.unknown()),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "snapshotId": zod.string(),
+  "characterId": zod.string()
+}),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListAgentsResponse = zod.array(ListAgentsResponseItem)
+
+
+/**
+ * @summary Instantiate an agent from an immutable character snapshot
+ */
+
+export const createAgentBodyGoalsItemPriorityMax = 5;
+
+export const createAgentBodyGoalsItemUrgencyMin = 0;
+export const createAgentBodyGoalsItemUrgencyMax = 1;
+
+
+export const createAgentBodyInitialStateAffectiveMinOne = 0;
+export const createAgentBodyInitialStateAffectiveMaxOne = 1;
+
+export const createAgentBodyInitialStateRelationalMinOne = 0;
+export const createAgentBodyInitialStateRelationalMaxOne = 1;
+
+export const createAgentBodyInitialStateMotivationalMinOne = 0;
+export const createAgentBodyInitialStateMotivationalMaxOne = 1;
+
+export const createAgentBodyInitialStateCognitiveMinOne = 0;
+export const createAgentBodyInitialStateCognitiveMaxOne = 1;
+
+export const createAgentBodyInitialStateBehavioralMinOne = 0;
+export const createAgentBodyInitialStateBehavioralMaxOne = 1;
+
+
+
+export const CreateAgentBody = zod.object({
+  "snapshotId": zod.string(),
+  "name": zod.string().optional(),
+  "goals": zod.array(zod.object({
+  "objective": zod.string().min(1),
+  "priority": zod.int().min(1).max(createAgentBodyGoalsItemPriorityMax),
+  "urgency": zod.number().min(createAgentBodyGoalsItemUrgencyMin).max(createAgentBodyGoalsItemUrgencyMax),
+  "successCriteria": zod.array(zod.string())
+})),
+  "constraints": zod.array(zod.object({
+  "type": zod.enum(['hard', 'soft', 'policy', 'environmental']),
+  "description": zod.string().min(1)
+})),
+  "policy": zod.record(zod.string(), zod.unknown()).optional(),
+  "runtimeConfig": zod.record(zod.string(), zod.unknown()).optional(),
+  "initialState": zod.object({
+  "affective": zod.record(zod.string(), zod.number().min(createAgentBodyInitialStateAffectiveMinOne).max(createAgentBodyInitialStateAffectiveMaxOne)).optional(),
+  "relational": zod.record(zod.string(), zod.number().min(createAgentBodyInitialStateRelationalMinOne).max(createAgentBodyInitialStateRelationalMaxOne)).optional(),
+  "motivational": zod.record(zod.string(), zod.number().min(createAgentBodyInitialStateMotivationalMinOne).max(createAgentBodyInitialStateMotivationalMaxOne)).optional(),
+  "cognitive": zod.record(zod.string(), zod.number().min(createAgentBodyInitialStateCognitiveMinOne).max(createAgentBodyInitialStateCognitiveMaxOne)).optional(),
+  "behavioral": zod.record(zod.string(), zod.number().min(createAgentBodyInitialStateBehavioralMinOne).max(createAgentBodyInitialStateBehavioralMaxOne)).optional()
+}).optional()
+})
+
+
+export const createAgentResponseOneGoalsItemOnePriorityMax = 5;
+
+export const createAgentResponseOneGoalsItemOneUrgencyMin = 0;
+export const createAgentResponseOneGoalsItemOneUrgencyMax = 1;
+
+
+export const createAgentResponseTwoStateAffectiveValuesMinOne = 0;
+export const createAgentResponseTwoStateAffectiveValuesMaxOne = 1;
+
+export const createAgentResponseTwoStateRelationalValuesMinOne = 0;
+export const createAgentResponseTwoStateRelationalValuesMaxOne = 1;
+
+export const createAgentResponseTwoStateMotivationalValuesMinOne = 0;
+export const createAgentResponseTwoStateMotivationalValuesMaxOne = 1;
+
+export const createAgentResponseTwoStateCognitiveValuesMinOne = 0;
+export const createAgentResponseTwoStateCognitiveValuesMaxOne = 1;
+
+export const createAgentResponseTwoStateBehavioralValuesMinOne = 0;
+export const createAgentResponseTwoStateBehavioralValuesMaxOne = 1;
+
+
+
+export const CreateAgentResponse = zod.object({
+  "id": zod.string(),
+  "snapshotId": zod.string(),
+  "name": zod.string(),
+  "goals": zod.array(zod.object({
+  "objective": zod.string().min(1),
+  "priority": zod.int().min(1).max(createAgentResponseOneGoalsItemOnePriorityMax),
+  "urgency": zod.number().min(createAgentResponseOneGoalsItemOneUrgencyMin).max(createAgentResponseOneGoalsItemOneUrgencyMax),
+  "successCriteria": zod.array(zod.string())
+}).and(zod.object({
+  "id": zod.string()
+}))),
+  "constraints": zod.array(zod.object({
+  "type": zod.enum(['hard', 'soft', 'policy', 'environmental']),
+  "description": zod.string().min(1)
+}).and(zod.object({
+  "id": zod.string()
+}))),
+  "policy": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "runtimeConfig": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "memory": zod.array(zod.unknown()),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "snapshotId": zod.string(),
+  "characterId": zod.string()
+}),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).and(zod.object({
+  "state": zod.object({
+  "affective": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(createAgentResponseTwoStateAffectiveValuesMinOne).max(createAgentResponseTwoStateAffectiveValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "relational": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(createAgentResponseTwoStateRelationalValuesMinOne).max(createAgentResponseTwoStateRelationalValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "motivational": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(createAgentResponseTwoStateMotivationalValuesMinOne).max(createAgentResponseTwoStateMotivationalValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "cognitive": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(createAgentResponseTwoStateCognitiveValuesMinOne).max(createAgentResponseTwoStateCognitiveValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "behavioral": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(createAgentResponseTwoStateBehavioralValuesMinOne).max(createAgentResponseTwoStateBehavioralValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+})
+}))
+
+
+/**
+ * @summary Get an agent with its runtime state
+ */
+export const GetAgentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+export const getAgentResponseOneGoalsItemOnePriorityMax = 5;
+
+export const getAgentResponseOneGoalsItemOneUrgencyMin = 0;
+export const getAgentResponseOneGoalsItemOneUrgencyMax = 1;
+
+
+export const getAgentResponseTwoStateAffectiveValuesMinOne = 0;
+export const getAgentResponseTwoStateAffectiveValuesMaxOne = 1;
+
+export const getAgentResponseTwoStateRelationalValuesMinOne = 0;
+export const getAgentResponseTwoStateRelationalValuesMaxOne = 1;
+
+export const getAgentResponseTwoStateMotivationalValuesMinOne = 0;
+export const getAgentResponseTwoStateMotivationalValuesMaxOne = 1;
+
+export const getAgentResponseTwoStateCognitiveValuesMinOne = 0;
+export const getAgentResponseTwoStateCognitiveValuesMaxOne = 1;
+
+export const getAgentResponseTwoStateBehavioralValuesMinOne = 0;
+export const getAgentResponseTwoStateBehavioralValuesMaxOne = 1;
+
+
+
+export const GetAgentResponse = zod.object({
+  "id": zod.string(),
+  "snapshotId": zod.string(),
+  "name": zod.string(),
+  "goals": zod.array(zod.object({
+  "objective": zod.string().min(1),
+  "priority": zod.int().min(1).max(getAgentResponseOneGoalsItemOnePriorityMax),
+  "urgency": zod.number().min(getAgentResponseOneGoalsItemOneUrgencyMin).max(getAgentResponseOneGoalsItemOneUrgencyMax),
+  "successCriteria": zod.array(zod.string())
+}).and(zod.object({
+  "id": zod.string()
+}))),
+  "constraints": zod.array(zod.object({
+  "type": zod.enum(['hard', 'soft', 'policy', 'environmental']),
+  "description": zod.string().min(1)
+}).and(zod.object({
+  "id": zod.string()
+}))),
+  "policy": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "runtimeConfig": zod.union([zod.record(zod.string(), zod.unknown()),zod.null()]),
+  "memory": zod.array(zod.unknown()),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "snapshotId": zod.string(),
+  "characterId": zod.string()
+}),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).and(zod.object({
+  "state": zod.object({
+  "affective": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(getAgentResponseTwoStateAffectiveValuesMinOne).max(getAgentResponseTwoStateAffectiveValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "relational": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(getAgentResponseTwoStateRelationalValuesMinOne).max(getAgentResponseTwoStateRelationalValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "motivational": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(getAgentResponseTwoStateMotivationalValuesMinOne).max(getAgentResponseTwoStateMotivationalValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "cognitive": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(getAgentResponseTwoStateCognitiveValuesMinOne).max(getAgentResponseTwoStateCognitiveValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "behavioral": zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(getAgentResponseTwoStateBehavioralValuesMinOne).max(getAgentResponseTwoStateBehavioralValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+})
+}))
+
+
+/**
+ * @summary Delete an agent (cascades runtime state; canonical data untouched)
+ */
+export const DeleteAgentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteAgentResponse = zod.void()
+
+
+/**
+ * @summary Merge-update one runtime state category (never touches canonical data)
+ */
+export const UpdateAgentStateParams = zod.object({
+  "id": zod.coerce.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral'])
+})
+
+export const updateAgentStateBodyValuesMinOne = 0;
+export const updateAgentStateBodyValuesMaxOne = 1;
+
+
+
+export const UpdateAgentStateBody = zod.object({
+  "values": zod.record(zod.string(), zod.number().min(updateAgentStateBodyValuesMinOne).max(updateAgentStateBodyValuesMaxOne))
+})
+
+export const updateAgentStateResponseValuesMinOne = 0;
+export const updateAgentStateResponseValuesMaxOne = 1;
+
+
+
+export const UpdateAgentStateResponse = zod.object({
+  "id": zod.string(),
+  "agentId": zod.string(),
+  "category": zod.enum(['affective', 'relational', 'motivational', 'cognitive', 'behavioral']),
+  "values": zod.record(zod.string(), zod.number().min(updateAgentStateResponseValuesMinOne).max(updateAgentStateResponseValuesMaxOne)),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary Aggregate stats across the content library
  */
 export const GetDashboardSummaryResponse = zod.object({

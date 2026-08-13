@@ -5,6 +5,7 @@ import scenariosRouter from "./scenarios";
 import projectionsRouter from "./projections";
 import charactersRouter from "./characters";
 import populationsRouter from "./populations";
+import agentsRouter from "./agents";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(scenariosRouter);
 router.use(projectionsRouter);
 router.use(charactersRouter);
 router.use(populationsRouter);
+router.use(agentsRouter);
 
 export default router;

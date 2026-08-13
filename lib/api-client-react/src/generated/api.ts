@@ -20,11 +20,17 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  Agent,
+  AgentInput,
+  AgentState,
+  AgentStateUpdate,
+  AgentWithState,
   ApiMessage,
   CanonicalExport,
   Category,
   Character,
   CharacterInput,
+  CharacterSnapshot,
   CharacterUpdate,
   ContentGraph,
   ContentInput,
@@ -48,6 +54,7 @@ import type {
   ScenarioRecord,
   ScenarioSaveInput,
   ScenarioUpdateInput,
+  SnapshotInput,
   SynthesizeInput,
   SynthesizeResult,
   ValidationReport,
@@ -3039,6 +3046,672 @@ export function useListSamplingRuns<TData = Awaited<ReturnType<typeof listSampli
 
 
 
+
+export const getListSnapshotsUrl = () => {
+
+
+
+
+  return `/api/v1/snapshots`
+}
+
+/**
+ * @summary List character snapshots
+ */
+export const listSnapshots = async ( options?: Parameters<typeof customFetch>[1]): Promise<CharacterSnapshot[]> => {
+
+  return customFetch<CharacterSnapshot[]>(getListSnapshotsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSnapshotsQueryKey = () => {
+    return [
+    `/api/v1/snapshots`
+    ] as const;
+    }
+
+
+export const getListSnapshotsQueryOptions = <TData = Awaited<ReturnType<typeof listSnapshots>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSnapshots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSnapshotsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSnapshots>>> = ({ signal }) => listSnapshots({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSnapshots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSnapshotsQueryResult = NonNullable<Awaited<ReturnType<typeof listSnapshots>>>
+export type ListSnapshotsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List character snapshots
+ */
+
+export function useListSnapshots<TData = Awaited<ReturnType<typeof listSnapshots>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSnapshots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSnapshotsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateSnapshotUrl = () => {
+
+
+
+
+  return `/api/v1/snapshots`
+}
+
+/**
+ * @summary Create an immutable snapshot of a character (agent instantiation source)
+ */
+export const createSnapshot = async (snapshotInput: SnapshotInput, options?: Parameters<typeof customFetch>[1]): Promise<CharacterSnapshot> => {
+
+  return customFetch<CharacterSnapshot>(getCreateSnapshotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(snapshotInput)
+  }
+);}
+
+
+
+
+
+export const getCreateSnapshotMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSnapshot>>, TError,{data: BodyType<SnapshotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSnapshot>>, TError,{data: BodyType<SnapshotInput>}, TContext> => {
+
+const mutationKey = ['createSnapshot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSnapshot>>, {data: BodyType<SnapshotInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSnapshot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSnapshotMutationResult = NonNullable<Awaited<ReturnType<typeof createSnapshot>>>
+    export type CreateSnapshotMutationBody = BodyType<SnapshotInput>
+    export type CreateSnapshotMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Create an immutable snapshot of a character (agent instantiation source)
+ */
+export const useCreateSnapshot = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSnapshot>>, TError,{data: BodyType<SnapshotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSnapshot>>,
+        TError,
+        {data: BodyType<SnapshotInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSnapshotMutationOptions(options));
+    }
+
+export const getGetSnapshotUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/snapshots/${id}`
+}
+
+/**
+ * @summary Get a character snapshot
+ */
+export const getSnapshot = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CharacterSnapshot> => {
+
+  return customFetch<CharacterSnapshot>(getGetSnapshotUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSnapshotQueryKey = (id: string,) => {
+    return [
+    `/api/v1/snapshots/${id}`
+    ] as const;
+    }
+
+
+export const getGetSnapshotQueryOptions = <TData = Awaited<ReturnType<typeof getSnapshot>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSnapshot>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSnapshotQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSnapshot>>> = ({ signal }) => getSnapshot(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSnapshot>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSnapshotQueryResult = NonNullable<Awaited<ReturnType<typeof getSnapshot>>>
+export type GetSnapshotQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a character snapshot
+ */
+
+export function useGetSnapshot<TData = Awaited<ReturnType<typeof getSnapshot>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSnapshot>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSnapshotQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteSnapshotUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/snapshots/${id}`
+}
+
+/**
+ * @summary Delete a snapshot (only allowed while never used by a simulation)
+ */
+export const deleteSnapshot = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteSnapshotUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteSnapshotMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSnapshot>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSnapshot>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteSnapshot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSnapshot>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSnapshot(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSnapshotMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSnapshot>>>
+
+    export type DeleteSnapshotMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Delete a snapshot (only allowed while never used by a simulation)
+ */
+export const useDeleteSnapshot = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSnapshot>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSnapshot>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteSnapshotMutationOptions(options));
+    }
+
+export const getListAgentsUrl = () => {
+
+
+
+
+  return `/api/v1/agents`
+}
+
+/**
+ * @summary List agents
+ */
+export const listAgents = async ( options?: Parameters<typeof customFetch>[1]): Promise<Agent[]> => {
+
+  return customFetch<Agent[]>(getListAgentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAgentsQueryKey = () => {
+    return [
+    `/api/v1/agents`
+    ] as const;
+    }
+
+
+export const getListAgentsQueryOptions = <TData = Awaited<ReturnType<typeof listAgents>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAgents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAgentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAgents>>> = ({ signal }) => listAgents({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAgents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAgentsQueryResult = NonNullable<Awaited<ReturnType<typeof listAgents>>>
+export type ListAgentsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List agents
+ */
+
+export function useListAgents<TData = Awaited<ReturnType<typeof listAgents>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAgents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAgentsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAgentUrl = () => {
+
+
+
+
+  return `/api/v1/agents`
+}
+
+/**
+ * @summary Instantiate an agent from an immutable character snapshot
+ */
+export const createAgent = async (agentInput: AgentInput, options?: Parameters<typeof customFetch>[1]): Promise<AgentWithState> => {
+
+  return customFetch<AgentWithState>(getCreateAgentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(agentInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAgentMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAgent>>, TError,{data: BodyType<AgentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAgent>>, TError,{data: BodyType<AgentInput>}, TContext> => {
+
+const mutationKey = ['createAgent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAgent>>, {data: BodyType<AgentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAgent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAgentMutationResult = NonNullable<Awaited<ReturnType<typeof createAgent>>>
+    export type CreateAgentMutationBody = BodyType<AgentInput>
+    export type CreateAgentMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Instantiate an agent from an immutable character snapshot
+ */
+export const useCreateAgent = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAgent>>, TError,{data: BodyType<AgentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAgent>>,
+        TError,
+        {data: BodyType<AgentInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAgentMutationOptions(options));
+    }
+
+export const getGetAgentUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/agents/${id}`
+}
+
+/**
+ * @summary Get an agent with its runtime state
+ */
+export const getAgent = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<AgentWithState> => {
+
+  return customFetch<AgentWithState>(getGetAgentUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAgentQueryKey = (id: string,) => {
+    return [
+    `/api/v1/agents/${id}`
+    ] as const;
+    }
+
+
+export const getGetAgentQueryOptions = <TData = Awaited<ReturnType<typeof getAgent>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAgent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAgentQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAgent>>> = ({ signal }) => getAgent(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAgent>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAgentQueryResult = NonNullable<Awaited<ReturnType<typeof getAgent>>>
+export type GetAgentQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get an agent with its runtime state
+ */
+
+export function useGetAgent<TData = Awaited<ReturnType<typeof getAgent>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAgent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAgentQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteAgentUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/agents/${id}`
+}
+
+/**
+ * @summary Delete an agent (cascades runtime state; canonical data untouched)
+ */
+export const deleteAgent = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteAgentUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAgentMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAgent>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAgent>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteAgent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAgent>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAgent(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAgentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAgent>>>
+
+    export type DeleteAgentMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Delete an agent (cascades runtime state; canonical data untouched)
+ */
+export const useDeleteAgent = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAgent>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAgent>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteAgentMutationOptions(options));
+    }
+
+export const getUpdateAgentStateUrl = (id: string,
+    category: 'affective' | 'relational' | 'motivational' | 'cognitive' | 'behavioral',) => {
+
+
+
+
+  return `/api/v1/agents/${id}/state/${category}`
+}
+
+/**
+ * @summary Merge-update one runtime state category (never touches canonical data)
+ */
+export const updateAgentState = async (id: string,
+    category: 'affective' | 'relational' | 'motivational' | 'cognitive' | 'behavioral',
+    agentStateUpdate: AgentStateUpdate, options?: Parameters<typeof customFetch>[1]): Promise<AgentState> => {
+
+  return customFetch<AgentState>(getUpdateAgentStateUrl(id,category),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(agentStateUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAgentStateMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAgentState>>, TError,{id: string;category: 'affective' | 'relational' | 'motivational' | 'cognitive' | 'behavioral';data: BodyType<AgentStateUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAgentState>>, TError,{id: string;category: 'affective' | 'relational' | 'motivational' | 'cognitive' | 'behavioral';data: BodyType<AgentStateUpdate>}, TContext> => {
+
+const mutationKey = ['updateAgentState'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAgentState>>, {id: string;category: 'affective' | 'relational' | 'motivational' | 'cognitive' | 'behavioral';data: BodyType<AgentStateUpdate>}> = (props) => {
+          const {id,category,data} = props ?? {};
+
+          return  updateAgentState(id,category,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAgentStateMutationResult = NonNullable<Awaited<ReturnType<typeof updateAgentState>>>
+    export type UpdateAgentStateMutationBody = BodyType<AgentStateUpdate>
+    export type UpdateAgentStateMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Merge-update one runtime state category (never touches canonical data)
+ */
+export const useUpdateAgentState = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAgentState>>, TError,{id: string;category: 'affective' | 'relational' | 'motivational' | 'cognitive' | 'behavioral';data: BodyType<AgentStateUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAgentState>>,
+        TError,
+        {id: string;category: 'affective' | 'relational' | 'motivational' | 'cognitive' | 'behavioral';data: BodyType<AgentStateUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAgentStateMutationOptions(options));
+    }
 
 export const getGetDashboardSummaryUrl = () => {
 

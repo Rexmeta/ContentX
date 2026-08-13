@@ -591,6 +591,183 @@ export interface SamplingRun {
   createdAt: string;
 }
 
+export interface SnapshotInput {
+  characterId: string;
+}
+
+export type BehavioralProfilePsychological = { [key: string]: unknown };
+
+export type BehavioralProfileBehavioral = { [key: string]: unknown };
+
+export interface BehavioralProfile {
+  psychological: BehavioralProfilePsychological;
+  behavioral: BehavioralProfileBehavioral;
+  goals: string[];
+  constraints: string[];
+}
+
+export interface SnapshotProvenance {
+  operation: string;
+  createdAt: string;
+  characterId: string;
+  characterSchemaVersion: string;
+  /** @nullable */
+  populationId?: string | null;
+  /** @nullable */
+  populationVersion?: number | null;
+  /** @nullable */
+  seed?: number | null;
+  /** @nullable */
+  dependencyGraphVersion?: string | null;
+  /** @nullable */
+  sampleIndex?: number | null;
+  /** @nullable */
+  strategy?: string | null;
+}
+
+export interface CharacterSnapshot {
+  id: string;
+  characterId: string;
+  /** @nullable */
+  populationId: string | null;
+  schemaVersion: string;
+  /** @nullable */
+  dependencyGraphVersion: string | null;
+  /** @nullable */
+  seed: number | null;
+  resolvedAttributes: CharacterAttributes;
+  behavioralProfile: BehavioralProfile;
+  provenance: SnapshotProvenance;
+  usedBySimulation: boolean;
+  createdAt: string;
+}
+
+export interface GoalInput {
+  /** @minLength 1 */
+  objective: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  priority: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  urgency: number;
+  successCriteria: string[];
+}
+
+export type Goal = GoalInput & {
+  id: string;
+};
+
+export type AgentConstraintInputType = typeof AgentConstraintInputType[keyof typeof AgentConstraintInputType];
+
+
+export const AgentConstraintInputType = {
+  hard: 'hard',
+  soft: 'soft',
+  policy: 'policy',
+  environmental: 'environmental',
+} as const;
+
+export interface AgentConstraintInput {
+  type: AgentConstraintInputType;
+  /** @minLength 1 */
+  description: string;
+}
+
+export type AgentConstraint = AgentConstraintInput & {
+  id: string;
+};
+
+export interface AgentProvenance {
+  operation: string;
+  createdAt: string;
+  snapshotId: string;
+  characterId: string;
+}
+
+export interface StateValues {[key: string]: number}
+
+export interface InitialAgentState {
+  affective?: StateValues;
+  relational?: StateValues;
+  motivational?: StateValues;
+  cognitive?: StateValues;
+  behavioral?: StateValues;
+}
+
+export type AgentStateCategory = typeof AgentStateCategory[keyof typeof AgentStateCategory];
+
+
+export const AgentStateCategory = {
+  affective: 'affective',
+  relational: 'relational',
+  motivational: 'motivational',
+  cognitive: 'cognitive',
+  behavioral: 'behavioral',
+} as const;
+
+export interface AgentState {
+  id: string;
+  agentId: string;
+  category: AgentStateCategory;
+  values: StateValues;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AgentPolicy = { [key: string]: unknown } | null;
+
+export type AgentRuntimeConfig = { [key: string]: unknown } | null;
+
+export interface Agent {
+  id: string;
+  snapshotId: string;
+  name: string;
+  goals: Goal[];
+  constraints: AgentConstraint[];
+  policy: AgentPolicy;
+  runtimeConfig: AgentRuntimeConfig;
+  memory: unknown[];
+  provenance: AgentProvenance;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AgentWithStateState = {
+  affective: AgentState;
+  relational: AgentState;
+  motivational: AgentState;
+  cognitive: AgentState;
+  behavioral: AgentState;
+};
+
+export type AgentWithState = Agent & {
+  state: AgentWithStateState;
+};
+
+export type AgentInputPolicy = { [key: string]: unknown };
+
+export type AgentInputRuntimeConfig = { [key: string]: unknown };
+
+export interface AgentInput {
+  snapshotId: string;
+  name?: string;
+  goals: GoalInput[];
+  constraints: AgentConstraintInput[];
+  policy?: AgentInputPolicy;
+  runtimeConfig?: AgentInputRuntimeConfig;
+  initialState?: InitialAgentState;
+}
+
+export interface AgentStateUpdate {
+  values: StateValues;
+}
+
 export type EntityUpdateAttributes = { [key: string]: unknown };
 
 export interface EntityUpdate {

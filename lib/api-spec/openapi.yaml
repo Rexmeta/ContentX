@@ -18,6 +18,8 @@ tags:
     description: Canonical character and dimension registry operations
   - name: population
     description: Population, dependency rule, and deterministic sampling operations
+  - name: agent
+    description: Character snapshots and agent runtime operations
 paths:
   /healthz:
     get:
@@ -923,6 +925,215 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/snapshots:
+    get:
+      operationId: listSnapshots
+      tags: [agent]
+      summary: List character snapshots
+      responses:
+        "200":
+          description: Snapshot list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CharacterSnapshot"
+    post:
+      operationId: createSnapshot
+      tags: [agent]
+      summary: Create an immutable snapshot of a character (agent instantiation source)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SnapshotInput"
+      responses:
+        "201":
+          description: Created snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSnapshot"
+        "404":
+          description: Character not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/snapshots/{id}:
+    get:
+      operationId: getSnapshot
+      tags: [agent]
+      summary: Get a character snapshot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSnapshot"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    delete:
+      operationId: deleteSnapshot
+      tags: [agent]
+      summary: Delete a snapshot (only allowed while never used by a simulation)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "409":
+          description: Snapshot was used by a simulation and is permanent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/agents:
+    get:
+      operationId: listAgents
+      tags: [agent]
+      summary: List agents
+      responses:
+        "200":
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agent"
+    post:
+      operationId: createAgent
+      tags: [agent]
+      summary: Instantiate an agent from an immutable character snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentInput"
+      responses:
+        "201":
+          description: Created agent with initialized state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentWithState"
+        "400":
+          description: Invalid goals/constraints/state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Snapshot not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/agents/{id}:
+    get:
+      operationId: getAgent
+      tags: [agent]
+      summary: Get an agent with its runtime state
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Agent with state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentWithState"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    delete:
+      operationId: deleteAgent
+      tags: [agent]
+      summary: Delete an agent (cascades runtime state; canonical data untouched)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/agents/{id}/state/{category}:
+    patch:
+      operationId: updateAgentState
+      tags: [agent]
+      summary: Merge-update one runtime state category (never touches canonical data)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [affective, relational, motivational, cognitive, behavioral]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentStateUpdate"
+      responses:
+        "200":
+          description: Updated state category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentState"
+        "400":
+          description: Invalid category or values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -1549,6 +1760,214 @@ components:
         schemaVersion: { type: string }
         dependencyGraphVersion: { type: string }
         createdAt: { type: string }
+    SnapshotInput:
+      type: object
+      required: [characterId]
+      properties:
+        characterId: { type: string }
+    BehavioralProfile:
+      type: object
+      required: [psychological, behavioral, goals, constraints]
+      properties:
+        psychological:
+          type: object
+          additionalProperties: true
+        behavioral:
+          type: object
+          additionalProperties: true
+        goals:
+          type: array
+          items: { type: string }
+        constraints:
+          type: array
+          items: { type: string }
+    SnapshotProvenance:
+      type: object
+      required: [operation, createdAt, characterId, characterSchemaVersion]
+      properties:
+        operation: { type: string }
+        createdAt: { type: string }
+        characterId: { type: string }
+        characterSchemaVersion: { type: string }
+        populationId: { type: ["string", "null"] }
+        populationVersion: { type: ["integer", "null"] }
+        seed: { type: ["number", "null"] }
+        dependencyGraphVersion: { type: ["string", "null"] }
+        sampleIndex: { type: ["integer", "null"] }
+        strategy: { type: ["string", "null"] }
+    CharacterSnapshot:
+      type: object
+      required: [id, characterId, populationId, schemaVersion, dependencyGraphVersion, seed, resolvedAttributes, behavioralProfile, provenance, usedBySimulation, createdAt]
+      properties:
+        id: { type: string }
+        characterId: { type: string }
+        populationId: { type: ["string", "null"] }
+        schemaVersion: { type: string }
+        dependencyGraphVersion: { type: ["string", "null"] }
+        seed: { type: ["number", "null"] }
+        resolvedAttributes:
+          $ref: "#/components/schemas/CharacterAttributes"
+        behavioralProfile:
+          $ref: "#/components/schemas/BehavioralProfile"
+        provenance:
+          $ref: "#/components/schemas/SnapshotProvenance"
+        usedBySimulation: { type: boolean }
+        createdAt: { type: string }
+    GoalInput:
+      type: object
+      required: [objective, priority, urgency, successCriteria]
+      properties:
+        objective: { type: string, minLength: 1 }
+        priority: { type: integer, minimum: 1, maximum: 5 }
+        urgency: { type: number, minimum: 0, maximum: 1 }
+        successCriteria:
+          type: array
+          items: { type: string }
+    Goal:
+      allOf:
+        - $ref: "#/components/schemas/GoalInput"
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string }
+    AgentConstraintInput:
+      type: object
+      required: [type, description]
+      properties:
+        type:
+          type: string
+          enum: [hard, soft, policy, environmental]
+        description: { type: string, minLength: 1 }
+    AgentConstraint:
+      allOf:
+        - $ref: "#/components/schemas/AgentConstraintInput"
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string }
+    AgentProvenance:
+      type: object
+      required: [operation, createdAt, snapshotId, characterId]
+      properties:
+        operation: { type: string }
+        createdAt: { type: string }
+        snapshotId: { type: string }
+        characterId: { type: string }
+    StateValues:
+      type: object
+      additionalProperties:
+        type: number
+        minimum: 0
+        maximum: 1
+      minProperties: 1
+    InitialAgentState:
+      type: object
+      additionalProperties: false
+      properties:
+        affective:
+          $ref: "#/components/schemas/StateValues"
+        relational:
+          $ref: "#/components/schemas/StateValues"
+        motivational:
+          $ref: "#/components/schemas/StateValues"
+        cognitive:
+          $ref: "#/components/schemas/StateValues"
+        behavioral:
+          $ref: "#/components/schemas/StateValues"
+    AgentState:
+      type: object
+      required: [id, agentId, category, values, version, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        agentId: { type: string }
+        category:
+          type: string
+          enum: [affective, relational, motivational, cognitive, behavioral]
+        values:
+          $ref: "#/components/schemas/StateValues"
+        version: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    Agent:
+      type: object
+      required: [id, snapshotId, name, goals, constraints, policy, runtimeConfig, memory, provenance, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        snapshotId: { type: string }
+        name: { type: string }
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Goal"
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentConstraint"
+        policy:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: "null"
+        runtimeConfig:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: "null"
+        memory:
+          type: array
+          items: {}
+        provenance:
+          $ref: "#/components/schemas/AgentProvenance"
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    AgentWithState:
+      allOf:
+        - $ref: "#/components/schemas/Agent"
+        - type: object
+          required: [state]
+          properties:
+            state:
+              type: object
+              required: [affective, relational, motivational, cognitive, behavioral]
+              properties:
+                affective:
+                  $ref: "#/components/schemas/AgentState"
+                relational:
+                  $ref: "#/components/schemas/AgentState"
+                motivational:
+                  $ref: "#/components/schemas/AgentState"
+                cognitive:
+                  $ref: "#/components/schemas/AgentState"
+                behavioral:
+                  $ref: "#/components/schemas/AgentState"
+    AgentInput:
+      type: object
+      required: [snapshotId, goals, constraints]
+      properties:
+        snapshotId: { type: string }
+        name: { type: string }
+        goals:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoalInput"
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentConstraintInput"
+        policy:
+          type: object
+          additionalProperties: true
+        runtimeConfig:
+          type: object
+          additionalProperties: true
+        initialState:
+          $ref: "#/components/schemas/InitialAgentState"
+    AgentStateUpdate:
+      type: object
+      required: [values]
+      properties:
+        values:
+          $ref: "#/components/schemas/StateValues"
     EntityUpdate:
       type: object
       properties:
