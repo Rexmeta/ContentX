@@ -30,14 +30,20 @@ import type {
   ContentInput,
   ContentSummary,
   DashboardSummary,
+  DependencyRule,
+  DependencyRuleInput,
   Dimension,
   DimensionInput,
   DramaticScenario,
   EntityUpdate,
   HealthStatus,
+  Population,
+  PopulationInput,
   ReclassifyResult,
   RelationshipUpdate,
   RoleplayXScenario,
+  SamplingInput,
+  SamplingRun,
   ScenarioDraftInput,
   ScenarioRecord,
   ScenarioSaveInput,
@@ -2293,6 +2299,746 @@ export const useDeleteCharacter = <TError = ErrorType<ApiMessage>,
       > => {
       return useMutation(getDeleteCharacterMutationOptions(options));
     }
+
+export const getListPopulationsUrl = () => {
+
+
+
+
+  return `/api/v1/populations`
+}
+
+/**
+ * @summary List populations
+ */
+export const listPopulations = async ( options?: Parameters<typeof customFetch>[1]): Promise<Population[]> => {
+
+  return customFetch<Population[]>(getListPopulationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPopulationsQueryKey = () => {
+    return [
+    `/api/v1/populations`
+    ] as const;
+    }
+
+
+export const getListPopulationsQueryOptions = <TData = Awaited<ReturnType<typeof listPopulations>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPopulations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPopulationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPopulations>>> = ({ signal }) => listPopulations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPopulations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPopulationsQueryResult = NonNullable<Awaited<ReturnType<typeof listPopulations>>>
+export type ListPopulationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List populations
+ */
+
+export function useListPopulations<TData = Awaited<ReturnType<typeof listPopulations>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPopulations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPopulationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreatePopulationUrl = () => {
+
+
+
+
+  return `/api/v1/populations`
+}
+
+/**
+ * @summary Create a population (cohort definition over registered dimensions)
+ */
+export const createPopulation = async (populationInput: PopulationInput, options?: Parameters<typeof customFetch>[1]): Promise<Population> => {
+
+  return customFetch<Population>(getCreatePopulationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(populationInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePopulationMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPopulation>>, TError,{data: BodyType<PopulationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPopulation>>, TError,{data: BodyType<PopulationInput>}, TContext> => {
+
+const mutationKey = ['createPopulation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPopulation>>, {data: BodyType<PopulationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPopulation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePopulationMutationResult = NonNullable<Awaited<ReturnType<typeof createPopulation>>>
+    export type CreatePopulationMutationBody = BodyType<PopulationInput>
+    export type CreatePopulationMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Create a population (cohort definition over registered dimensions)
+ */
+export const useCreatePopulation = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPopulation>>, TError,{data: BodyType<PopulationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPopulation>>,
+        TError,
+        {data: BodyType<PopulationInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePopulationMutationOptions(options));
+    }
+
+export const getGetPopulationUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/populations/${id}`
+}
+
+/**
+ * @summary Get a population
+ */
+export const getPopulation = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Population> => {
+
+  return customFetch<Population>(getGetPopulationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPopulationQueryKey = (id: string,) => {
+    return [
+    `/api/v1/populations/${id}`
+    ] as const;
+    }
+
+
+export const getGetPopulationQueryOptions = <TData = Awaited<ReturnType<typeof getPopulation>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPopulation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPopulationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPopulation>>> = ({ signal }) => getPopulation(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPopulation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPopulationQueryResult = NonNullable<Awaited<ReturnType<typeof getPopulation>>>
+export type GetPopulationQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a population
+ */
+
+export function useGetPopulation<TData = Awaited<ReturnType<typeof getPopulation>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPopulation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPopulationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeletePopulationUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/populations/${id}`
+}
+
+/**
+ * @summary Delete a population (cascades rules and sampling audit)
+ */
+export const deletePopulation = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeletePopulationUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePopulationMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePopulation>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePopulation>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deletePopulation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePopulation>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePopulation(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePopulationMutationResult = NonNullable<Awaited<ReturnType<typeof deletePopulation>>>
+
+    export type DeletePopulationMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Delete a population (cascades rules and sampling audit)
+ */
+export const useDeletePopulation = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePopulation>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePopulation>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeletePopulationMutationOptions(options));
+    }
+
+export const getListDependencyRulesUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/populations/${id}/dependencies`
+}
+
+/**
+ * @summary List statistical dependency rules of a population
+ */
+export const listDependencyRules = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DependencyRule[]> => {
+
+  return customFetch<DependencyRule[]>(getListDependencyRulesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDependencyRulesQueryKey = (id: string,) => {
+    return [
+    `/api/v1/populations/${id}/dependencies`
+    ] as const;
+    }
+
+
+export const getListDependencyRulesQueryOptions = <TData = Awaited<ReturnType<typeof listDependencyRules>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDependencyRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDependencyRulesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDependencyRules>>> = ({ signal }) => listDependencyRules(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDependencyRules>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDependencyRulesQueryResult = NonNullable<Awaited<ReturnType<typeof listDependencyRules>>>
+export type ListDependencyRulesQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary List statistical dependency rules of a population
+ */
+
+export function useListDependencyRules<TData = Awaited<ReturnType<typeof listDependencyRules>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDependencyRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDependencyRulesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateDependencyRuleUrl = () => {
+
+
+
+
+  return `/api/v1/dependencies`
+}
+
+/**
+ * @summary Create a statistical dependency rule (separate from semantic relationships)
+ */
+export const createDependencyRule = async (dependencyRuleInput: DependencyRuleInput, options?: Parameters<typeof customFetch>[1]): Promise<DependencyRule> => {
+
+  return customFetch<DependencyRule>(getCreateDependencyRuleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(dependencyRuleInput)
+  }
+);}
+
+
+
+
+
+export const getCreateDependencyRuleMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDependencyRule>>, TError,{data: BodyType<DependencyRuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDependencyRule>>, TError,{data: BodyType<DependencyRuleInput>}, TContext> => {
+
+const mutationKey = ['createDependencyRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDependencyRule>>, {data: BodyType<DependencyRuleInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDependencyRule(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDependencyRuleMutationResult = NonNullable<Awaited<ReturnType<typeof createDependencyRule>>>
+    export type CreateDependencyRuleMutationBody = BodyType<DependencyRuleInput>
+    export type CreateDependencyRuleMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Create a statistical dependency rule (separate from semantic relationships)
+ */
+export const useCreateDependencyRule = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDependencyRule>>, TError,{data: BodyType<DependencyRuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDependencyRule>>,
+        TError,
+        {data: BodyType<DependencyRuleInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDependencyRuleMutationOptions(options));
+    }
+
+export const getDeleteDependencyRuleUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/dependencies/${id}`
+}
+
+/**
+ * @summary Delete a dependency rule
+ */
+export const deleteDependencyRule = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteDependencyRuleUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteDependencyRuleMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDependencyRule>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDependencyRule>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteDependencyRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDependencyRule>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteDependencyRule(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDependencyRuleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDependencyRule>>>
+
+    export type DeleteDependencyRuleMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Delete a dependency rule
+ */
+export const useDeleteDependencyRule = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDependencyRule>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDependencyRule>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteDependencyRuleMutationOptions(options));
+    }
+
+export const getSamplePopulationUrl = () => {
+
+
+
+
+  return `/api/v1/sampling`
+}
+
+/**
+ * @summary Deterministically sample characters from a population (seeded)
+ */
+export const samplePopulation = async (samplingInput: SamplingInput, options?: Parameters<typeof customFetch>[1]): Promise<SamplingRun> => {
+
+  return customFetch<SamplingRun>(getSamplePopulationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(samplingInput)
+  }
+);}
+
+
+
+
+
+export const getSamplePopulationMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof samplePopulation>>, TError,{data: BodyType<SamplingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof samplePopulation>>, TError,{data: BodyType<SamplingInput>}, TContext> => {
+
+const mutationKey = ['samplePopulation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof samplePopulation>>, {data: BodyType<SamplingInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  samplePopulation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SamplePopulationMutationResult = NonNullable<Awaited<ReturnType<typeof samplePopulation>>>
+    export type SamplePopulationMutationBody = BodyType<SamplingInput>
+    export type SamplePopulationMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Deterministically sample characters from a population (seeded)
+ */
+export const useSamplePopulation = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof samplePopulation>>, TError,{data: BodyType<SamplingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof samplePopulation>>,
+        TError,
+        {data: BodyType<SamplingInput>},
+        TContext
+      > => {
+      return useMutation(getSamplePopulationMutationOptions(options));
+    }
+
+export const getGetSamplingRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/sampling/${id}`
+}
+
+/**
+ * @summary Get a sampling run audit record
+ */
+export const getSamplingRun = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SamplingRun> => {
+
+  return customFetch<SamplingRun>(getGetSamplingRunUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSamplingRunQueryKey = (id: string,) => {
+    return [
+    `/api/v1/sampling/${id}`
+    ] as const;
+    }
+
+
+export const getGetSamplingRunQueryOptions = <TData = Awaited<ReturnType<typeof getSamplingRun>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSamplingRun>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSamplingRunQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSamplingRun>>> = ({ signal }) => getSamplingRun(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSamplingRun>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSamplingRunQueryResult = NonNullable<Awaited<ReturnType<typeof getSamplingRun>>>
+export type GetSamplingRunQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a sampling run audit record
+ */
+
+export function useGetSamplingRun<TData = Awaited<ReturnType<typeof getSamplingRun>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSamplingRun>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSamplingRunQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListSamplingRunsUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/populations/${id}/sampling`
+}
+
+/**
+ * @summary List sampling runs of a population
+ */
+export const listSamplingRuns = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SamplingRun[]> => {
+
+  return customFetch<SamplingRun[]>(getListSamplingRunsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSamplingRunsQueryKey = (id: string,) => {
+    return [
+    `/api/v1/populations/${id}/sampling`
+    ] as const;
+    }
+
+
+export const getListSamplingRunsQueryOptions = <TData = Awaited<ReturnType<typeof listSamplingRuns>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSamplingRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSamplingRunsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSamplingRuns>>> = ({ signal }) => listSamplingRuns(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSamplingRuns>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSamplingRunsQueryResult = NonNullable<Awaited<ReturnType<typeof listSamplingRuns>>>
+export type ListSamplingRunsQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary List sampling runs of a population
+ */
+
+export function useListSamplingRuns<TData = Awaited<ReturnType<typeof listSamplingRuns>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSamplingRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSamplingRunsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetDashboardSummaryUrl = () => {
 

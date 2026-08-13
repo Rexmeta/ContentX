@@ -4,3 +4,6 @@ export * from "./scenarios";
 export * from "./categories";
 export * from "./dimensions";
 export * from "./characters";
+export * from "./populations";
+export * from "./dependencyRules";
+export * from "./samplingRuns";

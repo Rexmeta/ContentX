@@ -46,6 +46,11 @@ export interface CharacterProvenance {
   sourceType?: string | null;
   populationId?: string | null;
   seed?: number | null;
+  populationVersion?: number | null;
+  schemaVersion?: string | null;
+  dependencyGraphVersion?: string | null;
+  sampleIndex?: number | null;
+  strategy?: string | null;
   generatedByProvider?: string | null;
   generatedByModel?: string | null;
 }

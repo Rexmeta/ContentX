@@ -80,6 +80,40 @@ export async function createCharacter(input: {
   return toCharacter(row);
 }
 
+/**
+ * Build (and fully validate) a character insert row from a population
+ * sample WITHOUT writing it — the population domain commits sampled
+ * characters and the sampling audit in one transaction. Provenance records
+ * populationId/seed/versions for reproducibility.
+ */
+export async function buildSampledCharacterRow(input: {
+  name: string;
+  attributes: CharacterAttributes;
+  provenance: CharacterProvenance;
+}): Promise<{
+  id: string;
+  name: string;
+  canonicalName: null;
+  aliases: null;
+  attributes: CharacterAttributes;
+  derivedClassifications: null;
+  provenance: CharacterProvenance;
+  schemaVersion: string;
+}> {
+  checkIdentityFields(input);
+  validateCharacterAttributes(input.attributes, await dimensionIndex());
+  return {
+    id: newId("character"),
+    name: input.name.trim(),
+    canonicalName: null,
+    aliases: null,
+    attributes: input.attributes,
+    derivedClassifications: null,
+    provenance: input.provenance,
+    schemaVersion: CHARACTER_SCHEMA_VERSION,
+  };
+}
+
 export async function updateCharacter(
   id: string,
   patch: {

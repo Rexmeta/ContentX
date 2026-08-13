@@ -340,6 +340,16 @@ export interface CharacterProvenance {
   /** @nullable */
   seed?: number | null;
   /** @nullable */
+  populationVersion?: number | null;
+  /** @nullable */
+  schemaVersion?: string | null;
+  /** @nullable */
+  dependencyGraphVersion?: string | null;
+  /** @nullable */
+  sampleIndex?: number | null;
+  /** @nullable */
+  strategy?: string | null;
+  /** @nullable */
   generatedByProvider?: string | null;
   /** @nullable */
   generatedByModel?: string | null;
@@ -385,6 +395,200 @@ export interface CharacterUpdate {
   aliases?: string[];
   attributes?: CharacterAttributes;
   derivedClassifications?: CharacterUpdateDerivedClassifications;
+}
+
+export type DistributionType = typeof DistributionType[keyof typeof DistributionType];
+
+
+export const DistributionType = {
+  categorical: 'categorical',
+  uniform: 'uniform',
+  normal: 'normal',
+} as const;
+
+export type DistributionWeights = {[key: string]: number};
+
+export interface Distribution {
+  type: DistributionType;
+  weights?: DistributionWeights;
+  min?: number;
+  max?: number;
+  mean?: number;
+  stddev?: number;
+  integer?: boolean;
+}
+
+export interface PopulationConstraint {
+  dimension: string;
+  allowedValues?: string[];
+  min?: number;
+  max?: number;
+}
+
+export type SamplingConfigDefaultStrategy = typeof SamplingConfigDefaultStrategy[keyof typeof SamplingConfigDefaultStrategy];
+
+
+export const SamplingConfigDefaultStrategy = {
+  random: 'random',
+  weighted: 'weighted',
+  conditional: 'conditional',
+  stratified: 'stratified',
+} as const;
+
+export interface SamplingConfig {
+  defaultStrategy?: SamplingConfigDefaultStrategy;
+  defaultSampleSize?: number;
+}
+
+export interface PopulationProvenance {
+  operation: string;
+  createdAt: string;
+  /** @nullable */
+  sourceType?: string | null;
+}
+
+export type PopulationDistributions = {[key: string]: Distribution};
+
+export interface Population {
+  id: string;
+  name: string;
+  domain: string;
+  schemaVersion: string;
+  dimensions: string[];
+  distributions: PopulationDistributions;
+  constraints?: PopulationConstraint[];
+  samplingConfig?: SamplingConfig | null;
+  provenance: PopulationProvenance;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PopulationInputDistributions = {[key: string]: Distribution};
+
+export interface PopulationInput {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  domain: string;
+  /** @minItems 1 */
+  dimensions: string[];
+  distributions: PopulationInputDistributions;
+  constraints?: PopulationConstraint[];
+  samplingConfig?: SamplingConfig;
+}
+
+export interface RuleCondition {
+  equals?: unknown;
+  in?: string[];
+  min?: number;
+  max?: number;
+}
+
+export interface RuleEffect {
+  distribution?: Distribution;
+  value?: unknown;
+  excludedValues?: string[];
+  allowedValues?: string[];
+  min?: number;
+  max?: number;
+}
+
+export type DependencyRuleType = typeof DependencyRuleType[keyof typeof DependencyRuleType];
+
+
+export const DependencyRuleType = {
+  conditional: 'conditional',
+  constraint: 'constraint',
+  exclusion: 'exclusion',
+  implication: 'implication',
+  correlation: 'correlation',
+} as const;
+
+export interface DependencyRule {
+  id: string;
+  populationId: string;
+  sourceDimension: string;
+  targetDimension: string;
+  type: DependencyRuleType;
+  conditions: RuleCondition[];
+  effect: RuleEffect;
+  /** @nullable */
+  strength?: number | null;
+  provenance: PopulationProvenance;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DependencyRuleInputType = typeof DependencyRuleInputType[keyof typeof DependencyRuleInputType];
+
+
+export const DependencyRuleInputType = {
+  conditional: 'conditional',
+  constraint: 'constraint',
+  exclusion: 'exclusion',
+  implication: 'implication',
+  correlation: 'correlation',
+} as const;
+
+export interface DependencyRuleInput {
+  populationId: string;
+  sourceDimension: string;
+  targetDimension: string;
+  type: DependencyRuleInputType;
+  /** @minItems 1 */
+  conditions: RuleCondition[];
+  effect: RuleEffect;
+  strength?: number;
+}
+
+export type SamplingInputStrategy = typeof SamplingInputStrategy[keyof typeof SamplingInputStrategy];
+
+
+export const SamplingInputStrategy = {
+  random: 'random',
+  weighted: 'weighted',
+  conditional: 'conditional',
+  stratified: 'stratified',
+} as const;
+
+export type SamplingInputTargetDistribution = {[key: string]: {[key: string]: number}};
+
+export interface SamplingInput {
+  populationId: string;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  sampleSize: number;
+  strategy: SamplingInputStrategy;
+  seed: number;
+  constraints?: PopulationConstraint[];
+  targetDistribution?: SamplingInputTargetDistribution;
+}
+
+export type SamplingRunTargetDistribution = {[key: string]: {[key: string]: number}} | null;
+
+export type SamplingRunRequestedDistribution = { [key: string]: unknown };
+
+export type SamplingRunAchievedDistribution = {[key: string]: {[key: string]: number}};
+
+export interface SamplingRun {
+  id: string;
+  populationId: string;
+  seed: number;
+  strategy: string;
+  sampleSize: number;
+  constraints?: PopulationConstraint[] | null;
+  targetDistribution?: SamplingRunTargetDistribution;
+  requestedDistribution: SamplingRunRequestedDistribution;
+  achievedDistribution: SamplingRunAchievedDistribution;
+  characterIds: string[];
+  populationVersion: number;
+  schemaVersion: string;
+  dependencyGraphVersion: string;
+  createdAt: string;
 }
 
 export type EntityUpdateAttributes = { [key: string]: unknown };

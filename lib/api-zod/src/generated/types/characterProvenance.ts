@@ -16,6 +16,16 @@ export interface CharacterProvenance {
   /** @nullable */
   seed?: number | null;
   /** @nullable */
+  populationVersion?: number | null;
+  /** @nullable */
+  schemaVersion?: string | null;
+  /** @nullable */
+  dependencyGraphVersion?: string | null;
+  /** @nullable */
+  sampleIndex?: number | null;
+  /** @nullable */
+  strategy?: string | null;
+  /** @nullable */
   generatedByProvider?: string | null;
   /** @nullable */
   generatedByModel?: string | null;

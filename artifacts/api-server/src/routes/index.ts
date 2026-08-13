@@ -4,6 +4,7 @@ import contentRouter from "./content";
 import scenariosRouter from "./scenarios";
 import projectionsRouter from "./projections";
 import charactersRouter from "./characters";
+import populationsRouter from "./populations";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(contentRouter);
 router.use(scenariosRouter);
 router.use(projectionsRouter);
 router.use(charactersRouter);
+router.use(populationsRouter);
 
 export default router;

@@ -12,7 +12,10 @@ export type IdPrefix =
   | "scenario"
   | "category"
   | "dimension"
-  | "character";
+  | "character"
+  | "population"
+  | "dependency"
+  | "samplingrun";
 
 /** Stable prefixed identifiers. Never use array indexes as identity. */
 export function newId(prefix: IdPrefix): string {

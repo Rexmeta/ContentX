@@ -16,6 +16,8 @@ tags:
     description: Platform projections
   - name: character
     description: Canonical character and dimension registry operations
+  - name: population
+    description: Population, dependency rule, and deterministic sampling operations
 paths:
   /healthz:
     get:
@@ -691,6 +693,236 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/populations:
+    get:
+      operationId: listPopulations
+      tags: [population]
+      summary: List populations
+      responses:
+        "200":
+          description: Population list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Population"
+    post:
+      operationId: createPopulation
+      tags: [population]
+      summary: Create a population (cohort definition over registered dimensions)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PopulationInput"
+      responses:
+        "201":
+          description: Created population
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Population"
+        "400":
+          description: Invalid population definition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/populations/{id}:
+    get:
+      operationId: getPopulation
+      tags: [population]
+      summary: Get a population
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Population
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Population"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+    delete:
+      operationId: deletePopulation
+      tags: [population]
+      summary: Delete a population (cascades rules and sampling audit)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/populations/{id}/dependencies:
+    get:
+      operationId: listDependencyRules
+      tags: [population]
+      summary: List statistical dependency rules of a population
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Dependency rule list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DependencyRule"
+        "404":
+          description: Population not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/dependencies:
+    post:
+      operationId: createDependencyRule
+      tags: [population]
+      summary: Create a statistical dependency rule (separate from semantic relationships)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DependencyRuleInput"
+      responses:
+        "201":
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DependencyRule"
+        "400":
+          description: Invalid rule (unknown dimension, bad effect, would create a cycle)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Population not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/dependencies/{id}:
+    delete:
+      operationId: deleteDependencyRule
+      tags: [population]
+      summary: Delete a dependency rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/sampling:
+    post:
+      operationId: samplePopulation
+      tags: [population]
+      summary: Deterministically sample characters from a population (seeded)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SamplingInput"
+      responses:
+        "201":
+          description: Sampling run (audit) with created character ids
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SamplingRun"
+        "400":
+          description: Invalid sampling request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Population not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/sampling/{id}:
+    get:
+      operationId: getSamplingRun
+      tags: [population]
+      summary: Get a sampling run audit record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sampling run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SamplingRun"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/populations/{id}/sampling:
+    get:
+      operationId: listSamplingRuns
+      tags: [population]
+      summary: List sampling runs of a population
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Sampling run list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SamplingRun"
+        "404":
+          description: Population not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -1050,6 +1282,11 @@ components:
         sourceType: { type: ["string", "null"] }
         populationId: { type: ["string", "null"] }
         seed: { type: ["number", "null"] }
+        populationVersion: { type: ["integer", "null"] }
+        schemaVersion: { type: ["string", "null"] }
+        dependencyGraphVersion: { type: ["string", "null"] }
+        sampleIndex: { type: ["integer", "null"] }
+        strategy: { type: ["string", "null"] }
         generatedByProvider: { type: ["string", "null"] }
         generatedByModel: { type: ["string", "null"] }
     Character:
@@ -1105,6 +1342,213 @@ components:
             - type: object
               additionalProperties: { type: string }
             - type: "null"
+    Distribution:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [categorical, uniform, normal]
+        weights:
+          type: object
+          additionalProperties: { type: number }
+        min: { type: number }
+        max: { type: number }
+        mean: { type: number }
+        stddev: { type: number }
+        integer: { type: boolean }
+    PopulationConstraint:
+      type: object
+      required: [dimension]
+      properties:
+        dimension: { type: string }
+        allowedValues:
+          type: array
+          items: { type: string }
+        min: { type: number }
+        max: { type: number }
+    SamplingConfig:
+      type: object
+      properties:
+        defaultStrategy:
+          type: string
+          enum: [random, weighted, conditional, stratified]
+        defaultSampleSize: { type: integer }
+    PopulationProvenance:
+      type: object
+      required: [operation, createdAt]
+      properties:
+        operation: { type: string }
+        createdAt: { type: string }
+        sourceType: { type: ["string", "null"] }
+    Population:
+      type: object
+      required: [id, name, domain, schemaVersion, dimensions, distributions, provenance, version, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        domain: { type: string }
+        schemaVersion: { type: string }
+        dimensions:
+          type: array
+          items: { type: string }
+        distributions:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Distribution"
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/PopulationConstraint"
+        samplingConfig:
+          oneOf:
+            - $ref: "#/components/schemas/SamplingConfig"
+            - type: "null"
+        provenance:
+          $ref: "#/components/schemas/PopulationProvenance"
+        version: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    PopulationInput:
+      type: object
+      required: [name, domain, dimensions, distributions]
+      properties:
+        name: { type: string, minLength: 1 }
+        domain: { type: string, minLength: 1 }
+        dimensions:
+          type: array
+          items: { type: string }
+          minItems: 1
+        distributions:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Distribution"
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/PopulationConstraint"
+        samplingConfig:
+          $ref: "#/components/schemas/SamplingConfig"
+    RuleCondition:
+      type: object
+      properties:
+        equals: {}
+        in:
+          type: array
+          items: { type: string }
+        min: { type: number }
+        max: { type: number }
+    RuleEffect:
+      type: object
+      properties:
+        distribution:
+          $ref: "#/components/schemas/Distribution"
+        value: {}
+        excludedValues:
+          type: array
+          items: { type: string }
+        allowedValues:
+          type: array
+          items: { type: string }
+        min: { type: number }
+        max: { type: number }
+    DependencyRule:
+      type: object
+      required: [id, populationId, sourceDimension, targetDimension, type, conditions, effect, provenance, version, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        populationId: { type: string }
+        sourceDimension: { type: string }
+        targetDimension: { type: string }
+        type:
+          type: string
+          enum: [conditional, constraint, exclusion, implication, correlation]
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleCondition"
+        effect:
+          $ref: "#/components/schemas/RuleEffect"
+        strength: { type: ["number", "null"] }
+        provenance:
+          $ref: "#/components/schemas/PopulationProvenance"
+        version: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+    DependencyRuleInput:
+      type: object
+      required: [populationId, sourceDimension, targetDimension, type, conditions, effect]
+      properties:
+        populationId: { type: string }
+        sourceDimension: { type: string }
+        targetDimension: { type: string }
+        type:
+          type: string
+          enum: [conditional, constraint, exclusion, implication, correlation]
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleCondition"
+          minItems: 1
+        effect:
+          $ref: "#/components/schemas/RuleEffect"
+        strength: { type: number }
+    SamplingInput:
+      type: object
+      required: [populationId, sampleSize, strategy, seed]
+      properties:
+        populationId: { type: string }
+        sampleSize: { type: integer, minimum: 1, maximum: 1000 }
+        strategy:
+          type: string
+          enum: [random, weighted, conditional, stratified]
+        seed: { type: integer }
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/PopulationConstraint"
+        targetDistribution:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: { type: number }
+    SamplingRun:
+      type: object
+      required: [id, populationId, seed, strategy, sampleSize, requestedDistribution, achievedDistribution, characterIds, populationVersion, schemaVersion, dependencyGraphVersion, createdAt]
+      properties:
+        id: { type: string }
+        populationId: { type: string }
+        seed: { type: integer }
+        strategy: { type: string }
+        sampleSize: { type: integer }
+        constraints:
+          oneOf:
+            - type: array
+              items:
+                $ref: "#/components/schemas/PopulationConstraint"
+            - type: "null"
+        targetDistribution:
+          oneOf:
+            - type: object
+              additionalProperties:
+                type: object
+                additionalProperties: { type: number }
+            - type: "null"
+        requestedDistribution:
+          type: object
+          additionalProperties: true
+        achievedDistribution:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: { type: number }
+        characterIds:
+          type: array
+          items: { type: string }
+        populationVersion: { type: integer }
+        schemaVersion: { type: string }
+        dependencyGraphVersion: { type: string }
+        createdAt: { type: string }
     EntityUpdate:
       type: object
       properties:
