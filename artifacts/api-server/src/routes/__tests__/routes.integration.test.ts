@@ -53,7 +53,12 @@ vi.mock("../../domains/content/repository", () => ({
 import * as scenarioRepo from "../../domains/scenario/repository";
 import * as contentRepo from "../../domains/content/repository";
 import { synthesizeWithLLM } from "../../domains/scenario/synthesizer";
-import { classifyScenario } from "../../domains/scenario/classificationService";
+import {
+  classifyScenario,
+  acceptManualClassification,
+  InvalidClassificationError,
+} from "../../domains/scenario/classificationService";
+import { ClassificationError } from "../../domains/scenario/classifier";
 import app from "../../app";
 
 const scenarioA = amplifyIdea("빵집 사장과 프랜차이즈의 갈등");
@@ -77,6 +82,9 @@ const insertScenario = vi.mocked(scenarioRepo.insertScenario);
 const synthesize = vi.mocked(synthesizeWithLLM);
 const classify = vi.mocked(classifyScenario);
 const insertContent = vi.mocked(contentRepo.insertContentWithInitialVersion);
+const listScenarios = vi.mocked(scenarioRepo.listScenarios);
+const updateScenario = vi.mocked(scenarioRepo.updateScenario);
+const acceptManual = vi.mocked(acceptManualClassification);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -359,5 +367,133 @@ describe("POST /api/v1/content (lineage → provenance)", () => {
       .send({ prompt: "일반 그래프", scenario: scenarioA });
     expect(res.status).toBe(201);
     expect(res.body.provenance?.lineage).toBeUndefined();
+  });
+});
+
+describe("POST /api/v1/scenarios/:id/classify", () => {
+  it("returns 404 for an unknown scenario id", async () => {
+    const res = await request(app).post(
+      "/api/v1/scenarios/scenario_missing/classify",
+    );
+    expect(res.status).toBe(404);
+    expect(classify).not.toHaveBeenCalled();
+  });
+
+  it("returns 502 when the classifier fails", async () => {
+    classify.mockRejectedValueOnce(
+      new ClassificationError("AI provider request failed: boom"),
+    );
+    const res = await request(app).post(
+      "/api/v1/scenarios/scenario_a/classify",
+    );
+    expect(res.status).toBe(502);
+    expect(res.body.error).toContain("AI provider request failed");
+    expect(updateScenario).not.toHaveBeenCalled();
+  });
+
+  it("persists the classification and returns the updated record", async () => {
+    const classification = {
+      domain: "직장",
+      conflictType: "조직 갈등",
+      tone: "긴장",
+      tags: ["테스트"],
+    };
+    updateScenario.mockImplementation(async (id, patch) => ({
+      ...row(id),
+      ...patch,
+      updatedAt: new Date("2026-01-05T00:00:00Z"),
+    }) as ScenarioRow);
+    const res = await request(app).post(
+      "/api/v1/scenarios/scenario_a/classify",
+    );
+    expect(res.status).toBe(200);
+    expect(updateScenario).toHaveBeenCalledWith("scenario_a", {
+      classification,
+    });
+    expect(res.body.classification).toEqual(classification);
+  });
+});
+
+describe("POST /api/v1/scenarios/reclassify", () => {
+  it("aggregates partial failures into {classified, failed}", async () => {
+    listScenarios.mockResolvedValueOnce([
+      row("scenario_a", scenarioA),
+      row("scenario_b", scenarioB),
+      row("scenario_c", scenarioA),
+    ]);
+    classify
+      .mockResolvedValueOnce({
+        domain: "직장",
+        conflictType: "조직 갈등",
+        tone: "긴장",
+        tags: ["테스트"],
+      })
+      .mockRejectedValueOnce(new ClassificationError("boom"))
+      .mockResolvedValueOnce({
+        domain: "가정",
+        conflictType: "세대 갈등",
+        tone: "온정",
+        tags: ["테스트"],
+      });
+    updateScenario.mockImplementation(async (id, patch) => ({
+      ...row(id),
+      ...patch,
+    }) as ScenarioRow);
+    const res = await request(app).post("/api/v1/scenarios/reclassify");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ classified: 2, failed: 1 });
+    // Only successful classifications are persisted.
+    expect(updateScenario).toHaveBeenCalledTimes(2);
+    expect(updateScenario.mock.calls.map((c) => c[0])).toEqual([
+      "scenario_a",
+      "scenario_c",
+    ]);
+  });
+});
+
+describe("PATCH /api/v1/scenarios/:id (manual classification)", () => {
+  const manualBody = {
+    classification: {
+      domain: "  ",
+      conflictType: "조직 갈등",
+      tone: "긴장",
+      tags: ["테스트"],
+    },
+  };
+
+  it("returns 400 when the manual classification is invalid", async () => {
+    acceptManual.mockRejectedValueOnce(
+      new InvalidClassificationError("domain must not be empty."),
+    );
+    const res = await request(app)
+      .patch("/api/v1/scenarios/scenario_a")
+      .send(manualBody);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("domain must not be empty");
+    expect(updateScenario).not.toHaveBeenCalled();
+  });
+
+  it("persists a normalized manual classification", async () => {
+    const normalized = {
+      domain: "직장",
+      conflictType: "조직 갈등",
+      tone: "긴장",
+      tags: ["테스트"],
+      classifiedBy: "manual",
+    };
+    acceptManual.mockResolvedValueOnce(normalized);
+    updateScenario.mockImplementation(async (id, patch) => ({
+      ...row(id),
+      ...patch,
+      updatedAt: new Date("2026-01-05T00:00:00Z"),
+    }) as ScenarioRow);
+    const res = await request(app)
+      .patch("/api/v1/scenarios/scenario_a")
+      .send(manualBody);
+    expect(res.status).toBe(200);
+    expect(updateScenario).toHaveBeenCalledWith("scenario_a", {
+      classification: normalized,
+    });
+    expect(res.body.classification).toEqual(normalized);
   });
 });
