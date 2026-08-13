@@ -41,6 +41,38 @@ describe("validateGraph (schema + reference validation)", () => {
     expect(broken[0]!.objectId).toBe("relationship_broken");
   });
 
+  it("accepts new canonical entity kinds and identity fields", () => {
+    const graph = validGraphPayload();
+    graph.entities.push({
+      id: "entity_person1",
+      kind: "person",
+      name: "김민준",
+      canonicalName: "kim-minjun",
+      aliases: ["민준", "MJ Kim"],
+    });
+    const report = validateGraph(graph);
+    expect(report.valid).toBe(true);
+    expect(report.issues.some((i) => i.code === "UNKNOWN_KIND")).toBe(false);
+  });
+
+  it("warns on unknown entity kind without failing", () => {
+    const graph = validGraphPayload();
+    graph.entities[0]!.kind = "gizmo";
+    const report = validateGraph(graph);
+    expect(report.valid).toBe(true);
+    expect(
+      report.issues.some((i) => i.code === "UNKNOWN_KIND" && i.severity === "warning"),
+    ).toBe(true);
+  });
+
+  it("rejects empty or whitespace-only aliases", () => {
+    const graph = validGraphPayload();
+    graph.entities[0]!.aliases = ["valid", "   "];
+    const report = validateGraph(graph);
+    expect(report.valid).toBe(false);
+    expect(report.issues.some((i) => i.code === "EMPTY_ALIAS")).toBe(true);
+  });
+
   it("warns on non-conventional id format without failing", () => {
     const graph = validGraphPayload();
     graph.entities[0]!.id = "0"; // array-index style identity is not allowed

@@ -1,4 +1,6 @@
-import type { GraphPayload } from "../content/model";
+import { ENTITY_KINDS, type GraphPayload } from "../content/model";
+
+const KNOWN_KINDS: ReadonlySet<string> = new Set(ENTITY_KINDS);
 
 export interface ValidationIssue {
   severity: "error" | "warning";
@@ -19,6 +21,8 @@ const ID_PATTERN = /^(content|entity|relationship|event|narrative|asset|projecti
 export const VALIDATION_CHECKS = [
   "schema:required-fields",
   "schema:id-format",
+  "schema:entity-kind",
+  "schema:aliases",
   "identity:duplicate-ids",
   "references:relationship-endpoints",
   "relationships:self-reference",
@@ -47,6 +51,22 @@ export function validateGraph(graph: GraphPayload): ValidationResult {
         code: "ID_FORMAT",
         message: `Entity id "${e.id}" does not follow the prefixed stable-id convention.`,
         objectId: e.id,
+      });
+    }
+    if (e.kind && !KNOWN_KINDS.has(e.kind)) {
+      issues.push({
+        severity: "warning",
+        code: "UNKNOWN_KIND",
+        message: `Entity "${e.id}" has unknown kind "${e.kind}".`,
+        objectId: e.id || null,
+      });
+    }
+    if (e.aliases?.some((a) => !a || a.trim() === "")) {
+      issues.push({
+        severity: "error",
+        code: "EMPTY_ALIAS",
+        message: `Entity "${e.id}" has an empty alias.`,
+        objectId: e.id || null,
       });
     }
     if (e.id) {

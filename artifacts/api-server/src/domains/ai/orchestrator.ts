@@ -2,9 +2,10 @@ import type { GraphPayload, Provenance } from "../content/model";
 import { validateGraph } from "../validation/validator";
 import type { AIProvider } from "./provider";
 import { MockProvider } from "./mockProvider";
-import { amplifyIdea, type DramaticScenario } from "./scenarioAmplifier";
+import type { DramaticScenario } from "../scenario/model";
+import { amplifyIdea } from "./mockAmplifier";
 import { amplifyIdeaWithLLM } from "./llmAmplifier";
-import { buildGraphFromScenario } from "./scenarioGraphBuilder";
+import { buildGraphFromScenario } from "../scenario/graphBuilder";
 
 export type Amplifier = (
   idea: string,

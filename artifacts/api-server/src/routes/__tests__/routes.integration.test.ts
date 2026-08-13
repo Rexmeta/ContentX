@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import type { ScenarioRow, ContentRow } from "@workspace/db";
-import { amplifyIdea } from "../../domains/ai/scenarioAmplifier";
+import { amplifyIdea } from "../../domains/ai/mockAmplifier";
 import {
   SynthesisError,
   SYNTHESIZER_ID,

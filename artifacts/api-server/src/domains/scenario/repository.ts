@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { db, scenariosTable, type ScenarioRow } from "@workspace/db";
-import type { DramaticScenario } from "../ai/scenarioAmplifier";
+import type { DramaticScenario } from "./model";
 import type { Classification } from "./taxonomy";
 import type { Lineage } from "./synthesizer";
 

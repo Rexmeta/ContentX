@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { amplifyIdea } from "../ai/scenarioAmplifier";
-import { buildGraphFromScenario } from "../ai/scenarioGraphBuilder";
+import { amplifyIdea } from "../ai/mockAmplifier";
+import { buildGraphFromScenario } from "../scenario/graphBuilder";
 import { ContentOrchestrator, mockAmplifier } from "../ai/orchestrator";
 import { MockProvider } from "../ai/mockProvider";
 

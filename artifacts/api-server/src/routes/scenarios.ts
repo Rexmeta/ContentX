@@ -41,7 +41,7 @@ import { ClassificationError } from "../domains/scenario/classifier";
 import type { Classification } from "../domains/scenario/taxonomy";
 import { newId } from "../shared/id";
 import type { ScenarioRow } from "@workspace/db";
-import type { DramaticScenario } from "../domains/ai/scenarioAmplifier";
+import type { DramaticScenario } from "../domains/scenario/model";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();

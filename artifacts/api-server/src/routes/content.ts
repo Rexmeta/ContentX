@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { ScenarioValidationError } from "../domains/ai/orchestrator";
+import { orchestrator, ScenarioValidationError } from "../domains/ai/orchestrator";
 import {
   CreateContentBody,
   UpdateEntityBody,
@@ -22,7 +22,7 @@ import {
   validateLineage,
   InvalidLineageError,
 } from "../domains/scenario/lineageService";
-import type { Lineage } from "../domains/scenario/synthesizer";
+import type { Lineage } from "../shared/lineage";
 
 const router: IRouter = Router();
 
@@ -61,14 +61,13 @@ router.post("/v1/content", async (req, res): Promise<void> => {
       throw err;
     }
   }
-  let graph;
+  // Orchestration (generate or compose from a confirmed scenario) happens
+  // here, outside the content domain; the domain only commits the payload.
+  let payload;
   try {
-    graph = await service.createFromPrompt(
-      parsed.data.prompt,
-      parsed.data.title,
-      parsed.data.scenario,
-      lineage,
-    );
+    payload = parsed.data.scenario
+      ? orchestrator.generateFromScenario(parsed.data.prompt, parsed.data.scenario)
+      : await orchestrator.generate(parsed.data.prompt);
   } catch (err) {
     if (err instanceof ScenarioValidationError) {
       res.status(400).json({ error: err.message });
@@ -76,6 +75,16 @@ router.post("/v1/content", async (req, res): Promise<void> => {
     }
     throw err;
   }
+  // Carry validated synthesis lineage into canonical provenance.
+  if (lineage && payload.provenance) {
+    payload.provenance = { ...payload.provenance, lineage };
+  }
+  const graph = await service.commitGraph(
+    parsed.data.prompt,
+    payload,
+    parsed.data.title,
+    parsed.data.scenario?.title,
+  );
   res.status(201).json(CreateContentResponse.parse(graph));
 });
 

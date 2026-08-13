@@ -9,9 +9,19 @@ import type { EntityAttributes } from './entityAttributes';
 
 export interface Entity {
   id: string;
-  /** Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world) */
+  /** Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world) */
   kind: string;
   name: string;
+  /**
+     * Stable canonical identity name; `name` is the display name
+     * @nullable
+     */
+  canonicalName?: string | null;
+  /**
+     * Alternative names referring to the same canonical entity
+     * @items.minLength 1
+     */
+  aliases?: string[];
   /** @nullable */
   description?: string | null;
   attributes?: EntityAttributes;

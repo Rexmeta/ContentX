@@ -17,9 +17,19 @@ export type EntityAttributes = { [key: string]: unknown };
 
 export interface Entity {
   id: string;
-  /** Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world) */
+  /** Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world) */
   kind: string;
   name: string;
+  /**
+     * Stable canonical identity name; `name` is the display name
+     * @nullable
+     */
+  canonicalName?: string | null;
+  /**
+     * Alternative names referring to the same canonical entity
+     * @items.minLength 1
+     */
+  aliases?: string[];
   /** @nullable */
   description?: string | null;
   attributes?: EntityAttributes;
@@ -234,6 +244,10 @@ export type EntityUpdateAttributes = { [key: string]: unknown };
 export interface EntityUpdate {
   /** @minLength 1 */
   name?: string;
+  /** @nullable */
+  canonicalName?: string | null;
+  /** @items.minLength 1 */
+  aliases?: string[];
   /** @nullable */
   description?: string | null;
   attributes?: EntityUpdateAttributes;

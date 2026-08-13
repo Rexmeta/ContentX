@@ -6,6 +6,11 @@
 
 export const ENTITY_KINDS = [
   "character",
+  "person",
+  "value",
+  "trait",
+  "capability",
+  "population",
   "organization",
   "location",
   "object",
@@ -30,6 +35,10 @@ export interface Entity {
   id: string;
   kind: string;
   name: string;
+  /** Stable canonical identity name; `name` is the display name. */
+  canonicalName?: string | null;
+  /** Alternative names/spellings referring to the same canonical entity. */
+  aliases?: string[];
   description?: string | null;
   attributes?: Record<string, unknown>;
 }
@@ -51,7 +60,7 @@ export interface Provenance {
   sourceContentIds?: string[];
   generatedByProvider?: string | null;
   generatedByModel?: string | null;
-  lineage?: import("../scenario/synthesizer").Lineage | null;
+  lineage?: import("../../shared/lineage").Lineage | null;
 }
 
 /** The graph payload persisted as JSONB (without DB metadata). */

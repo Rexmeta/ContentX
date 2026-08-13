@@ -11,6 +11,10 @@ export interface EntityUpdate {
   /** @minLength 1 */
   name?: string;
   /** @nullable */
+  canonicalName?: string | null;
+  /** @items.minLength 1 */
+  aliases?: string[];
+  /** @nullable */
   description?: string | null;
   attributes?: EntityUpdateAttributes;
 }

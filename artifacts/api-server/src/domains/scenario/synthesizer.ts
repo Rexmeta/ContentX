@@ -1,35 +1,18 @@
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { DraftScenarioResponse } from "@workspace/api-zod";
-import type { DramaticScenario } from "../ai/scenarioAmplifier";
+import { completeJSON, LLMRequestError, LLM_MODEL_ID } from "../ai/llmClient";
+import type { DramaticScenario } from "./model";
+import type { Lineage, LineageParent, ScenarioElement } from "../../shared/lineage";
 
-export const SYNTHESIZER_MODEL = "gpt-5.6-terra";
-export const SYNTHESIZER_ID = `openai/${SYNTHESIZER_MODEL}`;
+export const SYNTHESIZER_ID = LLM_MODEL_ID;
 
 /** Thrown when LLM synthesis fails (provider error or invalid output). */
 export class SynthesisError extends Error {}
 
-export type ScenarioElement =
-  | "characters"
-  | "conflict"
-  | "setting"
-  | "twist"
-  | "structure";
+export type { Lineage, LineageParent, ScenarioElement };
 
 export interface SynthesisSourceInput {
   scenario: DramaticScenario;
   elements: ScenarioElement[];
-}
-
-export interface LineageParent {
-  scenarioId: string;
-  title: string;
-  elements: ScenarioElement[];
-}
-
-export interface Lineage {
-  parents: LineageParent[];
-  instruction?: string | null;
-  synthesizedBy?: string | null;
 }
 
 export type Synthesizer = (
@@ -123,32 +106,17 @@ function buildUserPrompt(
 
 /** LLM synthesizer: recombines selected elements into a new scenario. */
 export const synthesizeWithLLM: Synthesizer = async (sources, instruction) => {
-  let response;
-  try {
-    response = await openai.chat.completions.create({
-      model: SYNTHESIZER_MODEL,
-      max_completion_tokens: 8192,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: buildUserPrompt(sources, instruction) },
-      ],
-    });
-  } catch (err) {
-    throw new SynthesisError(
-      `AI provider request failed: ${err instanceof Error ? err.message : String(err)}`,
-      { cause: err },
-    );
-  }
-
-  const raw = response.choices[0]?.message?.content;
-  if (!raw) throw new SynthesisError("AI returned an empty response.");
-
   let json: unknown;
   try {
-    json = JSON.parse(raw);
-  } catch {
-    throw new SynthesisError("AI synthesis response was not valid JSON.");
+    json = await completeJSON({
+      system: SYSTEM_PROMPT,
+      user: buildUserPrompt(sources, instruction),
+    });
+  } catch (err) {
+    if (err instanceof LLMRequestError) {
+      throw new SynthesisError(err.message, { cause: err });
+    }
+    throw err;
   }
 
   const parsed = DraftScenarioResponse.safeParse(json);

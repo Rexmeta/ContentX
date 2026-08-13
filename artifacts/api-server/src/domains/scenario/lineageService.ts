@@ -1,20 +1,15 @@
 import * as repo from "./repository";
+import { SYNTHESIZER_ID } from "./synthesizer";
 import {
-  SYNTHESIZER_ID,
+  SCENARIO_ELEMENTS,
   type Lineage,
   type ScenarioElement,
-} from "./synthesizer";
+} from "../../shared/lineage";
 
 /** Thrown when client-provided lineage fails server-side invariants (→ 400). */
 export class InvalidLineageError extends Error {}
 
-const VALID_ELEMENTS: ReadonlySet<string> = new Set([
-  "characters",
-  "conflict",
-  "setting",
-  "twist",
-  "structure",
-]);
+const VALID_ELEMENTS: ReadonlySet<string> = new Set(SCENARIO_ELEMENTS);
 
 const MAX_INSTRUCTION_LENGTH = 500;
 

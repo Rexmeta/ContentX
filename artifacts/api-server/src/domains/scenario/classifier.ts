@@ -1,10 +1,9 @@
 import { z } from "zod/v4";
-import { openai } from "@workspace/integrations-openai-ai-server";
-import type { DramaticScenario } from "../ai/scenarioAmplifier";
+import { completeJSON, LLMRequestError, LLM_MODEL_ID } from "../ai/llmClient";
+import type { DramaticScenario } from "./model";
 import type { CategoryAxis, Classification } from "./taxonomy";
 
-export const CLASSIFIER_MODEL = "gpt-5.6-terra";
-export const CLASSIFIER_ID = `openai/${CLASSIFIER_MODEL}`;
+export const CLASSIFIER_ID = LLM_MODEL_ID;
 
 /** Thrown when LLM classification fails (provider error or invalid output). */
 export class ClassificationError extends Error {}
@@ -49,29 +48,14 @@ JSON만 응답: {"domain": string, "conflictType": string, "tone": string, "tags
 
 /** LLM classifier: picks existing categories or proposes new ones. */
 export const classifyWithLLM: Classifier = async (scenario, existing) => {
-  let response;
-  try {
-    response = await openai.chat.completions.create({
-      model: CLASSIFIER_MODEL,
-      max_completion_tokens: 8192,
-      response_format: { type: "json_object" },
-      messages: [{ role: "user", content: buildPrompt(scenario, existing) }],
-    });
-  } catch (err) {
-    throw new ClassificationError(
-      `AI provider request failed: ${err instanceof Error ? err.message : String(err)}`,
-      { cause: err },
-    );
-  }
-
-  const raw = response.choices[0]?.message?.content;
-  if (!raw) throw new ClassificationError("AI returned an empty response.");
-
   let json: unknown;
   try {
-    json = JSON.parse(raw);
-  } catch {
-    throw new ClassificationError("AI classification was not valid JSON.");
+    json = await completeJSON({ user: buildPrompt(scenario, existing) });
+  } catch (err) {
+    if (err instanceof LLMRequestError) {
+      throw new ClassificationError(err.message, { cause: err });
+    }
+    throw err;
   }
 
   const parsed = ClassificationOutput.safeParse(json);

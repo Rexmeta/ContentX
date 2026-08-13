@@ -1,6 +1,6 @@
 import { newId } from "../../shared/id";
 import type { Entity, Relationship } from "../content/model";
-import type { DramaticScenario } from "./scenarioAmplifier";
+import type { DramaticScenario } from "./model";
 
 /**
  * Builds a canonical Content Graph from a user-confirmed dramatic scenario.

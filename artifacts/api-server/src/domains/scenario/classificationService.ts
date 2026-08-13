@@ -1,4 +1,4 @@
-import type { DramaticScenario } from "../ai/scenarioAmplifier";
+import type { DramaticScenario } from "./model";
 import { classifyWithLLM, type Classifier } from "./classifier";
 import {
   getCategoryNamesByAxis,

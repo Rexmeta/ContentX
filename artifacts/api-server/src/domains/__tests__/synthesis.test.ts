@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { amplifyIdea } from "../ai/scenarioAmplifier";
+import { amplifyIdea } from "../ai/mockAmplifier";
 import {
   extractElements,
   mockSynthesizer,

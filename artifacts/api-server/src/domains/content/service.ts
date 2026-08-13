@@ -1,6 +1,5 @@
 import type { ContentRow } from "@workspace/db";
 import { newId } from "../../shared/id";
-import { orchestrator } from "../ai/orchestrator";
 import { validateGraph, type ValidationResult } from "../validation/validator";
 import type { ContentGraph, GraphPayload } from "./model";
 import * as repo from "./repository";
@@ -43,25 +42,22 @@ export function toSummary(row: ContentRow) {
   };
 }
 
-export async function createFromPrompt(
+/**
+ * Commit an already-generated, already-validated graph payload as new
+ * canonical content. Generation/orchestration lives outside the content
+ * domain — this domain only receives a GraphPayload plus provenance.
+ */
+export async function commitGraph(
   prompt: string,
+  payload: GraphPayload,
   title?: string,
-  scenario?: Parameters<typeof orchestrator.generateFromScenario>[1],
-  lineage?: import("../scenario/synthesizer").Lineage | null,
+  fallbackTitle?: string,
 ): Promise<ContentGraph> {
-  // Confirmed scenario → compose graph from it; raw prompt → direct generate.
-  const payload = scenario
-    ? orchestrator.generateFromScenario(prompt, scenario)
-    : await orchestrator.generate(prompt);
-  // Carry validated synthesis lineage into canonical provenance.
-  if (lineage && payload.provenance) {
-    payload.provenance = { ...payload.provenance, lineage };
-  }
   // Content row and its v1 snapshot are committed atomically.
   const row = await repo.insertContentWithInitialVersion(
     {
       id: newId("content"),
-      title: title?.trim() || scenario?.title || prompt.trim().slice(0, 80),
+      title: title?.trim() || fallbackTitle?.trim() || prompt.trim().slice(0, 80),
       sourcePrompt: prompt,
       version: 1,
       graph: payload,
@@ -82,6 +78,8 @@ export async function updateEntity(
   entityId: string,
   patch: {
     name?: string;
+    canonicalName?: string | null;
+    aliases?: string[];
     description?: string | null;
     attributes?: Record<string, unknown>;
   },
@@ -90,6 +88,8 @@ export async function updateEntity(
     const entity = payload.entities.find((e) => e.id === entityId);
     if (!entity) return null;
     if (patch.name !== undefined) entity.name = patch.name;
+    if (patch.canonicalName !== undefined) entity.canonicalName = patch.canonicalName;
+    if (patch.aliases !== undefined) entity.aliases = patch.aliases;
     if (patch.description !== undefined) entity.description = patch.description;
     if (patch.attributes !== undefined) entity.attributes = patch.attributes;
     return payload;

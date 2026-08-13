@@ -567,8 +567,15 @@ components:
         id: { type: string }
         kind:
           type: string
-          description: "Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)"
+          description: "Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)"
         name: { type: string }
+        canonicalName:
+          type: ["string", "null"]
+          description: "Stable canonical identity name; `name` is the display name"
+        aliases:
+          type: array
+          items: { type: string, minLength: 1 }
+          description: "Alternative names referring to the same canonical entity"
         description: { type: ["string", "null"] }
         attributes:
           type: object
@@ -821,6 +828,10 @@ components:
       type: object
       properties:
         name: { type: string, minLength: 1 }
+        canonicalName: { type: ["string", "null"] }
+        aliases:
+          type: array
+          items: { type: string, minLength: 1 }
         description: { type: ["string", "null"] }
         attributes:
           type: object

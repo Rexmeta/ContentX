@@ -1,36 +1,10 @@
 /**
- * Scenario amplification — turns a raw user idea into a dramatic scenario
- * draft. The user reviews/edits the draft and confirms it before any graph
- * is generated and committed (idea → amplify → confirm → commit).
- *
- * Deterministic mock implementation; a real LLM provider can replace it
- * behind the same function signature.
+ * Deterministic mock amplifier — turns a raw user idea into a dramatic
+ * scenario draft without calling an LLM. Used in tests and as a reference
+ * implementation; the real amplifier is llmAmplifier.ts.
  */
 
-export interface ScenarioAct {
-  name: string;
-  summary: string;
-  beats: string[];
-}
-
-export interface ScenarioCharacter {
-  name: string;
-  role: string;
-  motivation: string;
-}
-
-export interface DramaticScenario {
-  title: string;
-  logline: string;
-  synopsis: string;
-  theme: string;
-  stakes: string;
-  twist: string;
-  acts: ScenarioAct[];
-  characters: ScenarioCharacter[];
-  sourceIdea?: string | null;
-  amplifiedBy?: string | null;
-}
+import type { DramaticScenario } from "../scenario/model";
 
 const KOREAN_PATTERN = /[가-힣]/;
 

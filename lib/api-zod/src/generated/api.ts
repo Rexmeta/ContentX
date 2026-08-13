@@ -77,6 +77,7 @@ export const CreateContentBody = zod.object({
 })
 
 
+
 export const createContentResponseProvenanceLineageTwoParentsMin = 2;
 
 
@@ -90,8 +91,10 @@ export const CreateContentResponse = zod.object({
   "updatedAt": zod.string(),
   "entities": zod.array(zod.object({
   "id": zod.string(),
-  "kind": zod.string().describe('Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
   "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
   "description": zod.string().nullish(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })),
@@ -656,6 +659,7 @@ export const GetContentParams = zod.object({
 })
 
 
+
 export const getContentResponseProvenanceLineageTwoParentsMin = 2;
 
 
@@ -669,8 +673,10 @@ export const GetContentResponse = zod.object({
   "updatedAt": zod.string(),
   "entities": zod.array(zod.object({
   "id": zod.string(),
-  "kind": zod.string().describe('Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
   "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
   "description": zod.string().nullish(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })),
@@ -724,11 +730,15 @@ export const UpdateEntityParams = zod.object({
 
 
 
+
 export const UpdateEntityBody = zod.object({
   "name": zod.string().min(1).optional(),
+  "canonicalName": zod.string().nullish(),
+  "aliases": zod.array(zod.string().min(1)).optional(),
   "description": zod.string().nullish(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })
+
 
 
 export const updateEntityResponseProvenanceLineageTwoParentsMin = 2;
@@ -744,8 +754,10 @@ export const UpdateEntityResponse = zod.object({
   "updatedAt": zod.string(),
   "entities": zod.array(zod.object({
   "id": zod.string(),
-  "kind": zod.string().describe('Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
   "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
   "description": zod.string().nullish(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })),
@@ -797,6 +809,7 @@ export const UpdateRelationshipBody = zod.object({
 })
 
 
+
 export const updateRelationshipResponseProvenanceLineageTwoParentsMin = 2;
 
 
@@ -810,8 +823,10 @@ export const UpdateRelationshipResponse = zod.object({
   "updatedAt": zod.string(),
   "entities": zod.array(zod.object({
   "id": zod.string(),
-  "kind": zod.string().describe('Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
   "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
   "description": zod.string().nullish(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })),
@@ -918,6 +933,7 @@ export const ExportContentParams = zod.object({
 })
 
 
+
 export const exportContentResponseContentProvenanceLineageTwoParentsMin = 2;
 
 
@@ -934,8 +950,10 @@ export const ExportContentResponse = zod.object({
   "updatedAt": zod.string(),
   "entities": zod.array(zod.object({
   "id": zod.string(),
-  "kind": zod.string().describe('Content primitive kind (character, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
   "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
   "description": zod.string().nullish(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })),

@@ -1,9 +1,8 @@
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { DraftScenarioResponse } from "@workspace/api-zod";
-import type { DramaticScenario } from "./scenarioAmplifier";
+import { completeJSON, LLMRequestError, LLM_MODEL_ID } from "./llmClient";
+import type { DramaticScenario } from "../scenario/model";
 
-export const AMPLIFIER_MODEL = "gpt-5.6-terra";
-export const AMPLIFIER_ID = `openai/${AMPLIFIER_MODEL}`;
+export const AMPLIFIER_ID = LLM_MODEL_ID;
 
 /** Thrown when the LLM response cannot be parsed into a valid scenario. */
 export class AmplificationError extends Error {}
@@ -47,36 +46,17 @@ export async function amplifyIdeaWithLLM(
     ? `아이디어: ${idea}\n(제목은 "${title.trim()}"을 유지하라)`
     : `아이디어: ${idea}`;
 
-  let response;
-  try {
-    response = await openai.chat.completions.create({
-      model: AMPLIFIER_MODEL,
-      max_completion_tokens: 8192,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-    });
-  } catch (err) {
-    // Upstream failures (timeout, rate limit, unavailable) are part of the
-    // amplification failure contract → surfaced as 502, never a bare 500.
-    throw new AmplificationError(
-      `AI provider request failed: ${err instanceof Error ? err.message : String(err)}`,
-      { cause: err },
-    );
-  }
-
-  const raw = response.choices[0]?.message?.content;
-  if (!raw) {
-    throw new AmplificationError("AI returned an empty response.");
-  }
-
   let json: unknown;
   try {
-    json = JSON.parse(raw);
-  } catch {
-    throw new AmplificationError("AI response was not valid JSON.");
+    json = await completeJSON({ system: SYSTEM_PROMPT, user: userPrompt });
+  } catch (err) {
+    // Upstream failures (timeout, rate limit, unavailable, empty or non-JSON
+    // output) are part of the amplification failure contract → surfaced as
+    // 502, never a bare 500.
+    if (err instanceof LLMRequestError) {
+      throw new AmplificationError(err.message, { cause: err });
+    }
+    throw err;
   }
 
   const parsed = DraftScenarioResponse.safeParse(json);
