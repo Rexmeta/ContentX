@@ -1,0 +1,821 @@
+# ContentX — Next Phase Implementation
+## Population → Snapshot → Agent → Simulation → Evaluation Vertical Slice
+
+ContentX의 현재 main 브랜치를 기준으로 작업한다.
+
+현재까지 다음 아키텍처가 구현되어 있다.
+
+MatrAIx
+    ↓
+Canonical Graph
+    ↓
+Population
+    ↓
+DependencyRule
+    ↓
+Sampling
+    ↓
+Character
+    ↓
+Agent
+    ↓
+Simulation
+    ↓
+Roleplay / Novel Projection
+
+현재 MatrAIx import, provenance, canonical graph, population model,
+dependency rules, deterministic sampling, character, agent,
+agent state, simulation의 기본 구조가 구현되어 있다.
+
+131개 이상의 기존 테스트와 현재 main 브랜치의 구현을 기준으로
+기존 기능을 깨뜨리지 않는 incremental implementation을 수행한다.
+
+============================================================
+0. FIRST: CURRENT STATE AUDIT
+============================================================
+
+코드를 수정하기 전에 현재 repository를 먼저 분석한다.
+
+특히 다음을 실제 코드 기준으로 확인한다.
+
+- Character
+- CharacterSnapshot
+- Population
+- Dimension
+- DependencyRule
+- Sampling
+- Agent
+- AgentState
+- Goal
+- Memory
+- Simulation
+- Environment
+- InteractionEvent
+- Outcome
+- Evaluation
+- MatrAIx importer
+- Roleplay projection
+- Novel projection
+
+다음 질문에 답할 수 있도록 현재 구현 상태를 문서화한다.
+
+1. CharacterSnapshot이 실제 독립 domain/model/service로 존재하는가?
+2. Agent가 Character와 완전히 분리되어 있는가?
+3. Agent는 immutable CharacterSnapshot을 참조하는가?
+4. AgentState mutation이 Character를 변경할 가능성이 있는가?
+5. Population version을 재현할 수 있는가?
+6. Dependency graph version을 재현할 수 있는가?
+7. Sampling 결과를 동일 seed로 재현할 수 있는가?
+8. MatrAIx provenance가 Sampling/Character까지 전달되는가?
+9. Simulation의 Environment가 특정 negotiation use-case에 과도하게 결합되어 있는가?
+10. Evaluation domain이 현재 존재하는가?
+
+먼저 audit 결과를:
+
+docs/architecture/current-state-audit.md
+
+에 작성한다.
+
+기존 코드를 충분히 이해하기 전에 대규모 리팩터링하지 않는다.
+
+============================================================
+1. CHARACTER SNAPSHOT — PRIORITY #1
+============================================================
+
+Character와 Agent 사이에 명확한 immutable snapshot layer를 완성한다.
+
+Canonical structure:
+
+Character
+    ↓
+CharacterSnapshot
+    ↓
+Agent
+    ↓
+AgentState
+
+의 구조를 확정한다.
+
+Character:
+
+- persistent identity
+- canonical attributes
+- behavioral profile
+- provenance
+
+CharacterSnapshot:
+
+- snapshotId
+- characterId
+- populationId
+- populationVersion
+- schemaVersion
+- dependencyGraphVersion
+- samplingRunId
+- seed
+- strategy
+- resolvedAttributes
+- behavioralProfile
+- provenance
+- createdAt
+
+Snapshot은 생성 이후 immutable이어야 한다.
+
+Agent:
+
+- agentId
+- snapshotId
+- goals
+- constraints
+- policy
+- runtimeConfig
+- memory
+
+AgentState:
+
+- currentGoals
+- beliefs
+- memory state
+- relationship state
+- environment state
+- turn
+- runtime variables
+
+AgentState 변경은 Character 또는 CharacterSnapshot을 절대로
+mutation하지 않아야 한다.
+
+이것을 코드와 테스트로 보장한다.
+
+============================================================
+2. SNAPSHOT REPRODUCIBILITY
+============================================================
+
+동일한:
+
+populationId
++
+populationVersion
++
+schemaVersion
++
+dependencyGraphVersion
++
+constraints
++
+seed
++
+samplingStrategy
+
+를 사용하면 동일한 CharacterSnapshot을 생성할 수 있어야 한다.
+
+다음 테스트를 추가한다.
+
+Test A:
+
+same population
+same dependency graph
+same seed
+same constraints
+same strategy
+
+→ identical snapshot
+
+Test B:
+
+different seed
+
+→ different sampling result
+
+Test C:
+
+same seed but different dependency graph version
+
+→ different snapshot or explicit version mismatch
+
+Test D:
+
+snapshot mutation attempt
+
+→ rejected / impossible
+
+============================================================
+3. SAMPLING RUN DOMAIN
+============================================================
+
+Sampling 자체와 Sampling 결과를 명확하게 분리한다.
+
+가능하면:
+
+SamplingRun
+
+domain을 도입한다.
+
+SamplingRun은 다음을 기록한다.
+
+- samplingRunId
+- populationId
+- populationVersion
+- schemaVersion
+- dependencyGraphVersion
+- seed
+- strategy
+- constraints
+- sampleSize
+- createdAt
+- samplerVersion
+- provenance
+
+결과로 생성된 CharacterSnapshot들이 어느 SamplingRun에서
+생성되었는지 추적 가능해야 한다.
+
+목표:
+
+Population
+    ↓
+SamplingRun
+    ↓
+CharacterSnapshots
+
+============================================================
+4. PROVENANCE / LINEAGE
+============================================================
+
+MatrAIx provenance를 끝까지 전달한다.
+
+현재:
+
+MatrAIx
+    ↓
+Import
+    ↓
+Canonical Graph
+
+에서 끝나지 않고:
+
+MatrAIx
+    ↓
+Population
+    ↓
+SamplingRun
+    ↓
+Character
+    ↓
+CharacterSnapshot
+    ↓
+Agent
+    ↓
+Simulation
+    ↓
+Evaluation
+
+까지 lineage를 추적할 수 있어야 한다.
+
+최소한 다음을 추적 가능하게 한다.
+
+- sourceType
+- sourceDataset
+- sourceDatasetVersion
+- sourceId / matraixId
+- importId
+- transformerVersion
+- populationId
+- populationVersion
+- samplingRunId
+- dependencyGraphVersion
+- snapshotId
+- agentId
+- simulationId
+- evaluationId
+
+단, 모든 객체에 중복 데이터를 무조건 복사하지 않는다.
+
+가능한 경우 provenance reference를 사용한다.
+
+============================================================
+5. EVALUATION DOMAIN — PRIORITY #2
+============================================================
+
+Simulation 다음에 Evaluation을 연결한다.
+
+새로운 Evaluation domain을 설계한다.
+
+기본 구조:
+
+Evaluation
+    ├── targetType
+    ├── targetId
+    ├── evaluator
+    ├── rubric
+    ├── metrics
+    ├── score
+    ├── evidence
+    ├── provenance
+    └── createdAt
+
+처음부터 복잡한 AI evaluator를 만들지 않는다.
+
+MVP에서는 deterministic evaluation으로 시작한다.
+
+예:
+
+GoalAchievement
+BehaviorConsistency
+ConstraintCompliance
+OutcomeQuality
+
+등을 지원한다.
+
+============================================================
+6. BEHAVIOR TRACE
+============================================================
+
+Simulation의 결과를 단순 outcome 하나로 저장하지 않는다.
+
+SimulationTrace를 도입한다.
+
+구조:
+
+Simulation
+    ↓
+SimulationTrace
+    ↓
+Turn
+    ↓
+Observation
+    ↓
+Decision
+    ↓
+Action
+    ↓
+StateChange
+    ↓
+Utterance
+    ↓
+Outcome
+
+각 event에는 가능하면 다음을 기록한다.
+
+- simulationId
+- turn
+- agentId
+- observation
+- selectedAction
+- decision
+- rationale
+- utterance
+- stateDelta
+- timestamp
+- outcome
+
+Behavior와 Dialogue를 동일시하지 않는다.
+
+Utterance는 Action의 하나의 표현일 뿐이다.
+
+============================================================
+7. GENERIC SIMULATION RUNTIME
+============================================================
+
+현재 Simulation이 negotiation-specific하게 결합되어 있다면
+최소한의 generic runtime abstraction으로 정리한다.
+
+Generic:
+
+Environment
+Observation
+Action
+Policy
+StateTransition
+SimulationTrace
+Outcome
+
+Negotiation-specific:
+
+NegotiationEnvironment
+NegotiationPolicy
+NegotiationAction
+
+처럼 분리할 수 있는 구조를 만든다.
+
+중요:
+
+현재 negotiation MVP를 삭제하지 않는다.
+
+기존 negotiation simulation은 첫 번째 Environment/Policy 구현체로
+유지한다.
+
+============================================================
+8. AGENT RUNTIME
+============================================================
+
+Agent Runtime의 최소 실행 loop를 완성한다.
+
+다음 흐름을 실제 코드로 구현한다.
+
+Environment
+    ↓
+Observation
+    ↓
+Agent
+    ↓
+Policy
+    ↓
+ProposedBehavior
+    ↓
+Action
+    ↓
+Environment
+    ↓
+StateTransition
+    ↓
+Trace
+
+Agent는 CharacterSnapshot을 기반으로 행동해야 한다.
+
+AgentState는 실행 중 mutation 가능하지만
+CharacterSnapshot은 mutation 불가능해야 한다.
+
+============================================================
+9. MINIMUM END-TO-END DEMO
+============================================================
+
+실제 MatrAIx sample dataset을 이용하여
+다음 전체 흐름이 동작하도록 만든다.
+
+MatrAIx Dataset
+    ↓
+Import
+    ↓
+Population
+    ↓
+Dependency Rules
+    ↓
+SamplingRun
+    ↓
+Sample 10 Characters
+    ↓
+10 CharacterSnapshots
+    ↓
+Instantiate 2 Agents
+    ↓
+Negotiation Environment
+    ↓
+20~50 turns Simulation
+    ↓
+SimulationTrace
+    ↓
+Outcome
+    ↓
+Evaluation
+
+LLM을 사용할 필요는 없다.
+
+처음에는 deterministic mock policy를 사용한다.
+
+예:
+
+Agent A:
+- propose
+- hold
+- concede
+- accept
+- reject
+
+Agent B:
+동일 구조
+
+목표는 AI의 지능을 증명하는 것이 아니라
+ContentX runtime architecture가 실제로 연결되는 것을 증명하는 것이다.
+
+============================================================
+10. ROLEPLAY PROJECTION
+============================================================
+
+완성된 CharacterSnapshot과 Agent를 기존 Roleplay projection에서
+사용할 수 있는지 확인한다.
+
+중요:
+
+RoleplayX가 ContentX 내부 domain이 되어서는 안 된다.
+
+ContentX:
+
+Character
+Snapshot
+Agent
+Environment
+Behavior
+Evaluation
+
+을 제공하고,
+
+RoleplayX는 이를 소비하는 projection/application이어야 한다.
+
+따라서 기존 Roleplay projection의 contract를 확인하고
+필요한 최소 변경만 한다.
+
+============================================================
+11. NOVEL PROJECTION
+============================================================
+
+Novel projection 역시 동일하게 확인한다.
+
+CharacterSnapshot
+→ Character representation
+
+Agent
+→ Character behavior
+
+SimulationTrace
+→ Narrative event
+
+Outcome
+→ Story consequence
+
+로 연결할 수 있는 구조인지 확인한다.
+
+Novel domain이 Population/Agent runtime의 구현 세부사항에
+직접 의존하지 않도록 한다.
+
+============================================================
+12. MATR AIX SEMANTIC MAPPING
+============================================================
+
+기존 MatrAIx importer를 확장한다.
+
+단순 field mapping이 아니라 다음 semantic mapping을 문서화한다.
+
+MatrAIx
+    ↓
+World
+Population
+Persona
+Goals
+Relations
+Dimensions
+Distributions
+Dependencies
+
+각 항목에 대해:
+
+- ContentX domain
+- canonical type
+- preserved fields
+- transformed fields
+- discarded fields
+- provenance
+- version
+
+을 명시한다.
+
+문서:
+
+docs/architecture/matraix-semantic-mapping.md
+
+를 작성한다.
+
+중요:
+
+MatrAIx의 1,290개 dimension을 hard-coded schema로 만들지 않는다.
+
+Dimension Registry 기반의 extensible 구조를 유지한다.
+
+============================================================
+13. DEPENDENCY MODEL — DO NOT OVERENGINEER
+============================================================
+
+현재 DependencyRule 구조를 유지하되
+향후 conditional probability/distribution을 지원할 수 있도록
+확장 가능한지 확인한다.
+
+예:
+
+P(target | source)
+
+또는:
+
+P(target | sourceA, sourceB)
+
+를 표현할 수 있는 방향을 고려한다.
+
+하지만 이번 task에서 복잡한 probabilistic programming engine을
+구현하지 않는다.
+
+현재:
+
+- implication
+- exclusion
+- conditional
+- correlation
+- constraint
+
+구조를 유지하면서 extension point만 확보한다.
+
+============================================================
+14. TESTING
+============================================================
+
+기존 테스트를 모두 통과시킨다.
+
+추가 테스트:
+
+A. CharacterSnapshot immutability
+B. Snapshot reproducibility
+C. SamplingRun reproducibility
+D. Agent state isolation
+E. Provenance propagation
+F. Dependency version reproducibility
+G. Simulation trace integrity
+H. Evaluation reproducibility
+I. MatrAIx → Population mapping
+J. MatrAIx → CharacterSnapshot lineage
+K. MatrAIx → Agent lineage
+L. MatrAIx → Simulation lineage
+M. Roleplay projection compatibility
+N. Novel projection compatibility
+
+테스트는 숫자를 늘리는 것보다
+architecture invariant를 검증하는 방향으로 작성한다.
+
+============================================================
+15. ARCHITECTURE INVARIANTS
+============================================================
+
+다음 원칙을 코드와 테스트에서 보장한다.
+
+INVARIANT 1
+
+Character != CharacterSnapshot != Agent != AgentState
+
+INVARIANT 2
+
+SemanticRelationship != DependencyRule
+
+INVARIANT 3
+
+Behavior != Utterance
+
+INVARIANT 4
+
+Population generates / constrains Characters.
+Population does not become Character.
+
+INVARIANT 5
+
+Agent never mutates CharacterSnapshot.
+
+INVARIANT 6
+
+Simulation never mutates Character.
+
+INVARIANT 7
+
+Sampling is reproducible.
+
+INVARIANT 8
+
+Provenance is traceable.
+
+INVARIANT 9
+
+Roleplay and Novel are projections/consumers,
+not owners of canonical persona/agent data.
+
+INVARIANT 10
+
+MatrAIx is a source dataset, not the ContentX canonical schema.
+
+============================================================
+16. DOCUMENTATION
+============================================================
+
+다음 문서를 업데이트한다.
+
+docs/architecture/current-state-audit.md
+docs/architecture/character-snapshot.md
+docs/architecture/sampling-run.md
+docs/architecture/agent-runtime.md
+docs/architecture/simulation-runtime.md
+docs/architecture/evaluation.md
+docs/architecture/matraix-semantic-mapping.md
+docs/architecture/target-state.md
+
+target-state.md에는 최종 구조를 다음처럼 표현한다.
+
+                DATA / KNOWLEDGE
+                       │
+                ┌──────▼──────┐
+                │ Canonical   │
+                │ Content     │
+                │ Graph       │
+                └──────┬──────┘
+                       │
+             ┌─────────▼─────────┐
+             │ Population Domain │
+             │ Dimensions        │
+             │ Distributions     │
+             │ Dependencies      │
+             └─────────┬─────────┘
+                       │
+                    Sampling
+                       │
+                       ▼
+                   Character
+                       │
+                   Snapshot
+                       │
+                       ▼
+                     Agent
+                       │
+                 Agent Runtime
+                       │
+                       ▼
+                 Environment
+                       │
+                       ▼
+                  Simulation
+                       │
+                       ▼
+                Behavior Trace
+                       │
+                       ▼
+                  Evaluation
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+         Roleplay              Novel
+        Projection           Projection
+
+============================================================
+17. DO NOT DO
+============================================================
+
+이번 작업에서는 다음을 하지 않는다.
+
+- Upload UI
+- large-scale 8.3B persona storage
+- distributed simulation
+- graph database migration
+- microservices migration
+- vector database
+- complex LLM agent
+- autonomous agent framework
+- sophisticated probabilistic programming
+- production-scale simulation cluster
+
+현재 단계에서는 architecture correctness와
+end-to-end vertical slice가 우선이다.
+
+============================================================
+18. ACCEPTANCE CRITERIA
+============================================================
+
+작업 완료 조건:
+
+1. CharacterSnapshot이 독립적으로 존재한다.
+2. Agent는 CharacterSnapshot을 참조한다.
+3. AgentState mutation이 Character에 영향을 주지 않는다.
+4. SamplingRun이 존재하고 재현 가능하다.
+5. MatrAIx provenance가 Snapshot까지 전달된다.
+6. SimulationTrace가 turn-level behavior를 기록한다.
+7. Evaluation이 Simulation 결과를 평가한다.
+8. deterministic mock policy로 simulation이 실제 실행된다.
+9. 기존 MatrAIx import가 깨지지 않는다.
+10. Roleplay projection이 동작한다.
+11. Novel projection이 동작한다.
+12. 모든 기존 테스트가 통과한다.
+13. 새로운 architecture invariant 테스트가 통과한다.
+
+============================================================
+19. FINAL OUTPUT
+============================================================
+
+작업 후 다음을 보고한다.
+
+1. 현재 architecture
+2. 변경된 architecture
+3. 변경된 파일 목록
+4. DB/schema 변경
+5. API 변경
+6. 새로운 domain 추가
+7. 테스트 결과
+8. MatrAIx end-to-end 실행 결과
+9. Roleplay projection 결과
+10. Novel projection 결과
+11. 남은 architecture risks
+12. 다음 작업 3개
+
+중요:
+
+코드를 먼저 충분히 분석한 뒤 수정한다.
+
+기존 architecture와 충돌하는 부분이 발견되면
+무조건 대규모 rewrite하지 말고 가장 작은 변경으로 해결한다.
+
+이번 단계의 핵심 목표는 기능의 양이 아니라:
+
+"Population에서 생성된 사람이 실제 Agent가 되어
+Environment 안에서 행동하고,
+그 행동이 Trace와 Evaluation으로 다시 기록되는
+완전한 ContentX lifecycle"
+
+을 실제 코드로 증명하는 것이다.
