@@ -1088,6 +1088,24 @@ export interface MatraixImportStats {
   skippedDuplicates: number;
 }
 
+export interface MatraixGraphDiff {
+  addedEntities: number;
+  changedEntities: number;
+  removedEntities: number;
+  unchangedEntities: number;
+  addedRelationships: number;
+  changedRelationships: number;
+  removedRelationships: number;
+}
+
+export interface MatraixReimportInfo {
+  /** Id of the existing graph updated instead of duplicated */
+  existingContentId: string;
+  /** Version of the existing graph before this re-import */
+  previousVersion: number;
+  diff: MatraixGraphDiff;
+}
+
 export type ValidationIssueSeverity = typeof ValidationIssueSeverity[keyof typeof ValidationIssueSeverity];
 
 
@@ -1116,6 +1134,8 @@ export interface MatraixImportReport {
   importIssues: ValidationIssue[];
   validation: ValidationReport;
   stats: MatraixImportStats;
+  /** Present when the dataset's source.uri matched an existing imported graph; that graph was updated in place (version +1) instead of creating a duplicate, and diff summarizes the changes. */
+  reimport?: MatraixReimportInfo;
 }
 
 export interface MatraixImportResult {

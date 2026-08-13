@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { MatraixImportStats } from './matraixImportStats';
+import type { MatraixReimportInfo } from './matraixReimportInfo';
 import type { ValidationIssue } from './validationIssue';
 import type { ValidationReport } from './validationReport';
 
@@ -14,4 +15,6 @@ export interface MatraixImportReport {
   importIssues: ValidationIssue[];
   validation: ValidationReport;
   stats: MatraixImportStats;
+  /** Present when the dataset's source.uri matched an existing imported graph; that graph was updated in place (version +1) instead of creating a duplicate, and diff summarizes the changes. */
+  reimport?: MatraixReimportInfo;
 }

@@ -71,13 +71,16 @@ paths:
     post:
       operationId: importMatraixContent
       tags: [content]
-      summary: Import a MatrAIx dataset as a new canonical content graph
+      summary: Import a MatrAIx dataset as a canonical content graph
       description: >
         Maps a MatrAIx export (world, populations, personas, relations) into
         canonical entities/relationships with provenance sourceType "matraix",
         and returns the committed graph plus a validation/import report
-        (duplicates, broken references). With dryRun the mapping and report
-        are returned without committing.
+        (duplicates, broken references). If a graph with the same source.uri
+        was imported before, that graph is updated in place as a new version
+        (version +1) instead of creating a duplicate, and the report includes
+        a diff against the previous graph. With dryRun the mapping, report,
+        and re-import diff are returned without committing.
       requestBody:
         required: true
         content:
@@ -2499,6 +2502,38 @@ components:
         relations: { type: integer }
         skippedRelations: { type: integer }
         skippedDuplicates: { type: integer }
+    MatraixGraphDiff:
+      type: object
+      required:
+        [
+          addedEntities,
+          changedEntities,
+          removedEntities,
+          unchangedEntities,
+          addedRelationships,
+          changedRelationships,
+          removedRelationships,
+        ]
+      properties:
+        addedEntities: { type: integer }
+        changedEntities: { type: integer }
+        removedEntities: { type: integer }
+        unchangedEntities: { type: integer }
+        addedRelationships: { type: integer }
+        changedRelationships: { type: integer }
+        removedRelationships: { type: integer }
+    MatraixReimportInfo:
+      type: object
+      required: [existingContentId, previousVersion, diff]
+      properties:
+        existingContentId:
+          type: string
+          description: Id of the existing graph updated instead of duplicated
+        previousVersion:
+          type: integer
+          description: Version of the existing graph before this re-import
+        diff:
+          $ref: "#/components/schemas/MatraixGraphDiff"
     MatraixImportReport:
       type: object
       required: [importIssues, validation, stats]
@@ -2512,6 +2547,12 @@ components:
           $ref: "#/components/schemas/ValidationReport"
         stats:
           $ref: "#/components/schemas/MatraixImportStats"
+        reimport:
+          $ref: "#/components/schemas/MatraixReimportInfo"
+          description: >
+            Present when the dataset's source.uri matched an existing imported
+            graph; that graph was updated in place (version +1) instead of
+            creating a duplicate, and diff summarizes the changes.
     MatraixImportResult:
       type: object
       required: [content, report]

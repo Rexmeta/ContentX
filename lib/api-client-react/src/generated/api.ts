@@ -334,8 +334,8 @@ export const getImportMatraixContentUrl = () => {
 }
 
 /**
- * Maps a MatrAIx export (world, populations, personas, relations) into canonical entities/relationships with provenance sourceType "matraix", and returns the committed graph plus a validation/import report (duplicates, broken references). With dryRun the mapping and report are returned without committing.
- * @summary Import a MatrAIx dataset as a new canonical content graph
+ * Maps a MatrAIx export (world, populations, personas, relations) into canonical entities/relationships with provenance sourceType "matraix", and returns the committed graph plus a validation/import report (duplicates, broken references). If a graph with the same source.uri was imported before, that graph is updated in place as a new version (version +1) instead of creating a duplicate, and the report includes a diff against the previous graph. With dryRun the mapping, report, and re-import diff are returned without committing.
+ * @summary Import a MatrAIx dataset as a canonical content graph
  */
 export const importMatraixContent = async (matraixImportInput: MatraixImportInput, options?: Parameters<typeof customFetch>[1]): Promise<MatraixImportResult> => {
 
@@ -384,7 +384,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ImportMatraixContentMutationError = ErrorType<ApiMessage>
 
     /**
- * @summary Import a MatrAIx dataset as a new canonical content graph
+ * @summary Import a MatrAIx dataset as a canonical content graph
  */
 export const useImportMatraixContent = <TError = ErrorType<ApiMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importMatraixContent>>, TError,{data: BodyType<MatraixImportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

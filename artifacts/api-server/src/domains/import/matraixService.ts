@@ -12,6 +12,8 @@ import {
   mapMatraixToCanonical,
   type MatraixImportStats,
 } from "./matraixImporter";
+import { diffGraphPayloads, type GraphDiff } from "./graphDiff";
+import type { GraphPayload } from "../content/model";
 
 /** Raw MatrAIx payload failed schema validation — a 400 at the boundary. */
 export class MatraixParseError extends Error {
@@ -21,12 +23,27 @@ export class MatraixParseError extends Error {
   }
 }
 
+export interface MatraixReimportInfo {
+  /** Id of the existing graph that was updated instead of duplicated. */
+  existingContentId: string;
+  /** Version of the existing graph before this re-import. */
+  previousVersion: number;
+  /** Structural diff of the incoming graph against the existing one. */
+  diff: GraphDiff;
+}
+
 export interface MatraixImportReport {
   /** Issues found while mapping the MatrAIx source (duplicates, broken refs). */
   importIssues: ValidationIssue[];
   /** Canonical validation of the committed graph (same checks as /validate). */
   validation: ValidationResult;
   stats: MatraixImportStats;
+  /**
+   * Present when the dataset's source.uri matches an already imported graph.
+   * The existing graph is then updated in place (version +1) instead of
+   * creating a duplicate.
+   */
+  reimport?: MatraixReimportInfo;
 }
 
 export interface MatraixImportResult {
@@ -76,19 +93,86 @@ export async function importMatraix(input: {
     dataset.world?.name ||
     `MatrAIx import (${dataset.schemaVersion})`;
 
+  // Re-import policy: the same dataset (identified by source.uri) must
+  // update the existing graph as a new version instead of piling up
+  // duplicate graphs. Datasets without a source.uri cannot be identified
+  // and always create a new graph.
+  const sourceUri = dataset.source?.uri;
+
   if (input.dryRun) {
+    // Read-only preview: the lookup here is advisory (no lock is taken, so
+    // it may race with a concurrent commit), which is acceptable for a dry
+    // run that never writes.
+    const existing = sourceUri
+      ? await contentRepo.findByProvenanceSource("matraix", sourceUri)
+      : undefined;
+    const reimport: MatraixReimportInfo | undefined = existing
+      ? {
+          existingContentId: existing.id,
+          previousVersion: existing.version,
+          diff: diffGraphPayloads(
+            existing.graph as unknown as GraphPayload,
+            payload,
+          ),
+        }
+      : undefined;
     const nowIso = new Date().toISOString();
     return {
       content: {
-        id: "content_dryrun",
+        id: existing?.id ?? "content_dryrun",
         title,
         sourcePrompt: null,
-        version: 0,
+        version: existing?.version ?? 0,
         createdAt: nowIso,
         updatedAt: nowIso,
         ...payload,
       },
-      report: { importIssues: issues, validation, stats },
+      report: {
+        importIssues: issues,
+        validation,
+        stats,
+        ...(reimport ? { reimport } : {}),
+      },
+    };
+  }
+
+  if (sourceUri) {
+    // Lookup + insert-or-replace happen atomically inside the repository
+    // (advisory lock on the source identity), so two simultaneous imports of
+    // the same source.uri cannot both create a graph. The diff is computed
+    // from the actual locked predecessor, never a stale pre-lock read.
+    const { row, previous } = await contentRepo.upsertContentBySource({
+      sourceType: "matraix",
+      sourceUri,
+      content: {
+        id: newId("content"),
+        title,
+        sourcePrompt: null,
+        graph: payload,
+      },
+      versionId: newId("version"),
+      insertNote: `MatrAIx import (${dataset.schemaVersion})`,
+      updateNote: `MatrAIx re-import (${dataset.schemaVersion})`,
+      author: "matraix-importer",
+      // Only override the title when the caller explicitly provided one;
+      // a re-import must not silently rename a graph the user may have edited.
+      overrideTitle: input.title?.trim() || undefined,
+    });
+    const reimport: MatraixReimportInfo | undefined = previous
+      ? {
+          existingContentId: previous.id,
+          previousVersion: previous.version,
+          diff: diffGraphPayloads(previous.graph, payload),
+        }
+      : undefined;
+    return {
+      content: contentService.toContentGraph(row),
+      report: {
+        importIssues: issues,
+        validation,
+        stats,
+        ...(reimport ? { reimport } : {}),
+      },
     };
   }
 

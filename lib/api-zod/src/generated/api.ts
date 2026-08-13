@@ -128,8 +128,8 @@ export const CreateContentResponse = zod.object({
 
 
 /**
- * Maps a MatrAIx export (world, populations, personas, relations) into canonical entities/relationships with provenance sourceType "matraix", and returns the committed graph plus a validation/import report (duplicates, broken references). With dryRun the mapping and report are returned without committing.
- * @summary Import a MatrAIx dataset as a new canonical content graph
+ * Maps a MatrAIx export (world, populations, personas, relations) into canonical entities/relationships with provenance sourceType "matraix", and returns the committed graph plus a validation/import report (duplicates, broken references). If a graph with the same source.uri was imported before, that graph is updated in place as a new version (version +1) instead of creating a duplicate, and the report includes a diff against the previous graph. With dryRun the mapping, report, and re-import diff are returned without committing.
+ * @summary Import a MatrAIx dataset as a canonical content graph
  */
 export const ImportMatraixContentBody = zod.object({
   "dataset": zod.record(zod.string(), zod.unknown()).describe('Raw MatrAIx export payload (schemaVersion \"matraix\/x.y\", personas, optional world\/populations\/relations). Strictly validated in the domain layer; unknown keys are rejected.\n'),
@@ -213,7 +213,20 @@ export const ImportMatraixContentResponse = zod.object({
   "relations": zod.int(),
   "skippedRelations": zod.int(),
   "skippedDuplicates": zod.int()
+}),
+  "reimport": zod.object({
+  "existingContentId": zod.string().describe('Id of the existing graph updated instead of duplicated'),
+  "previousVersion": zod.int().describe('Version of the existing graph before this re-import'),
+  "diff": zod.object({
+  "addedEntities": zod.int(),
+  "changedEntities": zod.int(),
+  "removedEntities": zod.int(),
+  "unchangedEntities": zod.int(),
+  "addedRelationships": zod.int(),
+  "changedRelationships": zod.int(),
+  "removedRelationships": zod.int()
 })
+}).optional().describe('Present when the dataset\'s source.uri matched an existing imported graph; that graph was updated in place (version +1) instead of creating a duplicate, and diff summarizes the changes.\n')
 })
 })
 

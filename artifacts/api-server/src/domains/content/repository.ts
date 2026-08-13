@@ -1,4 +1,4 @@
-import { desc, eq, asc } from "drizzle-orm";
+import { desc, eq, asc, sql, and } from "drizzle-orm";
 import {
   db,
   contentsTable,
@@ -53,6 +53,130 @@ export async function insertContentWithInitialVersion(
       snapshot: row.graph,
     });
     return inserted!;
+  });
+}
+
+/**
+ * Find the most recently updated content graph whose canonical provenance
+ * points at the given source (e.g. sourceType "matraix" + the dataset's
+ * source.uri). Used by importers to detect re-imports of the same dataset.
+ */
+export async function findByProvenanceSource(
+  sourceType: string,
+  sourceUri: string,
+): Promise<ContentRow | undefined> {
+  const [row] = await db
+    .select()
+    .from(contentsTable)
+    .where(
+      and(
+        sql`${contentsTable.graph} -> 'provenance' ->> 'sourceType' = ${sourceType}`,
+        sql`${contentsTable.graph} -> 'provenance' ->> 'sourceUri' = ${sourceUri}`,
+      ),
+    )
+    .orderBy(desc(contentsTable.updatedAt))
+    .limit(1);
+  return row;
+}
+
+/**
+ * Atomically commit an imported graph for a given source identity: either
+ * update the existing graph for that source as a new version, or insert a
+ * brand-new content row — decided INSIDE one transaction.
+ *
+ * The lookup and the write are guarded by a transaction-scoped advisory lock
+ * keyed on (sourceType, sourceUri), because `contents` has no unique
+ * constraint on the JSONB provenance and a plain lookup-then-insert would
+ * let two simultaneous first imports of the same source both see "no
+ * existing row" and create duplicates. The advisory lock serializes the
+ * whole decide-and-write step; the row is additionally SELECT ... FOR UPDATE
+ * locked so concurrent non-import writers (PATCH/snapshot) serialize too.
+ *
+ * `previous` is the actual locked predecessor row state (id/version/graph at
+ * the moment of replacement), so callers can compute an accurate diff.
+ */
+export async function upsertContentBySource(input: {
+  sourceType: string;
+  sourceUri: string;
+  content: {
+    id: string;
+    title: string;
+    sourcePrompt: string | null;
+    graph: GraphPayload;
+  };
+  versionId: string;
+  insertNote: string | null;
+  updateNote: string | null;
+  author: string | null;
+  /** Only override the existing title when explicitly provided. */
+  overrideTitle?: string | undefined;
+}): Promise<{
+  row: ContentRow;
+  previous: { id: string; version: number; graph: GraphPayload } | null;
+}> {
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      // NB: PostgreSQL text cannot contain NUL bytes, so a printable
+      // separator is used for the lock key.
+      sql`SELECT pg_advisory_xact_lock(hashtextextended(${`import-source:${input.sourceType}:${input.sourceUri}`}, 0))`,
+    );
+    const [existing] = await tx
+      .select()
+      .from(contentsTable)
+      .where(
+        and(
+          sql`${contentsTable.graph} -> 'provenance' ->> 'sourceType' = ${input.sourceType}`,
+          sql`${contentsTable.graph} -> 'provenance' ->> 'sourceUri' = ${input.sourceUri}`,
+        ),
+      )
+      .orderBy(desc(contentsTable.updatedAt))
+      .limit(1)
+      .for("update");
+
+    if (!existing) {
+      const [inserted] = await tx
+        .insert(contentsTable)
+        .values({ ...input.content, version: 1 })
+        .returning();
+      await tx.insert(contentVersionsTable).values({
+        id: input.versionId,
+        contentId: input.content.id,
+        version: 1,
+        parentVersion: null,
+        note: input.insertNote,
+        author: input.author,
+        snapshot: input.content.graph,
+      });
+      return { row: inserted!, previous: null };
+    }
+
+    const nextVersion = existing.version + 1;
+    await tx.insert(contentVersionsTable).values({
+      id: input.versionId,
+      contentId: existing.id,
+      version: nextVersion,
+      parentVersion: existing.version,
+      note: input.updateNote,
+      author: input.author,
+      snapshot: input.content.graph,
+    });
+    const [updated] = await tx
+      .update(contentsTable)
+      .set({
+        graph: input.content.graph,
+        version: nextVersion,
+        ...(input.overrideTitle ? { title: input.overrideTitle } : {}),
+      })
+      .where(eq(contentsTable.id, existing.id))
+      .returning();
+    return {
+      row: updated!,
+      previous: {
+        id: existing.id,
+        version: existing.version,
+        graph: existing.graph as unknown as GraphPayload,
+      },
+    };
   });
 }
 
