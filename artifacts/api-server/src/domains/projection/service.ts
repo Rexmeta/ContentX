@@ -6,6 +6,7 @@ import * as evaluationService from "../evaluation/service";
 import { SimulationNotFoundError } from "../simulation/model";
 import {
   InvalidProjectionError,
+  validateProvenanceChain,
   PROJECTION_TARGETS,
   type ProjectionAdapter,
   type ProjectionResult,
@@ -79,5 +80,9 @@ export async function project(input: {
 }): Promise<ProjectionResult> {
   const adapter = adapters[input.target];
   const source = await resolveSource(input);
-  return adapter.project(source);
+  const result = await adapter.project(source);
+  // Contract-level guard: every adapter (current or future) must return an
+  // ordered, duplicate-free chain ending in a projection link.
+  validateProvenanceChain(result.provenance);
+  return result;
 }

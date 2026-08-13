@@ -14,8 +14,9 @@ export interface ProjectionResult {
   /** Runtime-specific JSON owned entirely by the adapter. */
   payload: ProjectionResultPayload;
   /**
-     * Ordered canonical → simulation → projection; always ends with a projection link.
+     * Ordered canonical → simulation → projection with at most one link per layer; always ends with a projection link. Order/duplicates are enforced server-side by the shared projection contract validator.
      * @minItems 2
+     * @maxItems 3
      */
   provenance: ProvenanceLink[];
 }

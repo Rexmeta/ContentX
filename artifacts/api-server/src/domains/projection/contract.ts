@@ -83,6 +83,53 @@ export class ProjectionExecutionError extends Error {
   }
 }
 
+/**
+ * Contract-level validation of a provenance chain. Enforces what the
+ * OpenAPI spec can only document in prose:
+ * - strict layer order: canonical → simulation → projection
+ * - at most one link per layer (no duplicates)
+ * - at least one source link (canonical or simulation)
+ * - the chain ends with exactly one projection link
+ *
+ * Throws ProjectionExecutionError so a misbehaving adapter fails loudly
+ * instead of persisting a scrambled chain.
+ */
+export function validateProvenanceChain(chain: ProvenanceLink[]): void {
+  const order: Record<ProvenanceLink["layer"], number> = {
+    canonical: 0,
+    simulation: 1,
+    projection: 2,
+  };
+  const layers = chain.map((link) => link.layer);
+
+  const seen = new Set<string>();
+  for (const layer of layers) {
+    if (seen.has(layer)) {
+      throw new ProjectionExecutionError(
+        `Invalid provenance chain: duplicate "${layer}" link`,
+      );
+    }
+    seen.add(layer);
+  }
+  for (let i = 1; i < layers.length; i++) {
+    if (order[layers[i]!] <= order[layers[i - 1]!]) {
+      throw new ProjectionExecutionError(
+        `Invalid provenance chain: "${layers[i]}" link may not follow "${layers[i - 1]}" (expected canonical → simulation → projection)`,
+      );
+    }
+  }
+  if (layers[layers.length - 1] !== "projection") {
+    throw new ProjectionExecutionError(
+      "Invalid provenance chain: chain must end with a projection link",
+    );
+  }
+  if (!seen.has("canonical") && !seen.has("simulation")) {
+    throw new ProjectionExecutionError(
+      "Invalid provenance chain: at least one canonical or simulation source link is required",
+    );
+  }
+}
+
 /** Builds the shared provenance chain every adapter must attach. */
 export function buildProvenanceChain(
   source: ProjectionSource,

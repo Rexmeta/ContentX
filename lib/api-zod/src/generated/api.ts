@@ -1001,6 +1001,7 @@ export const CreateProjectionBody = zod.union([zod.unknown(),zod.unknown()]).and
 })).describe('At least one of contentId or simulationId must be provided.')
 
 export const createProjectionResponseProvenanceMin = 2;
+export const createProjectionResponseProvenanceMax = 3;
 
 
 
@@ -1023,7 +1024,7 @@ export const CreateProjectionResponse = zod.object({
   "adapterVersion": zod.string(),
   "modelVersion": zod.string().nullable().describe('LLM model id, or null for deterministic adapters.'),
   "projectedAt": zod.string()
-})])).min(createProjectionResponseProvenanceMin).describe('Ordered canonical → simulation → projection; always ends with a projection link.')
+})])).min(createProjectionResponseProvenanceMin).max(createProjectionResponseProvenanceMax).describe('Ordered canonical → simulation → projection with at most one link per layer; always ends with a projection link. Order\/duplicates are enforced server-side by the shared projection contract validator.')
 })
 
 

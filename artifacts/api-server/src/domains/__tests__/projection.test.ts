@@ -13,8 +13,10 @@ import type { ContentGraph } from "../content/model";
 import type { ProjectionSource } from "../projection/contract";
 import {
   buildProvenanceChain,
+  validateProvenanceChain,
   InvalidProjectionError,
   ProjectionExecutionError,
+  type ProvenanceLink,
 } from "../projection/contract";
 import { roleplayxAdapter } from "../projection/roleplayxAdapter";
 import { validContentGraph } from "./fixtures";
@@ -161,6 +163,72 @@ describe("projection contract", () => {
       snapshotIds: ["snapshot_a"],
       evaluationIds: ["evaluation_1"],
     });
+    expect(() => validateProvenanceChain(chain)).not.toThrow();
+  });
+});
+
+describe("provenance chain contract validation", () => {
+  const canonical: ProvenanceLink = {
+    layer: "canonical",
+    contentId: "content_1",
+    contentVersion: 1,
+  };
+  const simulation: ProvenanceLink = {
+    layer: "simulation",
+    simulationId: "simulation_1",
+    seed: 42,
+    snapshotIds: [],
+    evaluationIds: [],
+  };
+  const projection: ProvenanceLink = {
+    layer: "projection",
+    adapter: "roleplayx",
+    adapterVersion: "2.0.0",
+    modelVersion: null,
+    projectedAt: NOW,
+  };
+
+  it("accepts valid chains (with and without a simulation link)", () => {
+    expect(() =>
+      validateProvenanceChain([canonical, simulation, projection]),
+    ).not.toThrow();
+    expect(() => validateProvenanceChain([canonical, projection])).not.toThrow();
+    expect(() =>
+      validateProvenanceChain([simulation, projection]),
+    ).not.toThrow();
+  });
+
+  it("rejects out-of-order chains", () => {
+    expect(() =>
+      validateProvenanceChain([simulation, canonical, projection]),
+    ).toThrow(ProjectionExecutionError);
+    expect(() =>
+      validateProvenanceChain([projection, canonical, simulation]),
+    ).toThrow(ProjectionExecutionError);
+  });
+
+  it("rejects duplicate layers", () => {
+    expect(() =>
+      validateProvenanceChain([canonical, canonical, projection]),
+    ).toThrow(/duplicate "canonical"/);
+    expect(() =>
+      validateProvenanceChain([canonical, projection, projection]),
+    ).toThrow(ProjectionExecutionError);
+  });
+
+  it("rejects chains not ending with a projection link", () => {
+    expect(() => validateProvenanceChain([canonical, simulation])).toThrow(
+      /end with a projection link/,
+    );
+    expect(() => validateProvenanceChain([])).toThrow(
+      ProjectionExecutionError,
+    );
+  });
+
+  it("rejects chains without any source link", () => {
+    expect(() => validateProvenanceChain([projection])).toThrow(
+      /canonical or simulation source link/,
+    );
   });
 });
 
