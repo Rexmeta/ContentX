@@ -768,6 +768,185 @@ export interface AgentStateUpdate {
   values: StateValues;
 }
 
+export type SimulationInputPolicy = typeof SimulationInputPolicy[keyof typeof SimulationInputPolicy];
+
+
+export const SimulationInputPolicy = {
+  heuristic: 'heuristic',
+  llm: 'llm',
+} as const;
+
+export interface SimulationInput {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  topic: string;
+  /** @minItems 2 */
+  agentIds: string[];
+  seed: number;
+  /**
+     * @minimum 1
+     * @maximum 50
+     */
+  maxTurns?: number;
+  policy?: SimulationInputPolicy;
+  roles?: string[];
+}
+
+export interface SimulationParticipant {
+  agentId: string;
+  snapshotId: string;
+  characterId: string;
+  name: string;
+  role: string;
+}
+
+export type SimulationConfigPolicy = typeof SimulationConfigPolicy[keyof typeof SimulationConfigPolicy];
+
+
+export const SimulationConfigPolicy = {
+  heuristic: 'heuristic',
+  llm: 'llm',
+} as const;
+
+export interface SimulationConfig {
+  topic: string;
+  maxTurns: number;
+  policy: SimulationConfigPolicy;
+}
+
+export type SimulationOutcomeFinalPositions = {[key: string]: number};
+
+export interface SimulationOutcome {
+  agreementReached: boolean;
+  finalGap: number;
+  finalPositions: SimulationOutcomeFinalPositions;
+  turnsUsed: number;
+  summary: string;
+}
+
+export interface SimulationProvenance {
+  operation: string;
+  createdAt: string;
+  seed: number;
+  environmentType: string;
+  policy: string;
+  /** @nullable */
+  modelVersion: string | null;
+  snapshotIds: string[];
+}
+
+export type SimulationEnvironmentType = typeof SimulationEnvironmentType[keyof typeof SimulationEnvironmentType];
+
+
+export const SimulationEnvironmentType = {
+  text: 'text',
+} as const;
+
+export type SimulationStatus = typeof SimulationStatus[keyof typeof SimulationStatus];
+
+
+export const SimulationStatus = {
+  completed: 'completed',
+  failed: 'failed',
+} as const;
+
+export interface Simulation {
+  id: string;
+  name: string;
+  environmentType: SimulationEnvironmentType;
+  config: SimulationConfig;
+  participants: SimulationParticipant[];
+  seed: number;
+  status: SimulationStatus;
+  turnsExecuted: number;
+  outcome: SimulationOutcome | null;
+  /** @nullable */
+  error: string | null;
+  provenance: SimulationProvenance;
+  createdAt: string;
+  /** @nullable */
+  completedAt: string | null;
+}
+
+export type InteractionEventType = typeof InteractionEventType[keyof typeof InteractionEventType];
+
+
+export const InteractionEventType = {
+  observation: 'observation',
+  action: 'action',
+  utterance: 'utterance',
+  decision: 'decision',
+  toolCall: 'toolCall',
+  stateChange: 'stateChange',
+  outcome: 'outcome',
+} as const;
+
+export type InteractionEventPayload = { [key: string]: unknown };
+
+export type InteractionEventStateBefore = {[key: string]: {[key: string]: number}} | null;
+
+export type InteractionEventStateAfter = {[key: string]: {[key: string]: number}} | null;
+
+export interface InteractionEvent {
+  id: string;
+  simulationId: string;
+  sequence: number;
+  turn: number;
+  actorId: string;
+  type: InteractionEventType;
+  payload: InteractionEventPayload;
+  stateBefore: InteractionEventStateBefore;
+  stateAfter: InteractionEventStateAfter;
+  createdAt: string;
+}
+
+export interface EvaluationInput {
+  simulationId: string;
+}
+
+export interface EvaluationProvenance {
+  operation: string;
+  createdAt: string;
+  simulationId: string;
+  evaluator: string;
+  evaluatorVersion: string;
+  traceEventCount: number;
+}
+
+export type EvaluationKind = typeof EvaluationKind[keyof typeof EvaluationKind];
+
+
+export const EvaluationKind = {
+  behavior: 'behavior',
+  personaFidelity: 'personaFidelity',
+  outcome: 'outcome',
+} as const;
+
+export type EvaluationSubjectType = typeof EvaluationSubjectType[keyof typeof EvaluationSubjectType];
+
+
+export const EvaluationSubjectType = {
+  agent: 'agent',
+  simulation: 'simulation',
+} as const;
+
+export type EvaluationScores = {[key: string]: number};
+
+export type EvaluationFindings = { [key: string]: unknown };
+
+export interface Evaluation {
+  id: string;
+  simulationId: string;
+  kind: EvaluationKind;
+  subjectType: EvaluationSubjectType;
+  subjectId: string;
+  scores: EvaluationScores;
+  findings: EvaluationFindings;
+  provenance: EvaluationProvenance;
+  createdAt: string;
+}
+
 export type EntityUpdateAttributes = { [key: string]: unknown };
 
 export interface EntityUpdate {
@@ -878,4 +1057,8 @@ export interface DashboardSummary {
   entityKindCounts: DashboardSummaryEntityKindCounts;
   recentContent: ContentSummary[];
 }
+
+export type ListEvaluationsParams = {
+simulationId?: string;
+};
 

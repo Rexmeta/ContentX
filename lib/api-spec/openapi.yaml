@@ -20,6 +20,8 @@ tags:
     description: Population, dependency rule, and deterministic sampling operations
   - name: agent
     description: Character snapshots and agent runtime operations
+  - name: simulation
+    description: Simulation runs, interaction traces, and evaluations
 paths:
   /healthz:
     get:
@@ -1134,6 +1136,176 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/simulations:
+    get:
+      operationId: listSimulations
+      tags: [simulation]
+      summary: List simulations
+      responses:
+        "200":
+          description: Simulation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Simulation"
+    post:
+      operationId: runSimulation
+      tags: [simulation]
+      summary: Create and synchronously run a simulation (agents in a text environment)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulationInput"
+      responses:
+        "201":
+          description: Completed simulation with outcome
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Simulation"
+        "400":
+          description: Invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Agent or snapshot not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "409":
+          description: Agent state changed concurrently during the run; nothing was persisted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "502":
+          description: LLM policy execution failed (provider error or invalid output)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/simulations/{id}:
+    get:
+      operationId: getSimulation
+      tags: [simulation]
+      summary: Get a simulation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Simulation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Simulation"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/simulations/{id}/events:
+    get:
+      operationId: listSimulationEvents
+      tags: [simulation]
+      summary: Get the immutable interaction trace of a simulation (sequence order)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Interaction events in total order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InteractionEvent"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/evaluations:
+    get:
+      operationId: listEvaluations
+      tags: [simulation]
+      summary: List evaluations (optionally filtered by simulation)
+      parameters:
+        - name: simulationId
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Evaluation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Evaluation"
+    post:
+      operationId: evaluateSimulation
+      tags: [simulation]
+      summary: Run the trace-based evaluation suite over a completed simulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluationInput"
+      responses:
+        "201":
+          description: Evaluations (behavior + persona fidelity per agent, outcome per simulation)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Evaluation"
+        "404":
+          description: Simulation not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/evaluations/{id}:
+    get:
+      operationId: getEvaluation
+      tags: [simulation]
+      summary: Get an evaluation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Evaluation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evaluation"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -1968,6 +2140,162 @@ components:
       properties:
         values:
           $ref: "#/components/schemas/StateValues"
+    SimulationInput:
+      type: object
+      required: [name, topic, agentIds, seed]
+      properties:
+        name: { type: string, minLength: 1 }
+        topic: { type: string, minLength: 1 }
+        agentIds:
+          type: array
+          items: { type: string }
+          minItems: 2
+        seed: { type: number }
+        maxTurns: { type: integer, minimum: 1, maximum: 50 }
+        policy:
+          type: string
+          enum: [heuristic, llm]
+        roles:
+          type: array
+          items: { type: string }
+    SimulationParticipant:
+      type: object
+      required: [agentId, snapshotId, characterId, name, role]
+      properties:
+        agentId: { type: string }
+        snapshotId: { type: string }
+        characterId: { type: string }
+        name: { type: string }
+        role: { type: string }
+    SimulationConfig:
+      type: object
+      required: [topic, maxTurns, policy]
+      properties:
+        topic: { type: string }
+        maxTurns: { type: integer }
+        policy:
+          type: string
+          enum: [heuristic, llm]
+    SimulationOutcome:
+      type: object
+      required: [agreementReached, finalGap, finalPositions, turnsUsed, summary]
+      properties:
+        agreementReached: { type: boolean }
+        finalGap: { type: number }
+        finalPositions:
+          type: object
+          additionalProperties: { type: number }
+        turnsUsed: { type: integer }
+        summary: { type: string }
+    SimulationProvenance:
+      type: object
+      required: [operation, createdAt, seed, environmentType, policy, modelVersion, snapshotIds]
+      properties:
+        operation: { type: string }
+        createdAt: { type: string }
+        seed: { type: number }
+        environmentType: { type: string }
+        policy: { type: string }
+        modelVersion: { type: ["string", "null"] }
+        snapshotIds:
+          type: array
+          items: { type: string }
+    Simulation:
+      type: object
+      required: [id, name, environmentType, config, participants, seed, status, turnsExecuted, outcome, error, provenance, createdAt, completedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        environmentType:
+          type: string
+          enum: [text]
+        config:
+          $ref: "#/components/schemas/SimulationConfig"
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/SimulationParticipant"
+        seed: { type: number }
+        status:
+          type: string
+          enum: [completed, failed]
+        turnsExecuted: { type: integer }
+        outcome:
+          oneOf:
+            - $ref: "#/components/schemas/SimulationOutcome"
+            - type: "null"
+        error: { type: ["string", "null"] }
+        provenance:
+          $ref: "#/components/schemas/SimulationProvenance"
+        createdAt: { type: string }
+        completedAt: { type: ["string", "null"] }
+    InteractionEvent:
+      type: object
+      required: [id, simulationId, sequence, turn, actorId, type, payload, stateBefore, stateAfter, createdAt]
+      properties:
+        id: { type: string }
+        simulationId: { type: string }
+        sequence: { type: integer }
+        turn: { type: integer }
+        actorId: { type: string }
+        type:
+          type: string
+          enum: [observation, action, utterance, decision, toolCall, stateChange, outcome]
+        payload:
+          type: object
+          additionalProperties: true
+        stateBefore:
+          oneOf:
+            - type: object
+              additionalProperties:
+                type: object
+                additionalProperties: { type: number }
+            - type: "null"
+        stateAfter:
+          oneOf:
+            - type: object
+              additionalProperties:
+                type: object
+                additionalProperties: { type: number }
+            - type: "null"
+        createdAt: { type: string }
+    EvaluationInput:
+      type: object
+      required: [simulationId]
+      properties:
+        simulationId: { type: string }
+    EvaluationProvenance:
+      type: object
+      required: [operation, createdAt, simulationId, evaluator, evaluatorVersion, traceEventCount]
+      properties:
+        operation: { type: string }
+        createdAt: { type: string }
+        simulationId: { type: string }
+        evaluator: { type: string }
+        evaluatorVersion: { type: string }
+        traceEventCount: { type: integer }
+    Evaluation:
+      type: object
+      required: [id, simulationId, kind, subjectType, subjectId, scores, findings, provenance, createdAt]
+      properties:
+        id: { type: string }
+        simulationId: { type: string }
+        kind:
+          type: string
+          enum: [behavior, personaFidelity, outcome]
+        subjectType:
+          type: string
+          enum: [agent, simulation]
+        subjectId: { type: string }
+        scores:
+          type: object
+          additionalProperties: { type: number }
+        findings:
+          type: object
+          additionalProperties: true
+        provenance:
+          $ref: "#/components/schemas/EvaluationProvenance"
+        createdAt: { type: string }
     EntityUpdate:
       type: object
       properties:

@@ -10,3 +10,6 @@ export * from "./samplingRuns";
 export * from "./characterSnapshots";
 export * from "./agents";
 export * from "./agentStates";
+export * from "./simulations";
+export * from "./interactionEvents";
+export * from "./evaluations";

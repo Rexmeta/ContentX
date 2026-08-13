@@ -42,7 +42,11 @@ import type {
   DimensionInput,
   DramaticScenario,
   EntityUpdate,
+  Evaluation,
+  EvaluationInput,
   HealthStatus,
+  InteractionEvent,
+  ListEvaluationsParams,
   Population,
   PopulationInput,
   ReclassifyResult,
@@ -54,6 +58,8 @@ import type {
   ScenarioRecord,
   ScenarioSaveInput,
   ScenarioUpdateInput,
+  Simulation,
+  SimulationInput,
   SnapshotInput,
   SynthesizeInput,
   SynthesizeResult,
@@ -3712,6 +3718,540 @@ export const useUpdateAgentState = <TError = ErrorType<ApiMessage>,
       > => {
       return useMutation(getUpdateAgentStateMutationOptions(options));
     }
+
+export const getListSimulationsUrl = () => {
+
+
+
+
+  return `/api/v1/simulations`
+}
+
+/**
+ * @summary List simulations
+ */
+export const listSimulations = async ( options?: Parameters<typeof customFetch>[1]): Promise<Simulation[]> => {
+
+  return customFetch<Simulation[]>(getListSimulationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSimulationsQueryKey = () => {
+    return [
+    `/api/v1/simulations`
+    ] as const;
+    }
+
+
+export const getListSimulationsQueryOptions = <TData = Awaited<ReturnType<typeof listSimulations>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSimulationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSimulations>>> = ({ signal }) => listSimulations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSimulationsQueryResult = NonNullable<Awaited<ReturnType<typeof listSimulations>>>
+export type ListSimulationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List simulations
+ */
+
+export function useListSimulations<TData = Awaited<ReturnType<typeof listSimulations>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSimulations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSimulationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRunSimulationUrl = () => {
+
+
+
+
+  return `/api/v1/simulations`
+}
+
+/**
+ * @summary Create and synchronously run a simulation (agents in a text environment)
+ */
+export const runSimulation = async (simulationInput: SimulationInput, options?: Parameters<typeof customFetch>[1]): Promise<Simulation> => {
+
+  return customFetch<Simulation>(getRunSimulationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(simulationInput)
+  }
+);}
+
+
+
+
+
+export const getRunSimulationMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runSimulation>>, TError,{data: BodyType<SimulationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runSimulation>>, TError,{data: BodyType<SimulationInput>}, TContext> => {
+
+const mutationKey = ['runSimulation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runSimulation>>, {data: BodyType<SimulationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  runSimulation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunSimulationMutationResult = NonNullable<Awaited<ReturnType<typeof runSimulation>>>
+    export type RunSimulationMutationBody = BodyType<SimulationInput>
+    export type RunSimulationMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Create and synchronously run a simulation (agents in a text environment)
+ */
+export const useRunSimulation = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runSimulation>>, TError,{data: BodyType<SimulationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runSimulation>>,
+        TError,
+        {data: BodyType<SimulationInput>},
+        TContext
+      > => {
+      return useMutation(getRunSimulationMutationOptions(options));
+    }
+
+export const getGetSimulationUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/simulations/${id}`
+}
+
+/**
+ * @summary Get a simulation
+ */
+export const getSimulation = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Simulation> => {
+
+  return customFetch<Simulation>(getGetSimulationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSimulationQueryKey = (id: string,) => {
+    return [
+    `/api/v1/simulations/${id}`
+    ] as const;
+    }
+
+
+export const getGetSimulationQueryOptions = <TData = Awaited<ReturnType<typeof getSimulation>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSimulation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSimulationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSimulation>>> = ({ signal }) => getSimulation(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSimulation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSimulationQueryResult = NonNullable<Awaited<ReturnType<typeof getSimulation>>>
+export type GetSimulationQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a simulation
+ */
+
+export function useGetSimulation<TData = Awaited<ReturnType<typeof getSimulation>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSimulation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSimulationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListSimulationEventsUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/simulations/${id}/events`
+}
+
+/**
+ * @summary Get the immutable interaction trace of a simulation (sequence order)
+ */
+export const listSimulationEvents = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<InteractionEvent[]> => {
+
+  return customFetch<InteractionEvent[]>(getListSimulationEventsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSimulationEventsQueryKey = (id: string,) => {
+    return [
+    `/api/v1/simulations/${id}/events`
+    ] as const;
+    }
+
+
+export const getListSimulationEventsQueryOptions = <TData = Awaited<ReturnType<typeof listSimulationEvents>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSimulationEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSimulationEventsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSimulationEvents>>> = ({ signal }) => listSimulationEvents(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSimulationEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSimulationEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listSimulationEvents>>>
+export type ListSimulationEventsQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get the immutable interaction trace of a simulation (sequence order)
+ */
+
+export function useListSimulationEvents<TData = Awaited<ReturnType<typeof listSimulationEvents>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSimulationEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSimulationEventsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListEvaluationsUrl = (params?: ListEvaluationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/evaluations?${stringifiedParams}` : `/api/v1/evaluations`
+}
+
+/**
+ * @summary List evaluations (optionally filtered by simulation)
+ */
+export const listEvaluations = async (params?: ListEvaluationsParams, options?: Parameters<typeof customFetch>[1]): Promise<Evaluation[]> => {
+
+  return customFetch<Evaluation[]>(getListEvaluationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEvaluationsQueryKey = (params?: ListEvaluationsParams,) => {
+    return [
+    `/api/v1/evaluations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListEvaluationsQueryOptions = <TData = Awaited<ReturnType<typeof listEvaluations>>, TError = ErrorType<unknown>>(params?: ListEvaluationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEvaluations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEvaluationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEvaluations>>> = ({ signal }) => listEvaluations(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEvaluations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEvaluationsQueryResult = NonNullable<Awaited<ReturnType<typeof listEvaluations>>>
+export type ListEvaluationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List evaluations (optionally filtered by simulation)
+ */
+
+export function useListEvaluations<TData = Awaited<ReturnType<typeof listEvaluations>>, TError = ErrorType<unknown>>(
+ params?: ListEvaluationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEvaluations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEvaluationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getEvaluateSimulationUrl = () => {
+
+
+
+
+  return `/api/v1/evaluations`
+}
+
+/**
+ * @summary Run the trace-based evaluation suite over a completed simulation
+ */
+export const evaluateSimulation = async (evaluationInput: EvaluationInput, options?: Parameters<typeof customFetch>[1]): Promise<Evaluation[]> => {
+
+  return customFetch<Evaluation[]>(getEvaluateSimulationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(evaluationInput)
+  }
+);}
+
+
+
+
+
+export const getEvaluateSimulationMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof evaluateSimulation>>, TError,{data: BodyType<EvaluationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof evaluateSimulation>>, TError,{data: BodyType<EvaluationInput>}, TContext> => {
+
+const mutationKey = ['evaluateSimulation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof evaluateSimulation>>, {data: BodyType<EvaluationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  evaluateSimulation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EvaluateSimulationMutationResult = NonNullable<Awaited<ReturnType<typeof evaluateSimulation>>>
+    export type EvaluateSimulationMutationBody = BodyType<EvaluationInput>
+    export type EvaluateSimulationMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Run the trace-based evaluation suite over a completed simulation
+ */
+export const useEvaluateSimulation = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof evaluateSimulation>>, TError,{data: BodyType<EvaluationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof evaluateSimulation>>,
+        TError,
+        {data: BodyType<EvaluationInput>},
+        TContext
+      > => {
+      return useMutation(getEvaluateSimulationMutationOptions(options));
+    }
+
+export const getGetEvaluationUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/evaluations/${id}`
+}
+
+/**
+ * @summary Get an evaluation
+ */
+export const getEvaluation = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Evaluation> => {
+
+  return customFetch<Evaluation>(getGetEvaluationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEvaluationQueryKey = (id: string,) => {
+    return [
+    `/api/v1/evaluations/${id}`
+    ] as const;
+    }
+
+
+export const getGetEvaluationQueryOptions = <TData = Awaited<ReturnType<typeof getEvaluation>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvaluation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEvaluationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvaluation>>> = ({ signal }) => getEvaluation(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEvaluation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEvaluationQueryResult = NonNullable<Awaited<ReturnType<typeof getEvaluation>>>
+export type GetEvaluationQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get an evaluation
+ */
+
+export function useGetEvaluation<TData = Awaited<ReturnType<typeof getEvaluation>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvaluation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEvaluationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetDashboardSummaryUrl = () => {
 

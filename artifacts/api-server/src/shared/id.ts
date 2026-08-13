@@ -18,7 +18,10 @@ export type IdPrefix =
   | "samplingrun"
   | "snapshot"
   | "agent"
-  | "agentstate";
+  | "agentstate"
+  | "simulation"
+  | "interaction"
+  | "evaluation";
 
 /** Stable prefixed identifiers. Never use array indexes as identity. */
 export function newId(prefix: IdPrefix): string {

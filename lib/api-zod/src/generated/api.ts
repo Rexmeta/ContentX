@@ -2214,6 +2214,266 @@ export const UpdateAgentStateResponse = zod.object({
 
 
 /**
+ * @summary List simulations
+ */
+export const ListSimulationsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "environmentType": zod.enum(['text']),
+  "config": zod.object({
+  "topic": zod.string(),
+  "maxTurns": zod.int(),
+  "policy": zod.enum(['heuristic', 'llm'])
+}),
+  "participants": zod.array(zod.object({
+  "agentId": zod.string(),
+  "snapshotId": zod.string(),
+  "characterId": zod.string(),
+  "name": zod.string(),
+  "role": zod.string()
+})),
+  "seed": zod.number(),
+  "status": zod.enum(['completed', 'failed']),
+  "turnsExecuted": zod.int(),
+  "outcome": zod.union([zod.object({
+  "agreementReached": zod.boolean(),
+  "finalGap": zod.number(),
+  "finalPositions": zod.record(zod.string(), zod.number()),
+  "turnsUsed": zod.int(),
+  "summary": zod.string()
+}),zod.null()]),
+  "error": zod.string().nullable(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "seed": zod.number(),
+  "environmentType": zod.string(),
+  "policy": zod.string(),
+  "modelVersion": zod.string().nullable(),
+  "snapshotIds": zod.array(zod.string())
+}),
+  "createdAt": zod.string(),
+  "completedAt": zod.string().nullable()
+})
+export const ListSimulationsResponse = zod.array(ListSimulationsResponseItem)
+
+
+/**
+ * @summary Create and synchronously run a simulation (agents in a text environment)
+ */
+
+
+export const runSimulationBodyAgentIdsMin = 2;
+
+export const runSimulationBodyMaxTurnsMax = 50;
+
+
+
+export const RunSimulationBody = zod.object({
+  "name": zod.string().min(1),
+  "topic": zod.string().min(1),
+  "agentIds": zod.array(zod.string()).min(runSimulationBodyAgentIdsMin),
+  "seed": zod.number(),
+  "maxTurns": zod.int().min(1).max(runSimulationBodyMaxTurnsMax).optional(),
+  "policy": zod.enum(['heuristic', 'llm']).optional(),
+  "roles": zod.array(zod.string()).optional()
+})
+
+export const RunSimulationResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "environmentType": zod.enum(['text']),
+  "config": zod.object({
+  "topic": zod.string(),
+  "maxTurns": zod.int(),
+  "policy": zod.enum(['heuristic', 'llm'])
+}),
+  "participants": zod.array(zod.object({
+  "agentId": zod.string(),
+  "snapshotId": zod.string(),
+  "characterId": zod.string(),
+  "name": zod.string(),
+  "role": zod.string()
+})),
+  "seed": zod.number(),
+  "status": zod.enum(['completed', 'failed']),
+  "turnsExecuted": zod.int(),
+  "outcome": zod.union([zod.object({
+  "agreementReached": zod.boolean(),
+  "finalGap": zod.number(),
+  "finalPositions": zod.record(zod.string(), zod.number()),
+  "turnsUsed": zod.int(),
+  "summary": zod.string()
+}),zod.null()]),
+  "error": zod.string().nullable(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "seed": zod.number(),
+  "environmentType": zod.string(),
+  "policy": zod.string(),
+  "modelVersion": zod.string().nullable(),
+  "snapshotIds": zod.array(zod.string())
+}),
+  "createdAt": zod.string(),
+  "completedAt": zod.string().nullable()
+})
+
+
+/**
+ * @summary Get a simulation
+ */
+export const GetSimulationParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetSimulationResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "environmentType": zod.enum(['text']),
+  "config": zod.object({
+  "topic": zod.string(),
+  "maxTurns": zod.int(),
+  "policy": zod.enum(['heuristic', 'llm'])
+}),
+  "participants": zod.array(zod.object({
+  "agentId": zod.string(),
+  "snapshotId": zod.string(),
+  "characterId": zod.string(),
+  "name": zod.string(),
+  "role": zod.string()
+})),
+  "seed": zod.number(),
+  "status": zod.enum(['completed', 'failed']),
+  "turnsExecuted": zod.int(),
+  "outcome": zod.union([zod.object({
+  "agreementReached": zod.boolean(),
+  "finalGap": zod.number(),
+  "finalPositions": zod.record(zod.string(), zod.number()),
+  "turnsUsed": zod.int(),
+  "summary": zod.string()
+}),zod.null()]),
+  "error": zod.string().nullable(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "seed": zod.number(),
+  "environmentType": zod.string(),
+  "policy": zod.string(),
+  "modelVersion": zod.string().nullable(),
+  "snapshotIds": zod.array(zod.string())
+}),
+  "createdAt": zod.string(),
+  "completedAt": zod.string().nullable()
+})
+
+
+/**
+ * @summary Get the immutable interaction trace of a simulation (sequence order)
+ */
+export const ListSimulationEventsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListSimulationEventsResponseItem = zod.object({
+  "id": zod.string(),
+  "simulationId": zod.string(),
+  "sequence": zod.int(),
+  "turn": zod.int(),
+  "actorId": zod.string(),
+  "type": zod.enum(['observation', 'action', 'utterance', 'decision', 'toolCall', 'stateChange', 'outcome']),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "stateBefore": zod.union([zod.record(zod.string(), zod.record(zod.string(), zod.number())),zod.null()]),
+  "stateAfter": zod.union([zod.record(zod.string(), zod.record(zod.string(), zod.number())),zod.null()]),
+  "createdAt": zod.string()
+})
+export const ListSimulationEventsResponse = zod.array(ListSimulationEventsResponseItem)
+
+
+/**
+ * @summary List evaluations (optionally filtered by simulation)
+ */
+export const ListEvaluationsQueryParams = zod.object({
+  "simulationId": zod.coerce.string().optional()
+})
+
+export const ListEvaluationsResponseItem = zod.object({
+  "id": zod.string(),
+  "simulationId": zod.string(),
+  "kind": zod.enum(['behavior', 'personaFidelity', 'outcome']),
+  "subjectType": zod.enum(['agent', 'simulation']),
+  "subjectId": zod.string(),
+  "scores": zod.record(zod.string(), zod.number()),
+  "findings": zod.record(zod.string(), zod.unknown()),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "simulationId": zod.string(),
+  "evaluator": zod.string(),
+  "evaluatorVersion": zod.string(),
+  "traceEventCount": zod.int()
+}),
+  "createdAt": zod.string()
+})
+export const ListEvaluationsResponse = zod.array(ListEvaluationsResponseItem)
+
+
+/**
+ * @summary Run the trace-based evaluation suite over a completed simulation
+ */
+export const EvaluateSimulationBody = zod.object({
+  "simulationId": zod.string()
+})
+
+export const EvaluateSimulationResponseItem = zod.object({
+  "id": zod.string(),
+  "simulationId": zod.string(),
+  "kind": zod.enum(['behavior', 'personaFidelity', 'outcome']),
+  "subjectType": zod.enum(['agent', 'simulation']),
+  "subjectId": zod.string(),
+  "scores": zod.record(zod.string(), zod.number()),
+  "findings": zod.record(zod.string(), zod.unknown()),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "simulationId": zod.string(),
+  "evaluator": zod.string(),
+  "evaluatorVersion": zod.string(),
+  "traceEventCount": zod.int()
+}),
+  "createdAt": zod.string()
+})
+export const EvaluateSimulationResponse = zod.array(EvaluateSimulationResponseItem)
+
+
+/**
+ * @summary Get an evaluation
+ */
+export const GetEvaluationParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetEvaluationResponse = zod.object({
+  "id": zod.string(),
+  "simulationId": zod.string(),
+  "kind": zod.enum(['behavior', 'personaFidelity', 'outcome']),
+  "subjectType": zod.enum(['agent', 'simulation']),
+  "subjectId": zod.string(),
+  "scores": zod.record(zod.string(), zod.number()),
+  "findings": zod.record(zod.string(), zod.unknown()),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "simulationId": zod.string(),
+  "evaluator": zod.string(),
+  "evaluatorVersion": zod.string(),
+  "traceEventCount": zod.int()
+}),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Aggregate stats across the content library
  */
 export const GetDashboardSummaryResponse = zod.object({
