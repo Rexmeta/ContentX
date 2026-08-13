@@ -47,6 +47,8 @@ import type {
   HealthStatus,
   InteractionEvent,
   ListEvaluationsParams,
+  MatraixImportInput,
+  MatraixImportResult,
   Population,
   PopulationInput,
   ProjectionInput,
@@ -321,6 +323,78 @@ export const useCreateContent = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateContentMutationOptions(options));
+    }
+
+export const getImportMatraixContentUrl = () => {
+
+
+
+
+  return `/api/v1/content/import/matraix`
+}
+
+/**
+ * Maps a MatrAIx export (world, populations, personas, relations) into canonical entities/relationships with provenance sourceType "matraix", and returns the committed graph plus a validation/import report (duplicates, broken references). With dryRun the mapping and report are returned without committing.
+ * @summary Import a MatrAIx dataset as a new canonical content graph
+ */
+export const importMatraixContent = async (matraixImportInput: MatraixImportInput, options?: Parameters<typeof customFetch>[1]): Promise<MatraixImportResult> => {
+
+  return customFetch<MatraixImportResult>(getImportMatraixContentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(matraixImportInput)
+  }
+);}
+
+
+
+
+
+export const getImportMatraixContentMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importMatraixContent>>, TError,{data: BodyType<MatraixImportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importMatraixContent>>, TError,{data: BodyType<MatraixImportInput>}, TContext> => {
+
+const mutationKey = ['importMatraixContent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importMatraixContent>>, {data: BodyType<MatraixImportInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  importMatraixContent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportMatraixContentMutationResult = NonNullable<Awaited<ReturnType<typeof importMatraixContent>>>
+    export type ImportMatraixContentMutationBody = BodyType<MatraixImportInput>
+    export type ImportMatraixContentMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Import a MatrAIx dataset as a new canonical content graph
+ */
+export const useImportMatraixContent = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importMatraixContent>>, TError,{data: BodyType<MatraixImportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importMatraixContent>>,
+        TError,
+        {data: BodyType<MatraixImportInput>},
+        TContext
+      > => {
+      return useMutation(getImportMatraixContentMutationOptions(options));
     }
 
 export const getDraftScenarioUrl = () => {

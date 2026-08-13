@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "matraix/1.0",
+  "source": {
+    "uri": "matraix://exports/korean-retail-demo",
+    "title": "Korean Retail Customers (demo slice)"
+  },
+  "world": {
+    "id": "world.retail-kr",
+    "name": "Korean Retail Market",
+    "description": "A mid-size Korean retail chain and its customer base."
+  },
+  "populations": [
+    {
+      "id": "pop.retail-customers",
+      "name": "Retail Customers 30-50",
+      "description": "Urban retail customers aged 30-50.",
+      "dimensions": [
+        { "id": "dim.age", "name": "age", "category": "demographic", "dataType": "number" },
+        { "id": "dim.occupation", "name": "occupation", "category": "professional", "dataType": "string" }
+      ]
+    }
+  ],
+  "personas": [
+    {
+      "id": "persona.jiyoung",
+      "name": "Kim Jiyoung",
+      "populationId": "pop.retail-customers",
+      "description": "38-year-old marketing manager, value-conscious shopper.",
+      "attributes": { "age": 38, "occupation": "marketing manager", "riskTolerance": "low" },
+      "traits": ["analytical", "brand-loyal"],
+      "goals": ["Find reliable products at fair prices"]
+    },
+    {
+      "id": "persona.minsu",
+      "name": "Park Minsu",
+      "populationId": "pop.retail-customers",
+      "aliases": ["Minsu"],
+      "description": "45-year-old shop owner comparing suppliers.",
+      "attributes": { "age": 45, "occupation": "shop owner", "riskTolerance": "medium" },
+      "traits": ["pragmatic", "negotiator"],
+      "goals": ["Negotiate better wholesale terms"]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel.knows",
+      "from": "persona.jiyoung",
+      "type": "knows",
+      "to": "persona.minsu"
+    },
+    {
+      "id": "rel.in-world",
+      "from": "pop.retail-customers",
+      "type": "locatedIn",
+      "to": "world.retail-kr"
+    }
+  ]
+}

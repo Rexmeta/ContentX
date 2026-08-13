@@ -19,6 +19,11 @@ import {
 import * as repo from "../domains/content/repository";
 import * as service from "../domains/content/service";
 import {
+  importMatraix,
+  MatraixParseError,
+} from "../domains/import/matraixService";
+import { ImportMatraixContentBody, ImportMatraixContentResponse } from "@workspace/api-zod";
+import {
   validateLineage,
   InvalidLineageError,
 } from "../domains/scenario/lineageService";
@@ -86,6 +91,30 @@ router.post("/v1/content", async (req, res): Promise<void> => {
     parsed.data.scenario?.title,
   );
   res.status(201).json(CreateContentResponse.parse(graph));
+});
+
+router.post("/v1/content/import/matraix", async (req, res): Promise<void> => {
+  const parsed = ImportMatraixContentBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  try {
+    const result = await importMatraix({
+      // Validate the RAW body's dataset in the domain layer: generated zod
+      // strips unknown keys, but MatrAIx parsing must reject them explicitly.
+      dataset: (req.body as { dataset: unknown }).dataset,
+      title: parsed.data.title,
+      dryRun: parsed.data.dryRun,
+    });
+    res.status(201).json(ImportMatraixContentResponse.parse(result));
+  } catch (err) {
+    if (err instanceof MatraixParseError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
 });
 
 router.get("/v1/content/:id", async (req, res): Promise<void> => {

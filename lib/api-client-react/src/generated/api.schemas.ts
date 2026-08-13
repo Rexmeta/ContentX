@@ -1064,6 +1064,30 @@ export interface RelationshipUpdate {
   attributes?: RelationshipUpdateAttributes;
 }
 
+/**
+ * Raw MatrAIx export payload (schemaVersion "matraix/x.y", personas, optional world/populations/relations). Strictly validated in the domain layer; unknown keys are rejected.
+ */
+export type MatraixImportInputDataset = { [key: string]: unknown };
+
+export interface MatraixImportInput {
+  /** Raw MatrAIx export payload (schemaVersion "matraix/x.y", personas, optional world/populations/relations). Strictly validated in the domain layer; unknown keys are rejected. */
+  dataset: MatraixImportInputDataset;
+  /** Optional title for the imported content graph */
+  title?: string;
+  /** Map and validate without committing */
+  dryRun?: boolean;
+}
+
+export interface MatraixImportStats {
+  worlds: number;
+  populations: number;
+  personas: number;
+  goals: number;
+  relations: number;
+  skippedRelations: number;
+  skippedDuplicates: number;
+}
+
 export type ValidationIssueSeverity = typeof ValidationIssueSeverity[keyof typeof ValidationIssueSeverity];
 
 
@@ -1085,6 +1109,18 @@ export interface ValidationReport {
   checkedAt: string;
   issues: ValidationIssue[];
   checks: string[];
+}
+
+export interface MatraixImportReport {
+  /** Mapping issues (duplicate MatrAIx ids, broken references) */
+  importIssues: ValidationIssue[];
+  validation: ValidationReport;
+  stats: MatraixImportStats;
+}
+
+export interface MatraixImportResult {
+  content: ContentGraph;
+  report: MatraixImportReport;
 }
 
 export interface VersionInfo {

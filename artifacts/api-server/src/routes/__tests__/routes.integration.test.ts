@@ -283,6 +283,78 @@ describe("POST /api/v1/scenarios (save with lineage)", () => {
   });
 });
 
+describe("POST /api/v1/content/import/matraix", () => {
+  it("rejects an invalid MatrAIx dataset with 400", async () => {
+    const res = await request(app)
+      .post("/api/v1/content/import/matraix")
+      .send({ dataset: { schemaVersion: "other/1.0", personas: [] } });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Invalid MatrAIx dataset/i);
+    expect(insertContent).not.toHaveBeenCalled();
+  });
+
+  it("imports a dataset, commits an initial version, and returns the report", async () => {
+    insertContent.mockImplementationOnce(async (row) => ({
+      ...row,
+      sourcePrompt: null,
+      createdAt: new Date("2026-08-13T00:00:00Z"),
+      updatedAt: new Date("2026-08-13T00:00:00Z"),
+    }) as unknown as ContentRow);
+
+    const res = await request(app)
+      .post("/api/v1/content/import/matraix")
+      .send({
+        dataset: {
+          schemaVersion: "matraix/1.0",
+          source: { title: "demo" },
+          personas: [
+            { id: "p1", name: "A", goals: ["win"] },
+            { id: "p2", name: "B" },
+          ],
+          relations: [
+            { id: "r1", from: "p1", type: "knows", to: "p2" },
+            { from: "p1", type: "knows", to: "ghost" },
+          ],
+        },
+        title: "Imported world",
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.content.title).toBe("Imported world");
+    expect(res.body.content.provenance).toMatchObject({
+      operation: "import",
+      sourceType: "matraix",
+    });
+    expect(res.body.report.stats).toMatchObject({
+      personas: 2,
+      goals: 1,
+      skippedRelations: 1,
+    });
+    expect(res.body.report.importIssues).toHaveLength(1);
+    expect(res.body.report.importIssues[0].code).toBe("BROKEN_REFERENCE");
+    expect(res.body.report.validation.valid).toBe(true);
+
+    const [row, versionRow] = insertContent.mock.calls[0]!;
+    expect(row.version).toBe(1);
+    expect(versionRow.author).toBe("matraix-importer");
+  });
+
+  it("dryRun maps and validates without committing", async () => {
+    const res = await request(app)
+      .post("/api/v1/content/import/matraix")
+      .send({
+        dataset: {
+          schemaVersion: "matraix/1.0",
+          personas: [{ id: "p1", name: "A" }],
+        },
+        dryRun: true,
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.content.version).toBe(0);
+    expect(insertContent).not.toHaveBeenCalled();
+  });
+});
+
 describe("POST /api/v1/content (lineage → provenance)", () => {
   it("returns 400 when lineage is sent without a scenario", async () => {
     const res = await request(app)

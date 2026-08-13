@@ -67,6 +67,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ContentGraph"
+  /v1/content/import/matraix:
+    post:
+      operationId: importMatraixContent
+      tags: [content]
+      summary: Import a MatrAIx dataset as a new canonical content graph
+      description: >
+        Maps a MatrAIx export (world, populations, personas, relations) into
+        canonical entities/relationships with provenance sourceType "matraix",
+        and returns the committed graph plus a validation/import report
+        (duplicates, broken references). With dryRun the mapping and report
+        are returned without committing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatraixImportInput"
+      responses:
+        "201":
+          description: Imported content graph plus import report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatraixImportResult"
+        "400":
+          description: Invalid MatrAIx dataset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/scenarios/draft:
     post:
       operationId: draftScenario
@@ -2440,6 +2470,56 @@ components:
         attributes:
           type: object
           additionalProperties: true
+    MatraixImportInput:
+      type: object
+      required: [dataset]
+      properties:
+        dataset:
+          type: object
+          description: >
+            Raw MatrAIx export payload (schemaVersion "matraix/x.y", personas,
+            optional world/populations/relations). Strictly validated in the
+            domain layer; unknown keys are rejected.
+          additionalProperties: true
+        title:
+          type: string
+          description: Optional title for the imported content graph
+        dryRun:
+          type: boolean
+          description: Map and validate without committing
+    MatraixImportStats:
+      type: object
+      required:
+        [worlds, populations, personas, goals, relations, skippedRelations, skippedDuplicates]
+      properties:
+        worlds: { type: integer }
+        populations: { type: integer }
+        personas: { type: integer }
+        goals: { type: integer }
+        relations: { type: integer }
+        skippedRelations: { type: integer }
+        skippedDuplicates: { type: integer }
+    MatraixImportReport:
+      type: object
+      required: [importIssues, validation, stats]
+      properties:
+        importIssues:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationIssue"
+          description: Mapping issues (duplicate MatrAIx ids, broken references)
+        validation:
+          $ref: "#/components/schemas/ValidationReport"
+        stats:
+          $ref: "#/components/schemas/MatraixImportStats"
+    MatraixImportResult:
+      type: object
+      required: [content, report]
+      properties:
+        content:
+          $ref: "#/components/schemas/ContentGraph"
+        report:
+          $ref: "#/components/schemas/MatraixImportReport"
     ValidationIssue:
       type: object
       required: [severity, code, message]

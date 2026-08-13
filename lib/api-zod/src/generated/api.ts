@@ -128,6 +128,97 @@ export const CreateContentResponse = zod.object({
 
 
 /**
+ * Maps a MatrAIx export (world, populations, personas, relations) into canonical entities/relationships with provenance sourceType "matraix", and returns the committed graph plus a validation/import report (duplicates, broken references). With dryRun the mapping and report are returned without committing.
+ * @summary Import a MatrAIx dataset as a new canonical content graph
+ */
+export const ImportMatraixContentBody = zod.object({
+  "dataset": zod.record(zod.string(), zod.unknown()).describe('Raw MatrAIx export payload (schemaVersion \"matraix\/x.y\", personas, optional world\/populations\/relations). Strictly validated in the domain layer; unknown keys are rejected.\n'),
+  "title": zod.string().optional().describe('Optional title for the imported content graph'),
+  "dryRun": zod.boolean().optional().describe('Map and validate without committing')
+})
+
+
+
+export const importMatraixContentResponseContentProvenanceLineageTwoParentsMin = 2;
+
+
+
+export const ImportMatraixContentResponse = zod.object({
+  "content": zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "sourcePrompt": zod.string().nullish(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "entities": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
+  "description": zod.string().nullish(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})),
+  "relationships": zod.array(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "type": zod.string(),
+  "target": zod.string(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish(),
+  "sourceUri": zod.string().nullish(),
+  "sourceTitle": zod.string().nullish(),
+  "sourceContentIds": zod.array(zod.string()).optional(),
+  "generatedByProvider": zod.string().nullish(),
+  "generatedByModel": zod.string().nullish(),
+  "lineage": zod.union([zod.null(),zod.object({
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+})).min(importMatraixContentResponseContentProvenanceLineageTwoParentsMin),
+  "instruction": zod.string().nullish(),
+  "synthesizedBy": zod.string().nullish()
+})]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
+}).optional()
+}),
+  "report": zod.object({
+  "importIssues": zod.array(zod.object({
+  "severity": zod.enum(['error', 'warning']),
+  "code": zod.string(),
+  "message": zod.string(),
+  "objectId": zod.string().nullish()
+})).describe('Mapping issues (duplicate MatrAIx ids, broken references)'),
+  "validation": zod.object({
+  "valid": zod.boolean(),
+  "checkedAt": zod.string(),
+  "issues": zod.array(zod.object({
+  "severity": zod.enum(['error', 'warning']),
+  "code": zod.string(),
+  "message": zod.string(),
+  "objectId": zod.string().nullish()
+})),
+  "checks": zod.array(zod.string())
+}),
+  "stats": zod.object({
+  "worlds": zod.int(),
+  "populations": zod.int(),
+  "personas": zod.int(),
+  "goals": zod.int(),
+  "relations": zod.int(),
+  "skippedRelations": zod.int(),
+  "skippedDuplicates": zod.int()
+})
+})
+})
+
+
+/**
  * @summary Amplify a raw idea into a dramatic scenario draft for user confirmation
  */
 
