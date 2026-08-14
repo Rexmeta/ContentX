@@ -4,6 +4,12 @@ import {
   CreatePopulationBody,
   CreatePopulationResponse,
   GetPopulationResponse,
+  UpdatePopulationBody,
+  UpdatePopulationResponse,
+  UpdateDependencyRuleBody,
+  UpdateDependencyRuleResponse,
+  GetPopulationDefinitionQueryParams,
+  GetPopulationDefinitionResponse,
   ListDependencyRulesResponse,
   CreateDependencyRuleBody,
   CreateDependencyRuleResponse,
@@ -83,6 +89,49 @@ router.get("/v1/populations/:id", async (req, res): Promise<void> => {
   res.json(GetPopulationResponse.parse(population));
 });
 
+router.put("/v1/populations/:id", async (req, res): Promise<void> => {
+  const parsed = UpdatePopulationBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  try {
+    const population = await populationService.updatePopulation(
+      pathParam(req.params["id"]),
+      {
+        ...parsed.data,
+        distributions: parsed.data.distributions as
+          | Record<string, Distribution>
+          | undefined,
+      },
+    );
+    res.json(UpdatePopulationResponse.parse(population));
+  } catch (err) {
+    if (!handleDomainError(err, res)) throw err;
+  }
+});
+
+router.get(
+  "/v1/populations/:id/definition",
+  async (req, res): Promise<void> => {
+    const parsed = GetPopulationDefinitionQueryParams.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    try {
+      const definition = await populationService.getPopulationDefinitionAt({
+        populationId: pathParam(req.params["id"]),
+        populationVersion: parsed.data.populationVersion,
+        dependencyGraphVersion: parsed.data.dependencyGraphVersion,
+      });
+      res.json(GetPopulationDefinitionResponse.parse(definition));
+    } catch (err) {
+      if (!handleDomainError(err, res)) throw err;
+    }
+  },
+);
+
 router.delete("/v1/populations/:id", async (req, res): Promise<void> => {
   let deleted: boolean;
   try {
@@ -130,6 +179,27 @@ router.post("/v1/dependencies", async (req, res): Promise<void> => {
       effect: parsed.data.effect as RuleEffect,
     });
     res.status(201).json(CreateDependencyRuleResponse.parse(rule));
+  } catch (err) {
+    if (!handleDomainError(err, res)) throw err;
+  }
+});
+
+router.put("/v1/dependencies/:id", async (req, res): Promise<void> => {
+  const parsed = UpdateDependencyRuleBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  try {
+    const rule = await populationService.updateDependencyRule(
+      pathParam(req.params["id"]),
+      {
+        ...parsed.data,
+        conditions: parsed.data.conditions as RuleCondition[] | undefined,
+        effect: parsed.data.effect as RuleEffect | undefined,
+      },
+    );
+    res.json(UpdateDependencyRuleResponse.parse(rule));
   } catch (err) {
     if (!handleDomainError(err, res)) throw err;
   }

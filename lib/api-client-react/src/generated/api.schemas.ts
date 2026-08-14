@@ -478,6 +478,34 @@ export interface PopulationInput {
   samplingConfig?: SamplingConfig;
 }
 
+export type PopulationUpdateDistributions = {[key: string]: Distribution};
+
+/**
+ * Partial update; version increments and the previous definition is preserved in history.
+ */
+export interface PopulationUpdate {
+  /** @minLength 1 */
+  name?: string;
+  /** @minLength 1 */
+  domain?: string;
+  /** @minItems 1 */
+  dimensions?: string[];
+  distributions?: PopulationUpdateDistributions;
+  constraints?: PopulationConstraint[];
+  samplingConfig?: SamplingConfig | null;
+}
+
+export type DependencyRuleType = typeof DependencyRuleType[keyof typeof DependencyRuleType];
+
+
+export const DependencyRuleType = {
+  conditional: 'conditional',
+  constraint: 'constraint',
+  exclusion: 'exclusion',
+  implication: 'implication',
+  correlation: 'correlation',
+} as const;
+
 export interface RuleCondition {
   equals?: unknown;
   in?: string[];
@@ -494,17 +522,6 @@ export interface RuleEffect {
   max?: number;
 }
 
-export type DependencyRuleType = typeof DependencyRuleType[keyof typeof DependencyRuleType];
-
-
-export const DependencyRuleType = {
-  conditional: 'conditional',
-  constraint: 'constraint',
-  exclusion: 'exclusion',
-  implication: 'implication',
-  correlation: 'correlation',
-} as const;
-
 export interface DependencyRule {
   id: string;
   populationId: string;
@@ -519,6 +536,14 @@ export interface DependencyRule {
   version: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Exact historical definition + rule set behind a pinned version pair.
+ */
+export interface PopulationDefinitionAt {
+  population: Population;
+  rules: DependencyRule[];
 }
 
 export type DependencyRuleInputType = typeof DependencyRuleInputType[keyof typeof DependencyRuleInputType];
@@ -543,6 +568,31 @@ export interface DependencyRuleInput {
   strength?: number;
 }
 
+export type DependencyRuleUpdateType = typeof DependencyRuleUpdateType[keyof typeof DependencyRuleUpdateType];
+
+
+export const DependencyRuleUpdateType = {
+  conditional: 'conditional',
+  constraint: 'constraint',
+  exclusion: 'exclusion',
+  implication: 'implication',
+  correlation: 'correlation',
+} as const;
+
+/**
+ * Partial update; rule version increments and the graph digest snapshot is preserved.
+ */
+export interface DependencyRuleUpdate {
+  sourceDimension?: string;
+  targetDimension?: string;
+  type?: DependencyRuleUpdateType;
+  /** @minItems 1 */
+  conditions?: RuleCondition[];
+  effect?: RuleEffect;
+  /** @nullable */
+  strength?: number | null;
+}
+
 export type SamplingInputStrategy = typeof SamplingInputStrategy[keyof typeof SamplingInputStrategy];
 
 
@@ -562,6 +612,13 @@ export interface SamplingInput {
      * @maximum 1000
      */
   sampleSize: number;
+  /**
+     * Pin sampling to a historical population definition version (reproduce a past run).
+     * @minimum 1
+     */
+  populationVersion?: number;
+  /** Pin sampling to a historical dependency rule set digest (reproduce a past run). */
+  dependencyGraphVersion?: string;
   strategy: SamplingInputStrategy;
   seed: number;
   constraints?: PopulationConstraint[];
@@ -1206,6 +1263,14 @@ export interface DashboardSummary {
   entityKindCounts: DashboardSummaryEntityKindCounts;
   recentContent: ContentSummary[];
 }
+
+export type GetPopulationDefinitionParams = {
+/**
+ * @minimum 1
+ */
+populationVersion: number;
+dependencyGraphVersion: string;
+};
 
 export type ListEvaluationsParams = {
 simulationId?: string;

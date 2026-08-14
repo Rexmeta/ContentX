@@ -56,15 +56,18 @@ Canonical Graph / Simulation bundle → Roleplay / Novel Projection
 - Test evidence: `domains/__tests__/agent.test.ts` asserts character/snapshot
   writes are never invoked during state mutation.
 
-### 5. Can the Population version be reproduced? — **Partially**
+### 5. Can the Population version be reproduced? — **Yes**
 
 - Population (`domains/population/model.ts`) carries `schemaVersion` and a
   numeric `version`; SamplingRun and Character provenance pin
   populationId/populationVersion/schemaVersion.
-- Gap: creation hardcodes version `1` and there is **no population update or
-  version-bump path** (repository is insert/get/list/delete only), and no
-  historical version snapshot table. Reproduction holds only while the
-  population and its dimension definitions remain unchanged.
+- `updatePopulation` (PUT) bumps `version` under a row lock and snapshots
+  every definition (including v1 at creation) into `population_versions`;
+  `getPopulationDefinitionAt` resolves any pinned version, and sampling
+  accepts version pins to reproduce past runs
+  (`domains/__tests__/populationVersioning.db.test.ts`).
+- Remaining caveat: dimension *registry* definitions themselves are not
+  version-snapshotted (registered dimensions are append-only in practice).
 
 ### 6. Can the dependency graph version be reproduced? — **Yes (digest-based)**
 
@@ -72,9 +75,11 @@ Canonical Graph / Simulation bundle → Roleplay / Novel Projection
   `population/service.ts` computes a deterministic digest over sorted
   `ruleId:version` pairs as `dependencyGraphVersion`, which is recorded on
   SamplingRun, Character provenance, and CharacterSnapshot.
-- Rule creation is serialized under a population row lock with cycle checking.
-- Gap: like populations, historical rule sets are not snapshotted; the digest
-  detects change but cannot restore an old graph.
+- Rule creation is serialized under a population row lock with cycle checking;
+  rule updates bump the rule version under the same lock.
+- Every rule create/update/delete and every sampling run snapshots the full
+  rule set into `dependency_graph_versions` keyed by the digest, so any
+  pinned graph digest is restorable (digest alone is not invertible).
 
 ### 7. Is sampling reproducible with the same seed? — **Yes**
 
@@ -120,8 +125,8 @@ Canonical Graph / Simulation bundle → Roleplay / Novel Projection
 
 | # | Gap | Spec ref |
 |---|---|---|
-| 1 | No population version-bump/history — versions are pinned but not evolvable/restorable | §2, §5 |
-| 2 | Dependency graph digest detects change but old graphs are not restorable | §2 |
+| 1 | ~~No population version-bump/history~~ — resolved: versioned updates + `population_versions` history | §2, §5 |
+| 2 | ~~Old dependency graphs not restorable~~ — resolved: `dependency_graph_versions` snapshots per digest | §2 |
 | 3 | MatrAIx provenance does not flow past the canonical graph (no import→population path) | §4, §9 |
 | 4 | Only negotiation Environment/Policy implementations; no generic/specific split | §7 |
 | 5 | Simulation provenance omits samplingRunId and population versions (reachable only via participant snapshots) | §4 |

@@ -16,6 +16,8 @@ export type IdPrefix =
   | "population"
   | "dependency"
   | "samplingrun"
+  | "populationversion"
+  | "depgraph"
   | "snapshot"
   | "agent"
   | "agentstate"

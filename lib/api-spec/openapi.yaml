@@ -826,6 +826,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+    put:
+      operationId: updatePopulation
+      tags: [population]
+      summary: Update a population (version increments; previous definition kept in history)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PopulationUpdate"
+      responses:
+        "200":
+          description: Updated population (version bumped)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Population"
+        "400":
+          description: Invalid definition (or existing rules reference removed dimensions)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
     delete:
       operationId: deletePopulation
       tags: [population]
@@ -840,6 +874,37 @@ paths:
           description: Deleted
         "404":
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/populations/{id}/definition:
+    get:
+      operationId: getPopulationDefinition
+      tags: [population]
+      summary: Resolve the exact historical definition + rule set behind a pinned populationVersion + dependencyGraphVersion pair (reproducibility)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: populationVersion
+          in: query
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - name: dependencyGraphVersion
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Historical population definition and rule set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PopulationDefinitionAt"
+        "404":
+          description: Population or stored version not found
           content:
             application/json:
               schema:
@@ -900,6 +965,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
   /v1/dependencies/{id}:
+    put:
+      operationId: updateDependencyRule
+      tags: [population]
+      summary: Update a dependency rule (version increments; graph digest snapshot kept)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DependencyRuleUpdate"
+      responses:
+        "200":
+          description: Updated rule (version bumped)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DependencyRule"
+        "400":
+          description: Invalid rule (unknown dimension, bad effect, would create a cycle)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
     delete:
       operationId: deleteDependencyRule
       tags: [population]
@@ -1881,6 +1980,39 @@ components:
             $ref: "#/components/schemas/PopulationConstraint"
         samplingConfig:
           $ref: "#/components/schemas/SamplingConfig"
+    PopulationUpdate:
+      type: object
+      description: Partial update; version increments and the previous definition is preserved in history.
+      properties:
+        name: { type: string, minLength: 1 }
+        domain: { type: string, minLength: 1 }
+        dimensions:
+          type: array
+          items: { type: string }
+          minItems: 1
+        distributions:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Distribution"
+        constraints:
+          type: array
+          items:
+            $ref: "#/components/schemas/PopulationConstraint"
+        samplingConfig:
+          oneOf:
+            - $ref: "#/components/schemas/SamplingConfig"
+            - type: "null"
+    PopulationDefinitionAt:
+      type: object
+      description: Exact historical definition + rule set behind a pinned version pair.
+      required: [population, rules]
+      properties:
+        population:
+          $ref: "#/components/schemas/Population"
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/DependencyRule"
     RuleCondition:
       type: object
       properties:
@@ -1945,12 +2077,36 @@ components:
         effect:
           $ref: "#/components/schemas/RuleEffect"
         strength: { type: number }
+    DependencyRuleUpdate:
+      type: object
+      description: Partial update; rule version increments and the graph digest snapshot is preserved.
+      properties:
+        sourceDimension: { type: string }
+        targetDimension: { type: string }
+        type:
+          type: string
+          enum: [conditional, constraint, exclusion, implication, correlation]
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleCondition"
+          minItems: 1
+        effect:
+          $ref: "#/components/schemas/RuleEffect"
+        strength: { type: ["number", "null"] }
     SamplingInput:
       type: object
       required: [populationId, sampleSize, strategy, seed]
       properties:
         populationId: { type: string }
         sampleSize: { type: integer, minimum: 1, maximum: 1000 }
+        populationVersion:
+          type: integer
+          minimum: 1
+          description: Pin sampling to a historical population definition version (reproduce a past run).
+        dependencyGraphVersion:
+          type: string
+          description: Pin sampling to a historical dependency rule set digest (reproduce a past run).
         strategy:
           type: string
           enum: [random, weighted, conditional, stratified]

@@ -27,6 +27,11 @@ import {
   validateConstraint,
 } from "./populationValidator";
 import { runSampler, topologicalDimensionOrder } from "./sampler";
+import {
+  dependencyGraphVersion,
+  toDependencyRule,
+  type PopulationDefinitionSnapshot,
+} from "./versioning";
 import * as repo from "./repository";
 import * as characterService from "../character/service";
 import { GROUP_CATEGORY_MAP } from "../character/attributeValidator";
@@ -55,24 +60,6 @@ export function toPopulation(row: PopulationRow): Population {
     updatedAt: row.updatedAt.toISOString(),
   };
 }
-
-export function toDependencyRule(row: DependencyRuleRow): DependencyRule {
-  return {
-    id: row.id,
-    populationId: row.populationId,
-    sourceDimension: row.sourceDimension,
-    targetDimension: row.targetDimension,
-    type: row.type as DependencyRuleType,
-    conditions: row.conditions as RuleCondition[],
-    effect: row.effect as RuleEffect,
-    strength: row.strength ?? null,
-    provenance: row.provenance as PopulationProvenance,
-    version: row.version,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
-
 export function toSamplingRun(row: SamplingRunRow): SamplingRun {
   return {
     id: row.id,
@@ -145,6 +132,76 @@ export async function getPopulation(id: string): Promise<Population | null> {
   return row ? toPopulation(row) : null;
 }
 
+/**
+ * Versioned population update: version increments and the new definition
+ * is snapshotted into history; existing rules must remain valid against
+ * the updated dimension set (otherwise the graph would silently break).
+ */
+export async function updatePopulation(
+  id: string,
+  input: {
+    name?: string;
+    domain?: string;
+    dimensions?: string[];
+    distributions?: Record<string, Distribution>;
+    constraints?: PopulationConstraint[];
+    samplingConfig?: SamplingConfig | null;
+  },
+): Promise<Population> {
+  const existing = await repo.getPopulation(id);
+  if (!existing) {
+    throw new PopulationNotFoundError(`Population "${id}" not found.`);
+  }
+  const dims = await registry();
+
+  // The patch is built and validated FROM THE LOCKED current row inside the
+  // transaction, so concurrent updates cannot validate against stale state.
+  const updated = await repo.updatePopulationSerialized(
+    id,
+    (currentRow, ruleRows) => {
+      const current = toPopulation(currentRow);
+      const next = {
+        name: input.name ?? current.name,
+        domain: input.domain ?? current.domain,
+        dimensions: input.dimensions ?? current.dimensions,
+        distributions: input.distributions ?? current.distributions,
+        constraints: input.constraints ?? current.constraints ?? [],
+        samplingConfig:
+          input.samplingConfig === undefined
+            ? (current.samplingConfig ?? null)
+            : input.samplingConfig,
+      };
+      validatePopulationDefinition(next, dims);
+      // Every existing rule must still reference dimensions of the new set.
+      for (const r of ruleRows) {
+        for (const dim of [r.sourceDimension, r.targetDimension]) {
+          if (!next.dimensions.includes(dim)) {
+            throw new InvalidPopulationError(
+              `Cannot update population: dependency rule "${r.id}" references dimension "${dim}" which is not in the updated dimension set. Delete or update the rule first.`,
+            );
+          }
+        }
+      }
+      return {
+        name: next.name.trim(),
+        domain: next.domain.trim(),
+        dimensions: next.dimensions,
+        distributions: next.distributions,
+        constraints: next.constraints,
+        samplingConfig: next.samplingConfig,
+        provenance: {
+          ...current.provenance,
+          operation: "update",
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    },
+  );
+  if (!updated) {
+    throw new PopulationNotFoundError(`Population "${id}" not found.`);
+  }
+  return toPopulation(updated);
+}
 export async function deletePopulation(id: string): Promise<boolean> {
   return repo.deletePopulation(id);
 }
@@ -168,12 +225,7 @@ export async function createDependencyRule(input: {
       `Population "${input.populationId}" not found.`,
     );
   }
-  const population = toPopulation(populationRow);
-  validateDependencyRuleDefinition(
-    input,
-    population.dimensions,
-    await registry(),
-  );
+  const dims = await registry();
   const candidate = {
     ...input,
     id: "candidate",
@@ -185,8 +237,9 @@ export async function createDependencyRule(input: {
     strength: input.strength ?? null,
   } satisfies DependencyRule;
 
-  // Cycle rejection happens INSIDE the transaction with the population row
-  // locked, so concurrent rule creations cannot commit a cycle together.
+  // Dimension validation AND cycle rejection happen INSIDE the transaction
+  // with the population row locked, so a concurrent population update or
+  // rule creation cannot invalidate this rule between check and commit.
   const row = await repo.insertRuleSerialized(
     {
       id: newId("dependency"),
@@ -204,7 +257,9 @@ export async function createDependencyRule(input: {
       },
       version: 1,
     },
-    (existingRows) => {
+    (lockedPopulationRow, existingRows) => {
+      const population = toPopulation(lockedPopulationRow);
+      validateDependencyRuleDefinition(input, population.dimensions, dims);
       const existing = existingRows.map(toDependencyRule);
       topologicalDimensionOrder(population.dimensions, [
         ...existing,
@@ -229,12 +284,152 @@ export async function listDependencyRules(
   );
 }
 
+/**
+ * Versioned rule update: version increments, the cycle check re-runs with
+ * the updated rule substituted, and the resulting graph digest is
+ * snapshotted so it stays resolvable.
+ */
+export async function updateDependencyRule(
+  id: string,
+  input: {
+    sourceDimension?: string;
+    targetDimension?: string;
+    type?: string;
+    conditions?: RuleCondition[];
+    effect?: RuleEffect;
+    strength?: number | null;
+  },
+): Promise<DependencyRule> {
+  const existingRow = await repo.getRule(id);
+  if (!existingRow) {
+    throw new PopulationNotFoundError(`Dependency rule "${id}" not found.`);
+  }
+  const dims = await registry();
+
+  // Patch is built + validated from the LOCKED population row and current
+  // rule row inside the transaction (no stale pre-transaction state).
+  const updated = await repo.updateRuleSerialized(
+    id,
+    (lockedPopulationRow, currentRow, otherRows) => {
+      const population = toPopulation(lockedPopulationRow);
+      const current = toDependencyRule(currentRow);
+      const next = {
+        populationId: current.populationId,
+        sourceDimension: input.sourceDimension ?? current.sourceDimension,
+        targetDimension: input.targetDimension ?? current.targetDimension,
+        type: input.type ?? current.type,
+        conditions: input.conditions ?? current.conditions,
+        effect: input.effect ?? current.effect,
+        strength:
+          input.strength === undefined ? current.strength : input.strength,
+      };
+      validateDependencyRuleDefinition(next, population.dimensions, dims);
+      const candidate: DependencyRule = {
+        ...current,
+        ...next,
+        type: next.type as DependencyRuleType,
+        strength: next.strength ?? null,
+      };
+      topologicalDimensionOrder(population.dimensions, [
+        ...otherRows.map(toDependencyRule),
+        candidate,
+      ]);
+      return {
+        sourceDimension: next.sourceDimension,
+        targetDimension: next.targetDimension,
+        type: next.type,
+        conditions: next.conditions,
+        effect: next.effect,
+        strength: next.strength ?? null,
+        provenance: {
+          ...current.provenance,
+          operation: "update",
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    },
+  );
+  if (!updated) {
+    throw new PopulationNotFoundError(`Dependency rule "${id}" not found.`);
+  }
+  return toDependencyRule(updated);
+}
 export async function deleteDependencyRule(id: string): Promise<boolean> {
   return repo.deleteRule(id);
 }
 
-// ---------- sampling ----------
+/**
+ * Resolve the exact population definition + rule set behind a pinned
+ * (populationVersion, dependencyGraphVersion) pair, e.g. from a past
+ * SamplingRun — the reproducibility invariant made concrete.
+ */
+export async function getPopulationDefinitionAt(input: {
+  populationId: string;
+  populationVersion: number;
+  dependencyGraphVersion: string;
+}): Promise<{ population: Population; rules: DependencyRule[] }> {
+  const liveRow = await repo.getPopulation(input.populationId);
+  if (!liveRow) {
+    throw new PopulationNotFoundError(
+      `Population "${input.populationId}" not found.`,
+    );
+  }
+  const live = toPopulation(liveRow);
 
+  let population: Population;
+  if (live.version === input.populationVersion) {
+    population = live;
+  } else {
+    const versionRow = await repo.getPopulationVersion(
+      input.populationId,
+      input.populationVersion,
+    );
+    if (!versionRow) {
+      throw new PopulationNotFoundError(
+        `No stored definition for population "${input.populationId}" version ${input.populationVersion}.`,
+      );
+    }
+    const def = versionRow.definition as PopulationDefinitionSnapshot;
+    population = {
+      id: live.id,
+      name: def.name,
+      domain: def.domain,
+      schemaVersion: def.schemaVersion,
+      dimensions: def.dimensions,
+      distributions: def.distributions as Record<string, Distribution>,
+      constraints: (def.constraints as PopulationConstraint[]) ?? [],
+      samplingConfig: (def.samplingConfig as SamplingConfig | null) ?? null,
+      provenance: def.provenance,
+      version: versionRow.version,
+      createdAt: versionRow.createdAt.toISOString(),
+      updatedAt: versionRow.createdAt.toISOString(),
+    };
+  }
+
+  let rules: DependencyRule[];
+  if (input.dependencyGraphVersion === "empty") {
+    rules = [];
+  } else {
+    const liveRules = (
+      await repo.listRulesForPopulation(input.populationId)
+    ).map(toDependencyRule);
+    if (dependencyGraphVersion(liveRules) === input.dependencyGraphVersion) {
+      rules = liveRules;
+    } else {
+      const graphRow = await repo.getGraphVersion(
+        input.populationId,
+        input.dependencyGraphVersion,
+      );
+      if (!graphRow) {
+        throw new PopulationNotFoundError(
+          `No stored rule set for population "${input.populationId}" dependency graph version "${input.dependencyGraphVersion}".`,
+        );
+      }
+      rules = graphRow.rules as DependencyRule[];
+    }
+  }
+  return { population, rules };
+}
 /** Map a dimension category to the character attribute group it belongs in. */
 function groupForCategory(category: string): string | null {
   for (const [group, categories] of Object.entries(GROUP_CATEGORY_MAP)) {
@@ -257,24 +452,6 @@ function sampleToAttributes(
   }
   return attributes as CharacterAttributes;
 }
-
-/**
- * The dependency graph version: deterministic digest of rule ids+versions,
- * so a run records exactly which rule set produced it.
- */
-function dependencyGraphVersion(rules: DependencyRule[]): string {
-  if (rules.length === 0) return "empty";
-  const parts = rules
-    .map((r) => `${r.id}:${r.version}`)
-    .sort()
-    .join(",");
-  let h = 5381;
-  for (let i = 0; i < parts.length; i++) {
-    h = (Math.imul(h, 33) ^ parts.charCodeAt(i)) >>> 0;
-  }
-  return `${rules.length}-${h.toString(16)}`;
-}
-
 export async function samplePopulation(input: {
   populationId: string;
   sampleSize: number;
@@ -282,6 +459,9 @@ export async function samplePopulation(input: {
   seed: number;
   constraints?: PopulationConstraint[] | null;
   targetDistribution?: TargetDistribution | null;
+  /** Pin to a historical definition (reproduce a past run). */
+  populationVersion?: number | null;
+  dependencyGraphVersion?: string | null;
 }): Promise<{ run: SamplingRun; characterIds: string[] }> {
   const populationRow = await repo.getPopulation(input.populationId);
   if (!populationRow) {
@@ -289,10 +469,25 @@ export async function samplePopulation(input: {
       `Population "${input.populationId}" not found.`,
     );
   }
-  const population = toPopulation(populationRow);
-  const rules = (await repo.listRulesForPopulation(input.populationId)).map(
-    toDependencyRule,
-  );
+  const live = toPopulation(populationRow);
+  const liveRules = (
+    await repo.listRulesForPopulation(input.populationId)
+  ).map(toDependencyRule);
+
+  // Optional version pins: resolve the historical definition instead of the
+  // live one, so the same seed reproduces the original run byte-for-byte.
+  let population = live;
+  let rules = liveRules;
+  if (input.populationVersion != null || input.dependencyGraphVersion != null) {
+    const resolved = await getPopulationDefinitionAt({
+      populationId: input.populationId,
+      populationVersion: input.populationVersion ?? live.version,
+      dependencyGraphVersion:
+        input.dependencyGraphVersion ?? dependencyGraphVersion(liveRules),
+    });
+    population = resolved.population;
+    rules = resolved.rules;
+  }
   const dims = await registry();
 
   // Request-level constraints must reference population dimensions and be

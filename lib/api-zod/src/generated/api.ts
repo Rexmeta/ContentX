@@ -1596,6 +1596,79 @@ export const GetPopulationResponse = zod.object({
 
 
 /**
+ * @summary Update a population (version increments; previous definition kept in history)
+ */
+export const UpdatePopulationParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+
+
+export const UpdatePopulationBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "domain": zod.string().min(1).optional(),
+  "dimensions": zod.array(zod.string()).min(1).optional(),
+  "distributions": zod.record(zod.string(), zod.object({
+  "type": zod.enum(['categorical', 'uniform', 'normal']),
+  "weights": zod.record(zod.string(), zod.number()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional(),
+  "mean": zod.number().optional(),
+  "stddev": zod.number().optional(),
+  "integer": zod.boolean().optional()
+})).optional(),
+  "constraints": zod.array(zod.object({
+  "dimension": zod.string(),
+  "allowedValues": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+})).optional(),
+  "samplingConfig": zod.union([zod.object({
+  "defaultStrategy": zod.enum(['random', 'weighted', 'conditional', 'stratified']).optional(),
+  "defaultSampleSize": zod.int().optional()
+}),zod.null()]).optional()
+}).describe('Partial update; version increments and the previous definition is preserved in history.')
+
+export const UpdatePopulationResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "domain": zod.string(),
+  "schemaVersion": zod.string(),
+  "dimensions": zod.array(zod.string()),
+  "distributions": zod.record(zod.string(), zod.object({
+  "type": zod.enum(['categorical', 'uniform', 'normal']),
+  "weights": zod.record(zod.string(), zod.number()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional(),
+  "mean": zod.number().optional(),
+  "stddev": zod.number().optional(),
+  "integer": zod.boolean().optional()
+})),
+  "constraints": zod.array(zod.object({
+  "dimension": zod.string(),
+  "allowedValues": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+})).optional(),
+  "samplingConfig": zod.union([zod.object({
+  "defaultStrategy": zod.enum(['random', 'weighted', 'conditional', 'stratified']).optional(),
+  "defaultSampleSize": zod.int().optional()
+}),zod.null()]).optional(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish()
+}),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary Delete a population (cascades rules and sampling audit)
  */
 export const DeletePopulationParams = zod.object({
@@ -1603,6 +1676,97 @@ export const DeletePopulationParams = zod.object({
 })
 
 export const DeletePopulationResponse = zod.void()
+
+
+/**
+ * @summary Resolve the exact historical definition + rule set behind a pinned populationVersion + dependencyGraphVersion pair (reproducibility)
+ */
+export const GetPopulationDefinitionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const GetPopulationDefinitionQueryParams = zod.object({
+  "populationVersion": zod.coerce.number().int().min(1),
+  "dependencyGraphVersion": zod.coerce.string()
+})
+
+export const GetPopulationDefinitionResponse = zod.object({
+  "population": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "domain": zod.string(),
+  "schemaVersion": zod.string(),
+  "dimensions": zod.array(zod.string()),
+  "distributions": zod.record(zod.string(), zod.object({
+  "type": zod.enum(['categorical', 'uniform', 'normal']),
+  "weights": zod.record(zod.string(), zod.number()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional(),
+  "mean": zod.number().optional(),
+  "stddev": zod.number().optional(),
+  "integer": zod.boolean().optional()
+})),
+  "constraints": zod.array(zod.object({
+  "dimension": zod.string(),
+  "allowedValues": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+})).optional(),
+  "samplingConfig": zod.union([zod.object({
+  "defaultStrategy": zod.enum(['random', 'weighted', 'conditional', 'stratified']).optional(),
+  "defaultSampleSize": zod.int().optional()
+}),zod.null()]).optional(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish()
+}),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "rules": zod.array(zod.object({
+  "id": zod.string(),
+  "populationId": zod.string(),
+  "sourceDimension": zod.string(),
+  "targetDimension": zod.string(),
+  "type": zod.enum(['conditional', 'constraint', 'exclusion', 'implication', 'correlation']),
+  "conditions": zod.array(zod.object({
+  "equals": zod.unknown().optional(),
+  "in": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+})),
+  "effect": zod.object({
+  "distribution": zod.object({
+  "type": zod.enum(['categorical', 'uniform', 'normal']),
+  "weights": zod.record(zod.string(), zod.number()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional(),
+  "mean": zod.number().optional(),
+  "stddev": zod.number().optional(),
+  "integer": zod.boolean().optional()
+}).optional(),
+  "value": zod.unknown().optional(),
+  "excludedValues": zod.array(zod.string()).optional(),
+  "allowedValues": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+}),
+  "strength": zod.number().nullish(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish()
+}),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+}).describe('Exact historical definition + rule set behind a pinned version pair.')
 
 
 /**
@@ -1730,6 +1894,85 @@ export const CreateDependencyRuleResponse = zod.object({
 
 
 /**
+ * @summary Update a dependency rule (version increments; graph digest snapshot kept)
+ */
+export const UpdateDependencyRuleParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const UpdateDependencyRuleBody = zod.object({
+  "sourceDimension": zod.string().optional(),
+  "targetDimension": zod.string().optional(),
+  "type": zod.enum(['conditional', 'constraint', 'exclusion', 'implication', 'correlation']).optional(),
+  "conditions": zod.array(zod.object({
+  "equals": zod.unknown().optional(),
+  "in": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+})).min(1).optional(),
+  "effect": zod.object({
+  "distribution": zod.object({
+  "type": zod.enum(['categorical', 'uniform', 'normal']),
+  "weights": zod.record(zod.string(), zod.number()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional(),
+  "mean": zod.number().optional(),
+  "stddev": zod.number().optional(),
+  "integer": zod.boolean().optional()
+}).optional(),
+  "value": zod.unknown().optional(),
+  "excludedValues": zod.array(zod.string()).optional(),
+  "allowedValues": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+}).optional(),
+  "strength": zod.number().nullish()
+}).describe('Partial update; rule version increments and the graph digest snapshot is preserved.')
+
+export const UpdateDependencyRuleResponse = zod.object({
+  "id": zod.string(),
+  "populationId": zod.string(),
+  "sourceDimension": zod.string(),
+  "targetDimension": zod.string(),
+  "type": zod.enum(['conditional', 'constraint', 'exclusion', 'implication', 'correlation']),
+  "conditions": zod.array(zod.object({
+  "equals": zod.unknown().optional(),
+  "in": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+})),
+  "effect": zod.object({
+  "distribution": zod.object({
+  "type": zod.enum(['categorical', 'uniform', 'normal']),
+  "weights": zod.record(zod.string(), zod.number()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional(),
+  "mean": zod.number().optional(),
+  "stddev": zod.number().optional(),
+  "integer": zod.boolean().optional()
+}).optional(),
+  "value": zod.unknown().optional(),
+  "excludedValues": zod.array(zod.string()).optional(),
+  "allowedValues": zod.array(zod.string()).optional(),
+  "min": zod.number().optional(),
+  "max": zod.number().optional()
+}),
+  "strength": zod.number().nullish(),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish()
+}),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary Delete a dependency rule
  */
 export const DeleteDependencyRuleParams = zod.object({
@@ -1746,9 +1989,12 @@ export const samplePopulationBodySampleSizeMax = 1000;
 
 
 
+
 export const SamplePopulationBody = zod.object({
   "populationId": zod.string(),
   "sampleSize": zod.int().min(1).max(samplePopulationBodySampleSizeMax),
+  "populationVersion": zod.int().min(1).optional().describe('Pin sampling to a historical population definition version (reproduce a past run).'),
+  "dependencyGraphVersion": zod.string().optional().describe('Pin sampling to a historical dependency rule set digest (reproduce a past run).'),
   "strategy": zod.enum(['random', 'weighted', 'conditional', 'stratified']),
   "seed": zod.int(),
   "constraints": zod.array(zod.object({

@@ -31,14 +31,26 @@ Not yet recorded vs spec §3: `samplerVersion`.
 - Verified: same definition + seed → identical output; different seed →
   different output (`domains/__tests__/sampler.test.ts`).
 
-## Versioning
+## Versioning & history
 
 - `dependencyGraphVersion` is a deterministic digest of sorted
-  `ruleId:version` pairs, recorded on the run and on each sampled character's
-  provenance.
-- Caveat: populations and rules have no version-bump/history mechanism yet, so
-  reproducibility holds only while definitions are unchanged (see
-  `current-state-audit.md` Q5/Q6).
+  `ruleId:version` pairs (`population/versioning.ts`), recorded on the run and
+  on each sampled character's provenance.
+- Population updates (`PUT /v1/populations/{id}`) bump `version` and snapshot
+  the new definition into `population_versions`
+  (v1 is snapshotted at creation); rule updates
+  (`PUT /v1/dependencies/{id}`) bump the rule version. Every rule
+  create/update/delete and every sampling run upserts the full current rule
+  set into `dependency_graph_versions` keyed by digest, so any pinned graph is
+  restorable.
+- `GET /v1/populations/{id}/definition?populationVersion&dependencyGraphVersion`
+  resolves the exact historical definition + rule set behind a run's pins.
+- `POST /v1/sampling` accepts optional `populationVersion` /
+  `dependencyGraphVersion` pins to re-sample under a historical definition;
+  same seed → identical output even after the live definition changed
+  (`domains/__tests__/populationVersioning.db.test.ts`).
+- Population updates that would orphan existing rules (removing a dimension a
+  rule references) are rejected with 400.
 
 ## Character creation
 

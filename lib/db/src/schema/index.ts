@@ -6,6 +6,8 @@ export * from "./dimensions";
 export * from "./characters";
 export * from "./populations";
 export * from "./dependencyRules";
+export * from "./populationVersions";
+export * from "./dependencyGraphVersions";
 export * from "./samplingRuns";
 export * from "./characterSnapshots";
 export * from "./agents";

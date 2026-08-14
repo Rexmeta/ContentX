@@ -16,6 +16,13 @@ export interface SamplingInput {
      * @maximum 1000
      */
   sampleSize: number;
+  /**
+     * Pin sampling to a historical population definition version (reproduce a past run).
+     * @minimum 1
+     */
+  populationVersion?: number;
+  /** Pin sampling to a historical dependency rule set digest (reproduce a past run). */
+  dependencyGraphVersion?: string;
   strategy: SamplingInputStrategy;
   seed: number;
   constraints?: PopulationConstraint[];

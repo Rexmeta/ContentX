@@ -2,4 +2,5 @@
 - [Orval ignores additionalProperties:false](orval-strict-objects.md) — generated zod strips unknown keys; validate raw body in the domain layer when unknown keys must 400.
 - [Zod v4 enum-keyed records](zod-v4-enum-records.md) — z.record over an enum demands ALL keys; use z.partialRecord for subsets.
 - [Simulation runtime layering](simulation-runtime-layering.md) — interaction_events payload field names are a compat contract; action objects spread into payloads, never rename their fields.
+- [Version-history snapshot rules](version-history-snapshots.md) — snapshot pre-mutation state idempotently and validate patches inside the FOR UPDATE transaction, never from a stale pre-lock read.
 - [Import dedup must be atomic](import-dedup-atomicity.md) — dedup on JSONB provenance needs a pg advisory xact lock around lookup+write; NUL bytes are illegal in lock key text.

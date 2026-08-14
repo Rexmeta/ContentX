@@ -38,19 +38,23 @@ import type {
   DashboardSummary,
   DependencyRule,
   DependencyRuleInput,
+  DependencyRuleUpdate,
   Dimension,
   DimensionInput,
   DramaticScenario,
   EntityUpdate,
   Evaluation,
   EvaluationInput,
+  GetPopulationDefinitionParams,
   HealthStatus,
   InteractionEvent,
   ListEvaluationsParams,
   MatraixImportInput,
   MatraixImportResult,
   Population,
+  PopulationDefinitionAt,
   PopulationInput,
+  PopulationUpdate,
   ProjectionInput,
   ProjectionResult,
   ReclassifyResult,
@@ -2685,6 +2689,78 @@ export function useGetPopulation<TData = Awaited<ReturnType<typeof getPopulation
 
 
 
+export const getUpdatePopulationUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/populations/${id}`
+}
+
+/**
+ * @summary Update a population (version increments; previous definition kept in history)
+ */
+export const updatePopulation = async (id: string,
+    populationUpdate: PopulationUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Population> => {
+
+  return customFetch<Population>(getUpdatePopulationUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(populationUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdatePopulationMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePopulation>>, TError,{id: string;data: BodyType<PopulationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePopulation>>, TError,{id: string;data: BodyType<PopulationUpdate>}, TContext> => {
+
+const mutationKey = ['updatePopulation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePopulation>>, {id: string;data: BodyType<PopulationUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePopulation(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePopulationMutationResult = NonNullable<Awaited<ReturnType<typeof updatePopulation>>>
+    export type UpdatePopulationMutationBody = BodyType<PopulationUpdate>
+    export type UpdatePopulationMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Update a population (version increments; previous definition kept in history)
+ */
+export const useUpdatePopulation = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePopulation>>, TError,{id: string;data: BodyType<PopulationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePopulation>>,
+        TError,
+        {id: string;data: BodyType<PopulationUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdatePopulationMutationOptions(options));
+    }
+
 export const getDeletePopulationUrl = (id: string,) => {
 
 
@@ -2755,6 +2831,95 @@ export const useDeletePopulation = <TError = ErrorType<ApiMessage>,
       > => {
       return useMutation(getDeletePopulationMutationOptions(options));
     }
+
+export const getGetPopulationDefinitionUrl = (id: string,
+    params: GetPopulationDefinitionParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/populations/${id}/definition?${stringifiedParams}` : `/api/v1/populations/${id}/definition`
+}
+
+/**
+ * @summary Resolve the exact historical definition + rule set behind a pinned populationVersion + dependencyGraphVersion pair (reproducibility)
+ */
+export const getPopulationDefinition = async (id: string,
+    params: GetPopulationDefinitionParams, options?: Parameters<typeof customFetch>[1]): Promise<PopulationDefinitionAt> => {
+
+  return customFetch<PopulationDefinitionAt>(getGetPopulationDefinitionUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPopulationDefinitionQueryKey = (id: string,
+    params?: GetPopulationDefinitionParams,) => {
+    return [
+    `/api/v1/populations/${id}/definition`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPopulationDefinitionQueryOptions = <TData = Awaited<ReturnType<typeof getPopulationDefinition>>, TError = ErrorType<ApiMessage>>(id: string,
+    params: GetPopulationDefinitionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPopulationDefinition>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPopulationDefinitionQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPopulationDefinition>>> = ({ signal }) => getPopulationDefinition(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPopulationDefinition>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPopulationDefinitionQueryResult = NonNullable<Awaited<ReturnType<typeof getPopulationDefinition>>>
+export type GetPopulationDefinitionQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Resolve the exact historical definition + rule set behind a pinned populationVersion + dependencyGraphVersion pair (reproducibility)
+ */
+
+export function useGetPopulationDefinition<TData = Awaited<ReturnType<typeof getPopulationDefinition>>, TError = ErrorType<ApiMessage>>(
+ id: string,
+    params: GetPopulationDefinitionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPopulationDefinition>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPopulationDefinitionQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListDependencyRulesUrl = (id: string,) => {
 
@@ -2902,6 +3067,78 @@ export const useCreateDependencyRule = <TError = ErrorType<ApiMessage>,
         TContext
       > => {
       return useMutation(getCreateDependencyRuleMutationOptions(options));
+    }
+
+export const getUpdateDependencyRuleUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/dependencies/${id}`
+}
+
+/**
+ * @summary Update a dependency rule (version increments; graph digest snapshot kept)
+ */
+export const updateDependencyRule = async (id: string,
+    dependencyRuleUpdate: DependencyRuleUpdate, options?: Parameters<typeof customFetch>[1]): Promise<DependencyRule> => {
+
+  return customFetch<DependencyRule>(getUpdateDependencyRuleUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(dependencyRuleUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateDependencyRuleMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDependencyRule>>, TError,{id: string;data: BodyType<DependencyRuleUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDependencyRule>>, TError,{id: string;data: BodyType<DependencyRuleUpdate>}, TContext> => {
+
+const mutationKey = ['updateDependencyRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDependencyRule>>, {id: string;data: BodyType<DependencyRuleUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateDependencyRule(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDependencyRuleMutationResult = NonNullable<Awaited<ReturnType<typeof updateDependencyRule>>>
+    export type UpdateDependencyRuleMutationBody = BodyType<DependencyRuleUpdate>
+    export type UpdateDependencyRuleMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Update a dependency rule (version increments; graph digest snapshot kept)
+ */
+export const useUpdateDependencyRule = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDependencyRule>>, TError,{id: string;data: BodyType<DependencyRuleUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateDependencyRule>>,
+        TError,
+        {id: string;data: BodyType<DependencyRuleUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateDependencyRuleMutationOptions(options));
     }
 
 export const getDeleteDependencyRuleUrl = (id: string,) => {
