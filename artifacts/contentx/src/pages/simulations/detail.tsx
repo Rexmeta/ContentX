@@ -8,6 +8,7 @@ import {
   Loader2, Network, MessageSquare, ArrowRight, Zap, Target, Activity
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatDisplayName } from "@/lib/display-name";
 
 export default function SimulationDetail() {
   const [, params] = useRoute("/simulations/:id");
@@ -38,7 +39,7 @@ export default function SimulationDetail() {
   const contextHeader = (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-serif">{sim.name}</h1>
+        <h1 className="text-2xl font-bold font-serif" title={sim.name}>{formatDisplayName(sim.name)}</h1>
         <Link href={`/explorer?perspective=simulation&id=${id}`} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
           <Network className="h-4 w-4" /> View Runtime Graph
         </Link>
@@ -54,7 +55,7 @@ export default function SimulationDetail() {
 
   return (
     <Layout 
-      breadcrumbs={[{ label: "ContentX" }, { label: "Simulations", href: "/simulations" }, { label: sim.name }]}
+      breadcrumbs={[{ label: "ContentX" }, { label: "Simulations", href: "/simulations" }, { label: formatDisplayName(sim.name) }]}
       contextHeader={contextHeader}
     >
       <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -66,7 +67,7 @@ export default function SimulationDetail() {
             <div className="space-y-3">
               {sim.participants.map(p => (
                 <div key={p.agentId} className="bg-muted/20 border border-border p-3">
-                  <div className="font-bold text-sm">{p.name}</div>
+                  <div className="font-bold text-sm" title={p.name}>{formatDisplayName(p.name)}</div>
                   <div className="text-[10px] font-mono text-secondary uppercase mt-1">{p.role}</div>
                 </div>
               ))}
@@ -114,7 +115,7 @@ export default function SimulationDetail() {
                     <div className="flex-1 border border-border bg-background p-4 relative group">
                       <div className="flex items-center gap-2 mb-2">
                         {icon}
-                        <span className="font-bold text-sm">{actor?.name || "System"}</span>
+                        <span className="font-bold text-sm" title={actor?.name}>{actor ? formatDisplayName(actor.name) : "System"}</span>
                         <span className="text-[9px] font-mono bg-muted px-1 border uppercase text-muted-foreground">{ev.type}</span>
                       </div>
                       

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useListSimulations } from "@workspace/api-client-react";
 import { PlayCircle, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
+import { formatDisplayName } from "@/lib/display-name";
 
 export default function SimulationsList() {
   const { data: simulations, isLoading } = useListSimulations();
@@ -32,7 +33,7 @@ export default function SimulationsList() {
               >
                 <div className="p-4 border-b border-border">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="font-bold text-lg group-hover:text-primary transition-colors">{sim.name}</div>
+                    <div className="font-bold text-lg group-hover:text-primary transition-colors" title={sim.name}>{formatDisplayName(sim.name)}</div>
                     {sim.status === 'completed' ? (
                       <span className="flex items-center gap-1 bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest">
                         <CheckCircle className="h-3 w-3" /> Completed

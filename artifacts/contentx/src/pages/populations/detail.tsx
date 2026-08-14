@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { StableGraph, GraphNode, GraphEdge } from "@/components/stable-graph";
 import { computePopulationLayout } from "@/lib/graph-layout";
 import { useMemo, useState } from "react";
+import { formatDisplayName } from "@/lib/display-name";
 
 export default function PopulationDetail() {
   const [, params] = useRoute("/populations/:id");
@@ -66,7 +67,7 @@ export default function PopulationDetail() {
   const contextHeader = (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-serif">{pop.name}</h1>
+        <h1 className="text-2xl font-bold font-serif" title={pop.name}>{formatDisplayName(pop.name)}</h1>
         <Link href={`/explorer?perspective=population&id=${id}`} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
           <Network className="h-4 w-4" /> View in Explorer
         </Link>
@@ -83,7 +84,7 @@ export default function PopulationDetail() {
 
   return (
     <Layout 
-      breadcrumbs={[{ label: "ContentX" }, { label: "Populations", href: "/populations" }, { label: pop.name }]}
+      breadcrumbs={[{ label: "ContentX" }, { label: "Populations", href: "/populations" }, { label: formatDisplayName(pop.name) }]}
       contextHeader={contextHeader}
     >
       <div className="h-full flex overflow-hidden">
@@ -149,7 +150,7 @@ export default function PopulationDetail() {
                     className="block text-xs font-mono truncate text-foreground hover:text-primary hover:underline"
                     title={c.name}
                   >
-                    {c.name}
+                    {formatDisplayName(c.name)}
                   </Link>
                 ))}
               </div>
@@ -162,8 +163,8 @@ export default function PopulationDetail() {
           
           <div className="p-4 space-y-2">
             {characters?.slice(0, 5).map(char => (
-              <Link key={char.id} href={`/characters/${char.id}`} className="block border border-border p-2 hover:border-primary transition-colors text-sm font-semibold">
-                {char.name}
+              <Link key={char.id} href={`/characters/${char.id}`} className="block border border-border p-2 hover:border-primary transition-colors text-sm font-semibold" title={char.name}>
+                {formatDisplayName(char.name)}
               </Link>
             ))}
             {(characters?.length || 0) > 5 && (

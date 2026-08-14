@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useListAgents, getListAgentsQueryKey } from "@workspace/api-client-react";
 import { Terminal, Users, Database } from "lucide-react";
 import { format } from "date-fns";
+import { formatDisplayName } from "@/lib/display-name";
 
 export default function AgentsList() {
   const { data: agents, isLoading } = useListAgents({ query: { queryKey: getListAgentsQueryKey() } });
@@ -41,7 +42,7 @@ export default function AgentsList() {
               <Link key={agent.id} href={`/agents/${agent.id}`}>
                 <div className="border border-border bg-card hover:border-primary transition-colors cursor-pointer flex flex-col h-full">
                   <div className="p-4 border-b border-border bg-muted/20">
-                    <div className="font-bold text-lg">{agent.name}</div>
+                    <div className="font-bold text-lg" title={agent.name}>{formatDisplayName(agent.name)}</div>
                     <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">
                       Goals: {agent.goals?.length || 0}
                     </div>

@@ -7,6 +7,7 @@ import {
 import { Terminal, CheckCircle, BrainCircuit, Activity, Heart, Users, Target, Book } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo } from "react";
+import { formatDisplayName } from "@/lib/display-name";
 
 export default function AgentDetail() {
   const [, params] = useRoute("/agents/:id");
@@ -43,9 +44,9 @@ export default function AgentDetail() {
   const contextHeader = (
     <div className="flex items-center justify-between">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold font-serif flex items-center gap-2">
+        <h1 className="text-2xl font-bold font-serif flex items-center gap-2" title={agent.name}>
           <Terminal className="h-6 w-6 text-primary" />
-          {agent.name}
+          {formatDisplayName(agent.name)}
         </h1>
         <div className="text-sm text-muted-foreground font-mono">ID: {agent.id}</div>
       </div>
@@ -57,7 +58,7 @@ export default function AgentDetail() {
       breadcrumbs={[
         { label: "ContentX" }, 
         { label: "Agents", href: "/agents" }, 
-        { label: agent.name }
+        { label: formatDisplayName(agent.name) }
       ]}
       contextHeader={contextHeader}
     >
@@ -203,7 +204,7 @@ export default function AgentDetail() {
                 {simulations.length > 0 ? (
                   simulations.map(sim => (
                     <Link key={sim.id} href={`/simulations/${sim.id}`} className="block p-2 border border-border bg-muted/20 hover:border-primary transition-colors">
-                      <div className="text-sm font-bold truncate">{sim.name}</div>
+                      <div className="text-sm font-bold truncate" title={sim.name}>{formatDisplayName(sim.name)}</div>
                       <div className="text-[10px] font-mono text-muted-foreground mt-1">Turns: {sim.turnsExecuted}</div>
                     </Link>
                   ))
