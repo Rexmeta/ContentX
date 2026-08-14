@@ -1,0 +1,684 @@
+# ContentX UX / Graph Explorer Redesign
+## Make the Population → Character → Agent → Simulation lifecycle visually understandable
+
+IMPORTANT:
+
+Do NOT change the backend domain architecture.
+
+The current backend architecture is already substantially implemented:
+
+MatrAIx
+→ Canonical Graph
+→ Population
+→ Dependency Rules
+→ SamplingRun
+→ Character
+→ CharacterSnapshot
+→ Agent
+→ AgentState
+→ Environment
+→ Simulation
+→ Behavior Trace
+→ Evaluation
+→ Roleplay / Novel Projection
+
+The current problem is UX comprehension.
+
+When testing the current application, the graph feels confusing and
+users cannot immediately understand:
+
+- what they are looking at
+- what the nodes represent
+- what the edges represent
+- what the moving blue circular spot means
+- why clicking a node changes the visual state
+- how Population, Character, Agent, Simulation and Evaluation relate
+
+The goal of this task is NOT to add more backend features.
+
+The goal is to make the existing ContentX architecture visually and
+interactively understandable.
+
+============================================================
+1. FIRST AUDIT THE CURRENT UI
+============================================================
+
+Inspect the existing frontend implementation.
+
+Identify:
+
+- main navigation
+- graph component
+- graph data source
+- node rendering
+- edge rendering
+- click behavior
+- hover behavior
+- selection state
+- blue circular indicator / spot
+- detail panel
+- current labels
+- current legends
+- current empty states
+
+Document the current UX flow in:
+
+docs/ux/current-graph-ux.md
+
+Do not change the backend architecture.
+
+============================================================
+2. CORE UX PRINCIPLE
+============================================================
+
+The user must always know:
+
+WHERE AM I?
+WHAT AM I LOOKING AT?
+WHAT DID I SELECT?
+WHAT DOES THIS RELATIONSHIP MEAN?
+WHAT CAN I DO NEXT?
+
+Every major view must have a visible context header.
+
+Example:
+
+POPULATION
+
+Negotiators
+
+MatrAIx
+Population v3
+
+3 Dimensions
+2 Dependency Rules
+10 Sampled Characters
+
+Do NOT expect the user to infer this from the graph.
+
+============================================================
+3. REDEFINE THE BLUE SPOT
+============================================================
+
+The current moving blue circular spot is confusing.
+
+Remove any ambiguous interpretation.
+
+The blue indicator MUST mean exactly one thing:
+
+SELECTED NODE
+
+It must NOT represent:
+
+- graph center
+- current simulation position
+- active agent
+- dependency
+- current traversal position
+- loading
+- focus point
+
+The selected node itself should receive a blue selection ring/halo.
+
+Do NOT render a separate floating blue object that moves around the graph.
+
+Use:
+
+normal node
+→ normal appearance
+
+hovered node
+→ hover appearance
+
+selected node
+→ blue ring / halo
+
+related nodes
+→ subtle contextual highlight
+
+============================================================
+4. ADD A GRAPH LEGEND
+============================================================
+
+Every graph view must have a compact legend.
+
+Example:
+
+NODE TYPES
+
+● Population
+● Character
+● Agent
+● Goal
+● Event
+● Evaluation
+
+RELATIONSHIPS
+
+──── Semantic Relationship
+- - - Dependency
+···· Provenance
+
+The actual visual encoding should match the implementation.
+
+The user should never have to guess what a line means.
+
+============================================================
+5. INTRODUCE GRAPH PERSPECTIVES
+============================================================
+
+Do NOT show every domain object in one graph by default.
+
+Add graph perspectives:
+
+[ World ]
+[ Population ]
+[ Character ]
+[ Simulation ]
+[ Lineage ]
+
+Default:
+
+Population
+
+because Population is the most important bridge between
+MatrAIx and Character.
+
+============================================================
+6. POPULATION VIEW
+============================================================
+
+Population graph should visually communicate:
+
+Population
+    ├── Dimensions
+    ├── Distributions
+    ├── Dependency Rules
+    └── Characters
+
+Example:
+
+                 Population
+                 /    |    \
+              Age   Occupation   Risk
+                       |
+                  Dependency
+                       ↓
+                    Risk
+
+Characters should appear as a separate grouped region.
+
+Do not mix unrelated World/Simulation nodes into this view.
+
+============================================================
+7. CHARACTER VIEW
+============================================================
+
+When a Character is selected:
+
+show:
+
+Character
+Name
+
+Population
+Snapshot
+
+Demographics
+Behavioral Profile
+Traits
+Values
+Capabilities
+Goals
+Relationships
+
+The graph should show only relevant neighboring nodes.
+
+============================================================
+8. AGENT VIEW
+============================================================
+
+When an Agent is selected:
+
+show:
+
+Agent
+Character
+Snapshot
+Goals
+Policy
+Current State
+Memory
+Simulation
+
+Clearly distinguish:
+
+Character
+from
+Agent
+
+Character = identity
+
+Agent = runtime actor
+
+AgentState = mutable runtime state
+
+============================================================
+9. SIMULATION VIEW
+============================================================
+
+Simulation view should show:
+
+Simulation
+   ↓
+Agents
+   ↓
+Turns
+   ↓
+Actions
+   ↓
+State Changes
+   ↓
+Outcome
+   ↓
+Evaluation
+
+Do not attempt to represent the entire canonical graph here.
+
+This is a runtime view.
+
+============================================================
+10. LINEAGE VIEW
+============================================================
+
+Create a dedicated lineage visualization.
+
+The main path should be:
+
+MatrAIx
+   ↓
+Import
+   ↓
+Population
+   ↓
+SamplingRun
+   ↓
+Character
+   ↓
+CharacterSnapshot
+   ↓
+Agent
+   ↓
+Simulation
+   ↓
+Evaluation
+
+This is one of the most important visualizations in ContentX.
+
+The backend already maintains this provenance/lineage information.
+
+Use it.
+
+Do NOT invent fake graph relationships.
+
+============================================================
+11. RIGHT-SIDE INSPECTOR
+============================================================
+
+Clicking a node should NOT cause the graph to become the only
+source of information.
+
+Open/update a right-side Inspector.
+
+Example:
+
+┌─────────────────────────────┐
+│ SELECTED                    │
+│                             │
+│ POPULATION                  │
+│ Negotiators                 │
+│                             │
+│ Source                      │
+│ MatrAIx                     │
+│                             │
+│ Version                     │
+│ 3                           │
+│                             │
+│ Dimensions                 │
+│ 3                           │
+│                             │
+│ Dependencies                │
+│ 2                           │
+│                             │
+│ Characters                  │
+│ 10                          │
+└─────────────────────────────┘
+
+For Character:
+
+┌─────────────────────────────┐
+│ CHARACTER                   │
+│ Kim Jiyoung                 │
+│                             │
+│ Population: Negotiators     │
+│ Snapshot: snap_xxx          │
+│                             │
+│ Age: 38                     │
+│ Occupation: Manager         │
+│ Risk: Low                   │
+└─────────────────────────────┘
+
+The inspector is the authoritative explanation of the selected node.
+
+============================================================
+12. RELATIONSHIP INSPECTOR
+============================================================
+
+Clicking an edge should show:
+
+RELATIONSHIP
+
+Type:
+Dependency
+
+Source:
+Occupation
+
+Target:
+Risk Tolerance
+
+Rule:
+
+shop_owner → medium
+manager → low
+engineer → low
+
+Version:
+3
+
+Source:
+MatrAIx
+
+Do not rely only on edge colors.
+
+============================================================
+13. NAVIGATION / BREADCRUMBS
+============================================================
+
+Use breadcrumbs.
+
+Example:
+
+ContentX
+/
+Population
+/
+Negotiators
+/
+Character
+/
+Kim Jiyoung
+
+For simulation:
+
+ContentX
+/
+Simulation
+/
+Wholesale Negotiation
+/
+Turn 12
+/
+Agent: Buyer
+
+This makes graph exploration understandable.
+
+============================================================
+14. DO NOT AUTO-RELAYOUT AFTER EVERY CLICK
+============================================================
+
+Clicking a node should NOT unexpectedly move the graph.
+
+Graph layout should remain stable.
+
+Selection changes should change:
+
+- node ring
+- neighboring highlight
+- inspector
+
+but NOT cause the entire graph to jump.
+
+Only explicit actions should re-layout:
+
+[Fit]
+[Center]
+[Reset Layout]
+
+============================================================
+15. GRAPH CONTROLS
+============================================================
+
+Provide explicit controls:
+
+Zoom +
+Zoom -
+Fit
+Reset
+Center Selected
+
+Do not make clicking itself implicitly perform camera movement.
+
+============================================================
+16. EMPTY / LOADING STATES
+============================================================
+
+If there is no selected node:
+
+show:
+
+SELECT AN ITEM
+
+"Click a node to inspect its meaning and relationships."
+
+If graph has no data:
+
+show:
+
+NO GRAPH DATA
+
+"Import a dataset or create a Population to begin."
+
+Do not show an empty canvas without explanation.
+
+============================================================
+17. MAIN NAVIGATION
+============================================================
+
+Change the application structure toward:
+
+Overview
+World
+Population
+Characters
+Simulation
+Evaluation
+Graph Explorer
+
+Graph Explorer should be an advanced exploration tool.
+
+It should NOT be the only way to understand ContentX.
+
+============================================================
+18. OVERVIEW SCREEN
+============================================================
+
+Create a simple overview/dashboard.
+
+Show the ContentX lifecycle:
+
+SOURCE
+MatrAIx
+   ↓
+POPULATION
+1 Population
+3 Dimensions
+2 Dependency Rules
+   ↓
+CHARACTERS
+10 Sampled
+   ↓
+AGENTS
+2 Active
+   ↓
+SIMULATION
+24 Turns
+   ↓
+EVALUATION
+Behavior 0.81
+Persona Fidelity 0.76
+Outcome 0.84
+
+Each stage should be clickable.
+
+This is the primary explanation of ContentX.
+
+============================================================
+19. VISUAL HIERARCHY
+============================================================
+
+Use consistent visual semantics.
+
+Primary:
+Population / Character / Agent / Simulation
+
+Secondary:
+Dimensions / Goals / Traits / Events
+
+Tertiary:
+Metadata / Provenance / Version / IDs
+
+Do not give every node type equal visual weight.
+
+============================================================
+20. TERMINOLOGY
+============================================================
+
+Use these exact conceptual distinctions:
+
+Population
+= a statistical / generative definition of a group
+
+Character
+= persistent identity
+
+CharacterSnapshot
+= immutable resolved state used to instantiate runtime actors
+
+Agent
+= runtime actor
+
+AgentState
+= mutable runtime state
+
+Simulation
+= execution environment
+
+Behavior
+= structured action/decision
+
+Utterance
+= optional textual expression of an action
+
+Evaluation
+= assessment of behavior/outcome/persona fidelity
+
+Dependency
+= statistical/semantic constraint between dimensions
+
+Relationship
+= semantic relationship between entities
+
+Do not collapse these concepts in UI labels.
+
+============================================================
+21. CRITICAL UX TEST
+============================================================
+
+After implementation, test the application as a first-time user.
+
+Ask:
+
+1. What is this application?
+2. What is Population?
+3. What is Character?
+4. What is Agent?
+5. What is Simulation?
+6. What does the blue indicator mean?
+7. What does an edge mean?
+8. Why did clicking a node change the screen?
+9. How did this Character originate?
+10. How can I follow it from MatrAIx to Evaluation?
+
+A first-time user should be able to answer all ten without
+reading developer documentation.
+
+============================================================
+22. DO NOT CHANGE
+============================================================
+
+Do NOT change:
+
+- canonical graph schema
+- Population domain
+- DependencyRule domain
+- Sampling domain
+- Character domain
+- CharacterSnapshot domain
+- Agent domain
+- Simulation runtime
+- Evaluation domain
+- MatrAIx importer
+
+unless a frontend integration issue absolutely requires a
+small contract change.
+
+Do not introduce new backend concepts.
+
+============================================================
+23. ACCEPTANCE CRITERIA
+============================================================
+
+The task is complete when:
+
+1. Blue indicator clearly means SELECTED NODE.
+2. No floating/moving blue spot exists as an ambiguous UI element.
+3. Clicking a node does not unexpectedly move/re-layout the graph.
+4. Every graph has a visible legend.
+5. Every selected node has an Inspector.
+6. Edge selection explains relationship type.
+7. Population / Character / Simulation / Lineage have separate perspectives.
+8. Main navigation reflects the ContentX lifecycle.
+9. Overview explains the lifecycle without requiring graph interpretation.
+10. MatrAIx → Population → Character → Snapshot → Agent → Simulation → Evaluation
+    can be followed visually.
+11. Existing backend tests remain unchanged and passing.
+12. Existing API contracts remain compatible.
+
+============================================================
+24. FINAL REPORT
+============================================================
+
+Report:
+
+1. Current UX problems found
+2. Graph behavior before/after
+3. Meaning of the blue indicator
+4. New navigation
+5. New graph perspectives
+6. Inspector design
+7. Lineage visualization
+8. Changed frontend files
+9. Any backend contract changes
+10. Screenshots / visual test evidence
+11. Remaining UX issues
