@@ -5,6 +5,8 @@ export interface GraphNode {
   id: string;
   label: string;
   sublabel?: string;
+  /** Full original name when `label` was shortened for display. */
+  fullLabel?: string;
   x: number;
   y: number;
   r: number;
@@ -338,6 +340,9 @@ export function StableGraph({
                   />
                 )}
                 
+                {/* Full original name on hover when the label was shortened */}
+                {node.fullLabel && <title>{node.fullLabel}</title>}
+
                 {/* Node Shape */}
                 <circle 
                   r={node.r} 

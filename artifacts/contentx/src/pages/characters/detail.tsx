@@ -10,6 +10,7 @@ import {
   Loader2, Network, UserCircle, ShieldAlert, Terminal, Lock
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatDisplayName, isNameShortened } from "@/lib/display-name";
 
 export default function CharacterDetail() {
   const [, params] = useRoute("/characters/:id");
@@ -48,22 +49,27 @@ export default function CharacterDetail() {
   const contextHeader = (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-serif">{character.name}</h1>
+        <h1 className="text-2xl font-bold font-serif" title={character.name}>{formatDisplayName(character.name)}</h1>
         <Link href={`/explorer?perspective=character&id=${id}`} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
           <Network className="h-4 w-4" /> View in Explorer
         </Link>
       </div>
       <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
         <span>Identity Record</span>
-        <span>Population: {pop?.name || "Unknown"}</span>
+        <span title={pop?.name}>Population: {formatDisplayName(pop?.name) || "Unknown"}</span>
         <span>Seed: {character.provenance.seed || "N/A"}</span>
       </div>
+      {isNameShortened(character.name) && (
+        <div className="text-[10px] font-mono text-muted-foreground break-all normal-case tracking-normal">
+          Full name: {character.name}
+        </div>
+      )}
     </div>
   );
 
   return (
     <Layout 
-      breadcrumbs={[{ label: "ContentX" }, { label: "Characters", href: "/characters" }, { label: character.name }]}
+      breadcrumbs={[{ label: "ContentX" }, { label: "Characters", href: "/characters" }, { label: formatDisplayName(character.name) }]}
       contextHeader={contextHeader}
     >
       <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -148,7 +154,7 @@ export default function CharacterDetail() {
             <div className="p-4 space-y-3">
               {agents?.map(agent => (
                 <div key={agent.id} className="border border-secondary/30 p-3 text-xs bg-secondary/5 font-mono">
-                  <div className="font-bold text-secondary mb-1 truncate">{agent.name}</div>
+                  <div className="font-bold text-secondary mb-1 truncate" title={agent.name}>{formatDisplayName(agent.name)}</div>
                   <div className="text-muted-foreground truncate" title={agent.id}>{agent.id}</div>
                 </div>
               ))}

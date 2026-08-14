@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { Link } from "wouter";
 import { useListCharacters, useListPopulations } from "@workspace/api-client-react";
 import { UserCircle, Loader2, Eye } from "lucide-react";
+import { formatDisplayName } from "@/lib/display-name";
 
 export default function CharactersList() {
   const { data: characters, isLoading } = useListCharacters({});
@@ -33,12 +34,12 @@ export default function CharactersList() {
                 className="block border border-border bg-card hover:border-primary transition-colors cursor-pointer group flex flex-col"
               >
                 <div className="p-4 border-b border-border flex-1">
-                  <div className="font-bold text-lg group-hover:text-primary transition-colors mb-2">{char.name}</div>
+                  <div className="font-bold text-lg group-hover:text-primary transition-colors mb-2" title={char.name}>{formatDisplayName(char.name)}</div>
                   
                   {char.provenance?.populationId && (
                     <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                       <UserCircle className="h-3 w-3" />
-                      POP: {popMap.get(char.provenance.populationId) || "Unknown"}
+                      <span title={popMap.get(char.provenance.populationId)}>POP: {formatDisplayName(popMap.get(char.provenance.populationId)) || "Unknown"}</span>
                     </div>
                   )}
                 </div>

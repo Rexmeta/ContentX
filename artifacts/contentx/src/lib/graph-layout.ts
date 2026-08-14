@@ -1,3 +1,5 @@
+import { formatDisplayName } from "./display-name";
+
 export interface GraphLayoutNode {
   id: string;
   label: string;
@@ -7,7 +9,15 @@ export interface GraphLayoutNode {
   y: number;
   r: number;
   color?: string;
+  /** Full original name when `label` was shortened for display. */
+  fullLabel?: string;
   metadata?: any;
+}
+
+// Shorten a node's display label while preserving the original for tooltips.
+function labelPair(name: string): { label: string; fullLabel?: string } {
+  const label = formatDisplayName(name);
+  return label === name ? { label } : { label, fullLabel: name };
 }
 
 export interface GraphLayoutEdge {
@@ -29,7 +39,7 @@ export function computeWorldLayout(entities: any[], relationships: any[]): { nod
     const angle = (i / sortedEntities.length) * 2 * Math.PI - Math.PI / 2;
     return {
       id: ent.id,
-      label: ent.name,
+      ...labelPair(ent.name),
       sublabel: ent.kind,
       kind: 'entity',
       x: cx + radius * Math.cos(angle),
@@ -58,7 +68,7 @@ export function computePopulationLayout(population: any, dimensions: any[], rule
 
   nodes.push({
     id: population.id,
-    label: population.name,
+    ...labelPair(population.name),
     kind: 'population',
     x: 0,
     y: 0,
@@ -129,7 +139,7 @@ export function computePopulationLayout(population: any, dimensions: any[], rule
 
     nodes.push({
       id: char.id,
-      label: char.name,
+      ...labelPair(char.name),
       sublabel: 'Character',
       kind: 'character',
       x,
@@ -158,7 +168,7 @@ export function computeCharacterLayout(character: any, population: any, snapshot
   // Character in center
   nodes.push({
     id: character.id,
-    label: character.name,
+    ...labelPair(character.name),
     kind: 'character',
     x: 0,
     y: 0,
@@ -171,7 +181,7 @@ export function computeCharacterLayout(character: any, population: any, snapshot
   if (population) {
     nodes.push({
       id: population.id,
-      label: population.name,
+      ...labelPair(population.name),
       sublabel: 'Population',
       kind: 'population',
       x: 0,
@@ -236,7 +246,7 @@ export function computeCharacterLayout(character: any, population: any, snapshot
     snapAgents.forEach((ag, j) => {
       nodes.push({
         id: ag.id,
-        label: ag.name,
+        ...labelPair(ag.name),
         sublabel: 'Agent',
         kind: 'agent',
         x: snapX + (j - (snapAgents.length - 1) / 2) * 80,
@@ -269,7 +279,7 @@ export function computeSimulationLayout(simulation: any, agents: any[], events: 
   // Simulation at top
   nodes.push({
     id: simulation.id,
-    label: simulation.name,
+    ...labelPair(simulation.name),
     kind: 'simulation',
     x: 0,
     y: 0,
@@ -283,7 +293,7 @@ export function computeSimulationLayout(simulation: any, agents: any[], events: 
     const x = (i - (agents.length - 1) / 2) * 200;
     nodes.push({
       id: ag.agentId,
-      label: ag.name,
+      ...labelPair(ag.name),
       sublabel: ag.role,
       kind: 'agent',
       x,
@@ -418,7 +428,7 @@ export function computeLineageLayout(
     rowItems.forEach((item, i) => {
       nodes.push({
         id: item.id,
-        label: item.label,
+        ...labelPair(item.label),
         sublabel: item.kind,
         kind: item.kind,
         x: (i - (rowItems.length - 1) / 2) * xSpacing,

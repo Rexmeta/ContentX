@@ -17,6 +17,7 @@ import {
 import { StableGraph, GraphLegend } from "@/components/stable-graph";
 import { computePopulationLayout, computeLineageLayout, computeWorldLayout, computeCharacterLayout, computeSimulationLayout } from "@/lib/graph-layout";
 import { useState, useMemo, useEffect } from "react";
+import { formatDisplayName } from "@/lib/display-name";
 import { Network, Database, Users, UserCircle, PlayCircle, GitMerge } from "lucide-react";
 
 type Perspective = "world" | "population" | "character" | "simulation" | "lineage";
@@ -244,17 +245,17 @@ export default function Explorer() {
             )}
             {perspective === 'population' && allPopulations && (
               <select className="bg-background border border-border px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
-                {allPopulations.map(p => <option key={p.id} value={p.id}>{p.name} (v{p.version})</option>)}
+                {allPopulations.map(p => <option key={p.id} value={p.id} title={p.name}>{formatDisplayName(p.name)} (v{p.version})</option>)}
               </select>
             )}
             {(perspective === 'character' || perspective === 'lineage') && allCharacters && (
               <select className="bg-background border border-border px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
-                {allCharacters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {allCharacters.map(c => <option key={c.id} value={c.id} title={c.name}>{formatDisplayName(c.name)}</option>)}
               </select>
             )}
             {perspective === 'simulation' && allSimulations && (
               <select className="bg-background border border-border px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
-                {allSimulations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {allSimulations.map(s => <option key={s.id} value={s.id} title={s.name}>{formatDisplayName(s.name)}</option>)}
               </select>
             )}
           </div>
@@ -288,7 +289,12 @@ export default function Explorer() {
                   <div className="border border-border p-4 bg-muted/10">
                     <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest mb-1">Selected Node</div>
                     <div className="text-lg font-bold uppercase tracking-wider">{selectedNode.kind}</div>
-                    <div className="text-2xl font-serif mt-2">{selectedNode.label}</div>
+                    <div className="text-2xl font-serif mt-2" title={selectedNode.fullLabel || selectedNode.label}>{selectedNode.label}</div>
+                    {selectedNode.fullLabel && (
+                      <div className="text-[10px] font-mono text-muted-foreground break-all mt-2">
+                        Full name: {selectedNode.fullLabel}
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="grid grid-cols-2 gap-y-2 border-b border-border pb-4">
