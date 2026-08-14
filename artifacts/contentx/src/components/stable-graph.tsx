@@ -41,6 +41,57 @@ export function StableGraph({
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const nodeRefs = useRef<Map<string, SVGGElement>>(new Map());
+
+  const focusNode = (id: string) => {
+    const el = nodeRefs.current.get(id);
+    if (el) el.focus();
+  };
+
+  // Arrow-key navigation: move focus to the nearest node in the pressed direction
+  const handleNodeKeyDown = (e: React.KeyboardEvent, node: GraphNode) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      onSelectNode?.(node.id);
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      onEmptyClick?.();
+      return;
+    }
+    const dirs: Record<string, [number, number]> = {
+      ArrowRight: [1, 0],
+      ArrowLeft: [-1, 0],
+      ArrowDown: [0, 1],
+      ArrowUp: [0, -1],
+    };
+    const dir = dirs[e.key];
+    if (!dir) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    let best: GraphNode | null = null;
+    let bestScore = Infinity;
+    for (const other of nodes) {
+      if (other.id === node.id) continue;
+      const dx = other.x - node.x;
+      const dy = other.y - node.y;
+      const dot = dx * dir[0] + dy * dir[1];
+      if (dot <= 0) continue; // must be in the pressed direction
+      const dist = Math.hypot(dx, dy);
+      const perp = Math.abs(dx * dir[1]) + Math.abs(dy * dir[0]);
+      const score = dist + perp * 1.5; // prefer aligned nodes
+      if (score < bestScore) {
+        bestScore = score;
+        best = other;
+      }
+    }
+    if (best) focusNode(best.id);
+  };
   
   // Fit graph on initial load
   useEffect(() => {
@@ -245,14 +296,36 @@ export function StableGraph({
             
             const opacity = (selectionId && !isSelected && !isRelated) ? 0.4 : 1;
 
+            const isFocused = focusedId === node.id;
+
             return (
               <g 
                 key={node.id} 
+                ref={(el) => {
+                  if (el) nodeRefs.current.set(node.id, el);
+                  else nodeRefs.current.delete(node.id);
+                }}
                 transform={`translate(${node.x}, ${node.y})`}
-                className="cursor-pointer group transition-opacity duration-300"
+                className="cursor-pointer group transition-opacity duration-300 focus:outline-none"
                 style={{ opacity }}
+                tabIndex={0}
+                role="button"
+                aria-label={`${node.kind ? node.kind + ': ' : ''}${node.label}${node.sublabel ? ` (${node.sublabel})` : ''}`}
                 onClick={() => onSelectNode?.(node.id)}
+                onFocus={() => setFocusedId(node.id)}
+                onBlur={() => setFocusedId(prev => (prev === node.id ? null : prev))}
+                onKeyDown={(e) => handleNodeKeyDown(e, node)}
               >
+                {/* Focus Ring (keyboard) — dashed, distinct from selection */}
+                {isFocused && (
+                  <circle
+                    r={node.r + 13}
+                    fill="none"
+                    stroke="hsl(var(--foreground))"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 3"
+                  />
+                )}
                 {/* Selection Ring */}
                 {isSelected && (
                   <circle 
