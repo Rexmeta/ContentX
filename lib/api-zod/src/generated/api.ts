@@ -2865,6 +2865,40 @@ export const GetEvaluationResponse = zod.object({
 
 
 /**
+ * Walks stored references backwards: evaluation -> simulation -> agents ->
+ * snapshots -> sampling runs -> populations -> imported content (MatrAIx).
+ * Every hop is resolved from persisted relationships; a missing hop is a
+ * 409 lineage-broken error, never a silently shortened chain.
+ * @summary Resolve the full provenance chain of an evaluation back to its source
+ */
+export const GetEvaluationLineageParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const GetEvaluationLineageResponse = zod.object({
+  "evaluationId": zod.string(),
+  "kind": zod.string(),
+  "simulationId": zod.string(),
+  "simulationSeed": zod.int(),
+  "agents": zod.array(zod.object({
+  "agentId": zod.string(),
+  "snapshotId": zod.string(),
+  "characterId": zod.string(),
+  "samplingRunId": zod.string().nullable(),
+  "populationId": zod.string().nullable(),
+  "populationVersion": zod.int().nullable(),
+  "seed": zod.int().nullable(),
+  "importId": zod.string().nullable().describe('Imported content id the population was bridged from.'),
+  "matraixId": zod.string().nullable(),
+  "sourceUri": zod.string().nullable()
+})).min(1)
+})
+
+
+/**
  * @summary Aggregate stats across the content library
  */
 export const GetDashboardSummaryResponse = zod.object({

@@ -13,7 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import { 
   Database, Users, UserCircle, PlayCircle, BarChart, 
-  ArrowRight, Activity, Terminal
+  ArrowRight, Terminal, Activity, FileText
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -50,11 +50,19 @@ export default function Overview() {
     });
   }, [evals]);
 
+  // BEHAVIOR aggregate: prefer explicit interaction counts, otherwise the
+  // turns executed across simulations. Both are real values from the
+  // simulations list — never synthesized.
+  const totalTurns = useMemo(
+    () => sims?.reduce((acc, s) => acc + s.turnsExecuted, 0) || 0,
+    [sims]
+  );
+
   const stages = [
     {
-      id: "matraix",
+      id: "source",
       title: "SOURCE",
-      name: "MatrAIx",
+      name: "MatrAIx or another source",
       icon: Database,
       href: "/world",
       metrics: [
@@ -103,7 +111,18 @@ export default function Overview() {
       href: "/simulations",
       metrics: [
         { label: "Simulations Run", value: sims?.length || 0 },
-        { label: "Turns Executed", value: sims?.reduce((acc, s) => acc + s.turnsExecuted, 0) || 0 }
+        { label: "Turns Executed", value: totalTurns }
+      ]
+    },
+    {
+      id: "behavior",
+      title: "BEHAVIOR",
+      name: "Interaction Traces",
+      icon: Activity,
+      href: "/simulations",
+      metrics: [
+        { label: "Turns Executed", value: totalTurns },
+        { label: "Completed Runs", value: sims?.filter((s) => s.status === "completed").length || 0 }
       ]
     },
     {
@@ -116,13 +135,36 @@ export default function Overview() {
         { label: "Total Evals", value: evals?.length || 0 },
         ...evalStats
       ]
+    },
+    {
+      id: "content",
+      title: "CONTENT",
+      name: "Projection Targets",
+      icon: FileText,
+      href: "/world",
+      metrics: [
+        { label: "Roleplay", value: "Available" },
+        { label: "Novel", value: "Available" },
+        { label: "Business Scenario", value: "Planned" }
+      ]
     }
+  ];
+
+  const trustSteps = [
+    "SOURCE",
+    "STRUCTURED DATA",
+    "VALIDATION",
+    "TRANSFORMATION",
+    "SIMULATION",
+    "EVALUATION",
   ];
 
   const header = (
     <div className="space-y-1">
-      <h1 className="text-xl font-bold font-serif">Pipeline Overview</h1>
-      <p className="text-sm text-muted-foreground">The MatrAIx generative pipeline lifecycle.</p>
+      <h1 className="text-xl font-bold font-serif">ContentX Journey</h1>
+      <p className="text-sm text-muted-foreground">
+        SOURCE → POPULATION → CHARACTERS → AGENTS → SIMULATION → BEHAVIOR → EVALUATION → CONTENT
+      </p>
     </div>
   );
 
@@ -131,7 +173,44 @@ export default function Overview() {
       breadcrumbs={[{ label: "ContentX" }, { label: "Overview" }]}
       contextHeader={header}
     >
-      <div className="p-8 max-w-5xl mx-auto">
+      <div className="p-8 max-w-5xl mx-auto space-y-10">
+
+        {/* What is ContentX? */}
+        <div className="border border-border bg-card p-6" data-testid="text-product-statement">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary mb-2">
+            What is ContentX?
+          </div>
+          <h2 className="text-lg font-bold mb-3">AI-native World &amp; Content Intelligence Engine</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
+            ContentX is an AI-native World &amp; Content Intelligence Engine that represents people
+            and worlds as structured data, simulates behavior, evaluates outcomes, and transforms
+            the result into multiple forms of content.
+          </p>
+        </div>
+
+        {/* Trust strip */}
+        <div className="border border-border bg-muted/20 p-4" data-testid="strip-trust">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground mb-3">
+            Trust
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {trustSteps.map((step, i) => (
+              <div key={step} className="flex items-center gap-2">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider border border-border bg-card px-2.5 py-1">
+                  {step}
+                </span>
+                {i < trustSteps.length - 1 && (
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Every artifact is traceable from its source through structured data, validation, and
+            transformation to simulated behavior and its evaluation.
+          </p>
+        </div>
+
         <div className="relative">
           {/* Vertical connecting line */}
           <div className="absolute left-8 top-12 bottom-12 w-px bg-border"></div>
@@ -145,7 +224,7 @@ export default function Overview() {
                     <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   
-                  <Link href={stage.href} className="flex-1 block">
+                  <Link href={stage.href} className="flex-1 block" data-testid={`link-stage-${stage.id}`}>
                     <div className="border border-border bg-card p-6 hover:border-primary hover:shadow-sm transition-all cursor-pointer">
                       <div className="flex items-start justify-between mb-4">
                         <div>

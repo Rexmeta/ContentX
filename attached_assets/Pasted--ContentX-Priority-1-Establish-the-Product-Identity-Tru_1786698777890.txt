@@ -1,0 +1,1123 @@
+# ContentX Priority 1
+# Establish the Product Identity, Trust Layer, and End-to-End Demonstration
+
+You are working on the ContentX repository.
+
+Repository:
+https://github.com/Rexmeta/ContentX
+
+IMPORTANT:
+
+Before changing code, inspect the CURRENT repository state.
+
+Do not assume that previous implementation plans are still accurate.
+
+Read:
+
+- README.md
+- AGENTS.md
+- docs/architecture/*
+- docs/architecture/target-state.md
+- docs/examples/*
+- current frontend navigation
+- current graph implementation
+- current Population implementation
+- current Character implementation
+- current Agent implementation
+- current Simulation implementation
+- current Evaluation implementation
+- MatrAIx importer
+- provenance/versioning implementation
+- existing tests
+
+The repository has already implemented substantial parts of:
+
+MatrAIx
+→ Import
+→ Canonical Graph
+→ Population
+→ Dependency Rules
+→ SamplingRun
+→ Character
+→ CharacterSnapshot
+→ Agent
+→ AgentState
+→ Simulation
+→ Behavior
+→ Evaluation
+→ Projection
+
+Recent work has also improved:
+
+- Overview/lifecycle navigation
+- Population/Character/Agent/Simulation/Evaluation views
+- Graph clustering for large Character populations
+- Display-name shortening
+- Full-name tooltips
+- Stable graph keyboard navigation
+- Graph usability
+
+Do NOT restart the architecture.
+
+Do NOT replace the canonical graph.
+
+Do NOT create a new parallel content model.
+
+Do NOT turn ContentX into a RoleplayBot.
+
+Do NOT make MatrAIx the core domain model.
+
+The goal of this task is to establish ContentX as a credible:
+
+AI-native World & Content Intelligence Engine
+
+with the core product promise:
+
+WORLD → PEOPLE → BEHAVIOR → SIMULATION → CONTENT
+
+============================================================
+1. PRODUCT IDENTITY
+============================================================
+
+Treat the following as the canonical product concept:
+
+ContentX is an AI-native World & Content Intelligence Engine.
+
+Its purpose is to allow AI systems to:
+
+1. represent worlds and entities
+2. model populations of people
+3. generate/sample realistic characters
+4. resolve characters into runtime agents
+5. simulate behavior
+6. evaluate behavior and outcomes
+7. transform the resulting structured world/behavior into
+   multiple content projections
+
+Core lifecycle:
+
+WORLD
+↓
+POPULATION
+↓
+CHARACTER
+↓
+SNAPSHOT
+↓
+AGENT
+↓
+SIMULATION
+↓
+BEHAVIOR
+↓
+EVALUATION
+↓
+CONTENT
+
+The system should communicate this lifecycle consistently.
+
+============================================================
+2. DO NOT ADD MAJOR NEW DOMAIN FEATURES
+============================================================
+
+For this task:
+
+DO NOT add:
+
+- another Persona system
+- another Character model
+- another Scenario model
+- another Graph schema
+- another Agent abstraction
+- another Simulation abstraction
+- another Content schema
+
+Use the existing canonical architecture.
+
+If something is missing, first determine whether the existing
+domain can already represent it.
+
+Only add a new domain concept if absolutely necessary.
+
+Document the reason before implementing it.
+
+============================================================
+3. CREATE A SINGLE "CONTENTX JOURNEY"
+============================================================
+
+The most important UX improvement is to make the entire system
+understandable as one continuous journey.
+
+Create an explicit lifecycle representation:
+
+SOURCE
+↓
+POPULATION
+↓
+CHARACTERS
+↓
+AGENTS
+↓
+SIMULATION
+↓
+BEHAVIOR
+↓
+EVALUATION
+↓
+CONTENT
+
+Example:
+
+SOURCE
+MatrAIx
+
+↓
+
+POPULATION
+Negotiators
+
+3 Dimensions
+2 Dependency Rules
+
+↓
+
+CHARACTERS
+10 sampled characters
+
+↓
+
+AGENTS
+2 runtime agents
+
+↓
+
+SIMULATION
+Wholesale Negotiation
+
+24 Turns
+
+↓
+
+BEHAVIOR
+48 interactions
+
+↓
+
+EVALUATION
+Behavior: 0.81
+Persona Fidelity: 0.76
+Outcome: 0.84
+
+↓
+
+CONTENT
+Roleplay
+Novel
+Business Scenario
+
+This should become the central product narrative.
+
+============================================================
+4. OVERVIEW MUST BECOME THE PRIMARY ENTRY POINT
+============================================================
+
+The Overview page must answer immediately:
+
+"What is ContentX?"
+
+"What can I do with it?"
+
+"Where did this data come from?"
+
+"What happened to it?"
+
+"What can I create from it?"
+
+Do not make the Graph the primary explanation.
+
+The Overview should visually communicate:
+
+MatrAIx
+or another source
+
+↓
+
+Population
+
+↓
+
+Sampling
+
+↓
+
+Characters
+
+↓
+
+Agents
+
+↓
+
+Simulation
+
+↓
+
+Evaluation
+
+↓
+
+Projection
+
+The user must be able to click each stage.
+
+============================================================
+5. BUILD ONE COMPLETE REFERENCE DEMO
+============================================================
+
+Create one canonical demonstration dataset.
+
+The demo must be small enough to understand but rich enough
+to demonstrate the architecture.
+
+Recommended:
+
+World:
+Wholesale negotiation environment
+
+Population:
+B2B sales managers / buyers
+
+Population dimensions:
+
+- age
+- occupation
+- experience
+- risk tolerance
+- negotiation style
+- goal orientation
+
+Include meaningful dependencies.
+
+Example:
+
+occupation
+→ negotiation style
+
+experience
+→ risk tolerance
+
+goal orientation
+→ concession behavior
+
+Sample:
+
+10 characters
+
+Select:
+
+2 characters
+
+Create:
+
+2 runtime agents
+
+Simulation:
+
+Wholesale negotiation
+
+Generate:
+
+multiple turns
+
+Record:
+
+actions
+decisions
+state changes
+outcome
+
+Evaluate:
+
+behavior consistency
+persona fidelity
+goal achievement
+outcome quality
+
+Finally project the result into:
+
+1. Roleplay scenario
+2. Business case
+3. Narrative/novel outline
+
+The exact domain can differ if the repository already contains
+a better reference example.
+
+Do NOT fabricate fake backend results.
+
+Use the actual existing runtime where possible.
+
+============================================================
+6. DEMO DATA MUST BE REPRODUCIBLE
+============================================================
+
+The demonstration must use explicit:
+
+dataset/version
+population version
+dependency version
+sampling seed
+model version
+simulation version
+
+If the existing system already supports these concepts,
+use the existing implementation.
+
+The same configuration must be capable of producing the same
+sampling/runtime result.
+
+Show:
+
+Reproducible ✓
+
+in the UI when the required metadata is available.
+
+============================================================
+7. TRUST LAYER
+============================================================
+
+ContentX must not behave like:
+
+Prompt
+→
+LLM
+→
+Magic Result
+
+Instead communicate:
+
+SOURCE
+→
+STRUCTURED DATA
+→
+VALIDATION
+→
+TRANSFORMATION
+→
+SIMULATION
+→
+EVALUATION
+
+Every major artifact should expose provenance.
+
+At minimum expose:
+
+Source
+Version
+Created
+Updated
+Schema Version
+Population Version
+Dependency Version
+Sampling Run
+Snapshot
+Agent
+Simulation
+Evaluation
+
+Where available.
+
+============================================================
+8. CREATE A PROVENANCE / LINEAGE VIEW
+============================================================
+
+Implement a dedicated lineage visualization.
+
+The default path:
+
+MatrAIx
+↓
+Import
+↓
+Population
+↓
+SamplingRun
+↓
+Character
+↓
+CharacterSnapshot
+↓
+Agent
+↓
+Simulation
+↓
+Evaluation
+
+The lineage must use REAL persisted relationships.
+
+Do NOT create frontend-only fake relationships.
+
+Clicking a node should open its Inspector.
+
+The user should be able to answer:
+
+"Where did this result come from?"
+
+============================================================
+9. VERSION INFORMATION MUST BE HUMAN READABLE
+============================================================
+
+Do not expose only UUIDs.
+
+Show:
+
+Population v3
+Dependency v7
+Sampling Run #12
+Snapshot #23
+Simulation #8
+
+UUIDs can remain available in:
+
+Details
+Advanced
+Copy ID
+
+Human users should see semantic identifiers first.
+
+============================================================
+10. VALIDATION STATUS
+============================================================
+
+Where validation data exists, show it.
+
+Example:
+
+DATA QUALITY
+
+Schema
+✓ Valid
+
+References
+✓ Valid
+
+Dependencies
+✓ Valid
+
+Provenance
+✓ Complete
+
+Reproducibility
+✓ Available
+
+Do not claim validation passed unless it was actually performed.
+
+Use actual backend validation results.
+
+============================================================
+11. AI TRANSPARENCY
+============================================================
+
+Where AI is used, distinguish:
+
+Generated
+Imported
+Derived
+Sampled
+Simulated
+Evaluated
+Human Edited
+
+Do not hide provenance behind a generic "AI Generated" label.
+
+Example:
+
+Origin:
+MatrAIx
+
+Transformation:
+Population Sampling
+
+Generated:
+AI-assisted
+
+Validated:
+✓
+
+This becomes part of ContentX's trust model.
+
+============================================================
+12. GRAPH UX
+============================================================
+
+Continue the recent graph improvements, but simplify the
+semantic meaning.
+
+The graph is an exploration tool.
+
+It is NOT the primary product explanation.
+
+The graph must clearly distinguish:
+
+Node
+Edge
+Selection
+Focus
+Dependency
+Provenance
+
+The blue visual indicator MUST mean:
+
+SELECTED NODE
+
+Nothing else.
+
+Do not use a floating/moving blue object to represent
+camera position, traversal, simulation state, or graph center.
+
+Selection should be:
+
+selected node
+→ blue ring / halo
+
+Hover:
+→ hover state
+
+Keyboard focus:
+→ separate dashed focus ring
+
+These must remain visually distinct.
+
+============================================================
+13. GRAPH MUST NOT AUTO-JUMP ON SELECTION
+============================================================
+
+Clicking a node must not unexpectedly:
+
+- re-layout the graph
+- move all nodes
+- move a blue spot
+- change perspective
+- change zoom
+
+Selection changes:
+
+- selected state
+- related-node highlight
+- Inspector
+
+only.
+
+Provide explicit controls:
+
+Fit
+Center Selected
+Reset Layout
+Zoom In
+Zoom Out
+
+============================================================
+14. GRAPH PERSPECTIVES
+============================================================
+
+Keep graph views conceptually separated.
+
+Provide:
+
+WORLD
+POPULATION
+CHARACTER
+SIMULATION
+LINEAGE
+
+Do not show every domain object in one giant graph.
+
+Population view:
+
+Population
+├── Dimensions
+├── Distributions
+├── Dependency Rules
+└── Characters
+
+Character view:
+
+Character
+├── Traits
+├── Values
+├── Capabilities
+├── Goals
+└── Relationships
+
+Simulation view:
+
+Simulation
+├── Agents
+├── Turns
+├── Actions
+├── State Changes
+└── Outcome
+
+Lineage view:
+
+Source
+→ Population
+→ Sampling
+→ Character
+→ Snapshot
+→ Agent
+→ Simulation
+→ Evaluation
+
+============================================================
+15. INSPECTOR
+============================================================
+
+Every selected node must have a clear Inspector.
+
+Example:
+
+SELECTED
+
+POPULATION
+
+Negotiators
+
+Source
+MatrAIx
+
+Version
+3
+
+Dimensions
+6
+
+Dependency Rules
+3
+
+Characters
+10
+
+Sampling Runs
+2
+
+The Inspector must explain what the object means.
+
+Do not force users to understand the graph to understand
+the selected object.
+
+============================================================
+16. DOMAIN LANGUAGE
+============================================================
+
+Use these conceptual distinctions consistently:
+
+Population
+=
+a generative/statistical definition of a group
+
+Character
+=
+a persistent identity
+
+CharacterSnapshot
+=
+an immutable resolved character state
+
+Agent
+=
+a runtime actor
+
+AgentState
+=
+mutable runtime state
+
+Simulation
+=
+runtime execution
+
+Behavior
+=
+structured action/decision
+
+Evaluation
+=
+assessment of behavior/outcome/persona fidelity
+
+Dependency
+=
+constraint/dependency between dimensions
+
+Relationship
+=
+semantic relation between entities
+
+Projection
+=
+conversion into an external content representation
+
+Do not collapse these concepts.
+
+============================================================
+17. PROJECTION DEMONSTRATION
+============================================================
+
+The final stage of the demo must prove:
+
+ONE STRUCTURED WORLD
+
+can become:
+
+Roleplay
+Novel
+Business Scenario
+
+without duplicating the underlying canonical data model.
+
+Example:
+
+Canonical Scenario Graph
+
+↓
+
+Roleplay Projection
+
+↓
+
+Novel Projection
+
+↓
+
+Business Case Projection
+
+Show that these are projections of the same source model.
+
+Do not create separate source-of-truth models.
+
+============================================================
+18. CONTENTX SHOULD NOT BE ROLEPLAY-CENTRIC
+============================================================
+
+RoleplayX is a consumer.
+
+It is not the definition of ContentX.
+
+Maintain:
+
+ContentX
+↓
+Projection / Adapter
+↓
+RoleplayX
+
+not:
+
+RoleplayX
+↓
+ContentX
+
+The same architecture must support future:
+
+Novel
+Game
+Screenplay
+Training
+Advertising
+Business Simulation
+
+without modifying the canonical core.
+
+============================================================
+19. DOCUMENT THE ARCHITECTURE
+============================================================
+
+Create/update:
+
+docs/product/contentx-identity.md
+
+Include:
+
+1. What is ContentX?
+2. What ContentX is NOT
+3. Core product promise
+4. World → Population → Behavior → Simulation → Content
+5. Canonical architecture
+6. Trust model
+7. Projection architecture
+8. MatrAIx's role
+9. RoleplayX's role
+10. Future extensibility
+
+Recommended product statement:
+
+"ContentX is an AI-native World & Content Intelligence Engine
+that represents people and worlds as structured data,
+simulates behavior, evaluates outcomes, and transforms the
+result into multiple forms of content."
+
+============================================================
+20. CREATE A TRUST MODEL DOCUMENT
+============================================================
+
+Create:
+
+docs/architecture/trust-model.md
+
+Define:
+
+- provenance
+- versioning
+- validation
+- reproducibility
+- lineage
+- auditability
+- AI attribution
+
+Explain how each is represented in the current system.
+
+Do not document functionality that does not exist.
+
+Mark future capabilities as:
+
+PLANNED
+
+============================================================
+21. CREATE A REFERENCE DEMO DOCUMENT
+============================================================
+
+Create:
+
+docs/examples/contentx-reference-demo.md
+
+Document:
+
+1. Input
+2. Population
+3. Dependency model
+4. Sampling
+5. Characters
+6. Snapshots
+7. Agents
+8. Simulation
+9. Behavior
+10. Evaluation
+11. Projection
+12. Provenance
+13. Reproducibility
+
+This becomes the canonical example for future development.
+
+============================================================
+22. TEST STRATEGY
+============================================================
+
+Do not only test isolated functions.
+
+Add / maintain one end-to-end test that verifies:
+
+source
+→ import
+→ population
+→ dependency
+→ sampling
+→ character
+→ snapshot
+→ agent
+→ simulation
+→ behavior
+→ evaluation
+→ projection
+
+Verify:
+
+- IDs
+- provenance
+- versions
+- relationships
+- deterministic sampling where applicable
+- projection source references
+
+The test should fail if any lifecycle stage silently breaks.
+
+============================================================
+23. QUALITY GATES
+============================================================
+
+Before considering this task complete:
+
+Run all existing tests.
+
+Do not reduce test coverage.
+
+Do not weaken assertions.
+
+Add tests for every new behavior.
+
+Verify:
+
+- TypeScript
+- lint
+- unit tests
+- integration tests
+- end-to-end tests
+
+The final report must contain actual test results.
+
+Do not write "all tests pass" without running them.
+
+============================================================
+24. PERFORMANCE
+============================================================
+
+Do not regress large Population graph behavior.
+
+The existing application has already introduced Character clustering
+for large populations.
+
+Preserve this.
+
+Test at least:
+
+10 characters
+50 characters
+100 characters
+500 characters
+
+The UI must remain understandable.
+
+Do not render hundreds of individual nodes if the existing
+clustering strategy is more appropriate.
+
+============================================================
+25. DO NOT OVERBUILD THE UI
+============================================================
+
+Do not add:
+
+- unnecessary animations
+- decorative graph effects
+- floating particles
+- moving blue indicators
+- excessive gradients
+- dashboard noise
+- meaningless metrics
+
+Every visual element must communicate:
+
+identity
+relationship
+state
+provenance
+progress
+or action
+
+============================================================
+26. DEFINITION OF DONE
+============================================================
+
+This task is complete only when a new user can enter ContentX
+and understand the following without reading developer docs:
+
+1. ContentX represents worlds and people.
+2. Population describes a group.
+3. Characters are sampled from a Population.
+4. Snapshots resolve character state.
+5. Agents are runtime actors.
+6. Agents participate in Simulations.
+7. Simulations produce Behavior.
+8. Behavior can be Evaluated.
+9. The resulting structured model can become different forms
+   of Content.
+10. The origin and lineage of important data can be inspected.
+
+The user must also understand:
+
+11. What the blue selection indicator means.
+12. What a graph edge means.
+13. What the selected node represents.
+14. Where the data came from.
+15. Which version produced it.
+
+============================================================
+27. PRIORITY ORDER
+============================================================
+
+Implement in this exact order:
+
+P0
+Current repository audit
+
+P1
+Overview / ContentX Journey
+
+P2
+Reference Demo
+
+P3
+Provenance / Lineage
+
+P4
+Inspector / Graph semantics
+
+P5
+Trust / Validation visibility
+
+P6
+End-to-end lifecycle test
+
+P7
+Documentation
+
+P8
+Polish / performance
+
+DO NOT start with visual polish.
+
+DO NOT start with new AI features.
+
+DO NOT start with new domains.
+
+============================================================
+28. FINAL REPORT
+============================================================
+
+At the end report:
+
+A. Repository state before changes
+
+B. Product identity changes
+
+C. ContentX Journey implementation
+
+D. Reference Demo implementation
+
+E. Provenance / Lineage implementation
+
+F. Graph UX changes
+
+G. Inspector changes
+
+H. Trust / Validation changes
+
+I. Projection demonstration
+
+J. Documentation changes
+
+K. Tests added
+
+L. Existing tests executed and actual results
+
+M. Any backend/API changes
+
+N. Any unresolved issues
+
+O. Recommended next priority
+
+IMPORTANT:
+
+If an existing feature already satisfies a requirement,
+DO NOT rebuild it.
+
+Reuse existing implementations.
+
+The objective is to consolidate and strengthen ContentX,
+not to continuously expand its surface area.

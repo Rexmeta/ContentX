@@ -1474,6 +1474,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/evaluations/{id}/lineage:
+    get:
+      operationId: getEvaluationLineage
+      tags: [simulation]
+      summary: Resolve the full provenance chain of an evaluation back to its source
+      description: |
+        Walks stored references backwards: evaluation -> simulation -> agents ->
+        snapshots -> sampling runs -> populations -> imported content (MatrAIx).
+        Every hop is resolved from persisted relationships; a missing hop is a
+        409 lineage-broken error, never a silently shortened chain.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Resolved lineage chain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationLineage"
+        "404":
+          description: Evaluation not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "409":
+          description: Lineage broken — a stored reference no longer resolves
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -2521,6 +2555,36 @@ components:
         provenance:
           $ref: "#/components/schemas/EvaluationProvenance"
         createdAt: { type: string }
+    AgentLineage:
+      type: object
+      required: [agentId, snapshotId, characterId, samplingRunId, populationId, populationVersion, seed, importId, matraixId, sourceUri]
+      properties:
+        agentId: { type: string }
+        snapshotId: { type: string }
+        characterId: { type: string }
+        samplingRunId: { type: string, nullable: true }
+        populationId: { type: string, nullable: true }
+        populationVersion: { type: integer, nullable: true }
+        seed: { type: integer, nullable: true }
+        importId:
+          type: string
+          nullable: true
+          description: Imported content id the population was bridged from.
+        matraixId: { type: string, nullable: true }
+        sourceUri: { type: string, nullable: true }
+    EvaluationLineage:
+      type: object
+      required: [evaluationId, kind, simulationId, simulationSeed, agents]
+      properties:
+        evaluationId: { type: string }
+        kind: { type: string }
+        simulationId: { type: string }
+        simulationSeed: { type: integer }
+        agents:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/AgentLineage"
     ProjectionInput:
       type: object
       required: [target]

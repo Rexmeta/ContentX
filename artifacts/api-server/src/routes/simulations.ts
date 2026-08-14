@@ -9,9 +9,15 @@ import {
   EvaluateSimulationBody,
   EvaluateSimulationResponse,
   GetEvaluationResponse,
+  GetEvaluationLineageResponse,
 } from "@workspace/api-zod";
 import * as simulationService from "../domains/simulation/service";
 import * as evaluationService from "../domains/evaluation/service";
+import {
+  resolveEvaluationLineage,
+  LineageBrokenError,
+} from "../domains/evaluation/lineageService";
+import { EvaluationNotFoundError } from "../domains/evaluation/model";
 import {
   InvalidSimulationError,
   PolicyExecutionError,
@@ -133,6 +139,28 @@ router.post("/v1/evaluations", async (req, res): Promise<void> => {
     if (!handleDomainError(err, res)) throw err;
   }
 });
+
+router.get(
+  "/v1/evaluations/:id/lineage",
+  async (req, res): Promise<void> => {
+    try {
+      const lineage = await resolveEvaluationLineage(
+        pathParam(req.params["id"]),
+      );
+      res.json(GetEvaluationLineageResponse.parse(lineage));
+    } catch (err) {
+      if (err instanceof EvaluationNotFoundError) {
+        res.status(404).json({ error: err.message });
+        return;
+      }
+      if (err instanceof LineageBrokenError) {
+        res.status(409).json({ error: err.message });
+        return;
+      }
+      throw err;
+    }
+  },
+);
 
 router.get("/v1/evaluations/:id", async (req, res): Promise<void> => {
   const evaluation = await evaluationService.getEvaluation(

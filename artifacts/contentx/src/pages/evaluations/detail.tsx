@@ -1,7 +1,11 @@
 import { Layout } from "@/components/layout";
 import { Link, useRoute } from "wouter";
-import { useGetEvaluation, getGetEvaluationQueryKey } from "@workspace/api-client-react";
-import { Loader2, PlayCircle, UserCircle } from "lucide-react";
+import {
+  useGetEvaluation, getGetEvaluationQueryKey,
+  useGetEvaluationLineage, getGetEvaluationLineageQueryKey,
+} from "@workspace/api-client-react";
+import type { AgentLineage } from "@workspace/api-client-react";
+import { Loader2, PlayCircle, UserCircle, GitMerge, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function EvaluationDetail() {
   const [, params] = useRoute("/evaluations/:id");
@@ -39,6 +43,8 @@ export default function EvaluationDetail() {
       <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
         <span>Simulation: {evaluation.simulationId}</span>
         <span>Events Analysed: {evaluation.provenance.traceEventCount}</span>
+        {/* Origin label — derived from a real evaluation record. */}
+        <span className="text-primary">Origin: Evaluated</span>
       </div>
     </div>
   );
@@ -76,6 +82,9 @@ export default function EvaluationDetail() {
           ))}
         </div>
 
+        {/* Lineage (trust layer) */}
+        <LineageSection evaluationId={id} />
+
         {/* Findings Log */}
         <div className="border border-border bg-card">
           <div className="p-4 border-b border-border bg-muted/30">
@@ -90,5 +99,178 @@ export default function EvaluationDetail() {
 
       </div>
     </Layout>
+  );
+}
+
+// --- LINEAGE ---
+
+interface LineageHopProps {
+  label: string;
+  value: string;
+  sub?: string;
+  href?: string;
+  testId: string;
+}
+
+function LineageHop({ label, value, sub, href, testId }: LineageHopProps) {
+  const inner = (
+    <div className="border border-border bg-card px-3 py-2 min-w-[140px] hover:border-primary transition-colors">
+      <div className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="text-sm font-semibold truncate max-w-[200px]" title={value}>{value}</div>
+      {sub && <div className="text-[10px] font-mono text-primary mt-0.5">{sub}</div>}
+    </div>
+  );
+  if (href) {
+    return <Link href={href} className="block" data-testid={testId}>{inner}</Link>;
+  }
+  return <div data-testid={testId}>{inner}</div>;
+}
+
+function AgentLineageChain({ agent, simulationId, simulationSeed, evaluationId, index }: {
+  agent: AgentLineage;
+  simulationId: string;
+  simulationSeed: number;
+  evaluationId: string;
+  index: number;
+}) {
+  const reproducible =
+    agent.populationVersion !== null && agent.seed !== null && simulationSeed !== null && simulationSeed !== undefined;
+
+  const sourceValue = agent.sourceUri || agent.matraixId || "Unknown source";
+
+  const hops: (LineageHopProps | null)[] = [
+    {
+      label: "Source",
+      value: sourceValue,
+      sub: agent.matraixId ? `MatrAIx ${agent.matraixId}` : undefined,
+      testId: `hop-source-${index}`,
+    },
+    agent.importId
+      ? { label: "Import", value: agent.importId, testId: `hop-import-${index}` }
+      : null,
+    {
+      label: "Population",
+      value: agent.populationId ?? "—",
+      sub: agent.populationVersion !== null ? `Population v${agent.populationVersion}` : undefined,
+      href: agent.populationId ? `/populations/${agent.populationId}` : undefined,
+      testId: `hop-population-${index}`,
+    },
+    agent.samplingRunId
+      ? {
+          label: "Sampling Run",
+          value: agent.samplingRunId,
+          sub: agent.seed !== null ? `Seed ${agent.seed}` : undefined,
+          testId: `hop-sampling-${index}`,
+        }
+      : null,
+    {
+      label: "Character",
+      value: agent.characterId,
+      href: `/characters/${agent.characterId}`,
+      testId: `hop-character-${index}`,
+    },
+    {
+      label: "Snapshot",
+      value: agent.snapshotId,
+      testId: `hop-snapshot-${index}`,
+    },
+    {
+      label: "Agent",
+      value: agent.agentId,
+      href: `/agents/${agent.agentId}`,
+      testId: `hop-agent-${index}`,
+    },
+    {
+      label: "Simulation",
+      value: simulationId,
+      sub: `Seed ${simulationSeed}`,
+      href: `/simulations/${simulationId}`,
+      testId: `hop-simulation-${index}`,
+    },
+    {
+      label: "Evaluation",
+      value: evaluationId,
+      href: `/evaluations/${evaluationId}`,
+      testId: `hop-evaluation-${index}`,
+    },
+  ];
+
+  const visibleHops = hops.filter((h): h is LineageHopProps => h !== null);
+
+  return (
+    <div className="border border-border bg-muted/10 p-4 space-y-3" data-testid={`lineage-agent-${index}`}>
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground">
+          Agent {agent.agentId}
+        </div>
+        {reproducible && (
+          <span
+            className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-widest text-green-600 dark:text-green-500 border border-green-600/40 dark:border-green-500/40 px-2 py-0.5"
+            data-testid={`badge-reproducible-${index}`}
+          >
+            <CheckCircle2 className="h-3 w-3" /> Reproducible
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {visibleHops.map((hop, i) => (
+          <div key={hop.testId} className="flex items-center gap-2">
+            <LineageHop {...hop} />
+            {i < visibleHops.length - 1 && (
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LineageSection({ evaluationId }: { evaluationId: string }) {
+  const { data: lineage, isLoading, error } = useGetEvaluationLineage(evaluationId, {
+    query: { enabled: !!evaluationId, queryKey: getGetEvaluationLineageQueryKey(evaluationId), retry: false },
+  });
+
+  return (
+    <div className="border border-border bg-card" data-testid="section-lineage">
+      <div className="p-4 border-b border-border bg-muted/30 flex items-center gap-2">
+        <GitMerge className="h-4 w-4 text-primary" />
+        <h3 className="text-xs font-mono font-bold uppercase tracking-widest">Lineage</h3>
+        <span className="text-[10px] text-muted-foreground font-mono ml-2">
+          Real persisted provenance — source to evaluation
+        </span>
+      </div>
+      <div className="p-6 space-y-4">
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" /> Resolving lineage...
+          </div>
+        ) : error ? (
+          <div className="border border-destructive/50 bg-destructive/5 p-4 text-sm" data-testid="text-lineage-error">
+            <div className="font-bold text-destructive mb-1">
+              {(error as { status?: number }).status === 409 ? "Lineage broken" : "Lineage unavailable"}
+            </div>
+            <p className="text-muted-foreground text-xs font-mono">
+              {(error as { data?: { error?: string } }).data?.error ||
+                (error as Error).message ||
+                "Unable to resolve lineage."}
+            </p>
+          </div>
+        ) : lineage ? (
+          <>
+            {lineage.agents.map((agent, i) => (
+              <AgentLineageChain
+                key={agent.agentId}
+                agent={agent}
+                simulationId={lineage.simulationId}
+                simulationSeed={lineage.simulationSeed}
+                evaluationId={lineage.evaluationId}
+                index={i}
+              />
+            ))}
+          </>
+        ) : null}
+      </div>
+    </div>
   );
 }

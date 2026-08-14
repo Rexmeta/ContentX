@@ -434,19 +434,38 @@ function ValidationPanel({ contentId, onSelectObject }: { contentId: string, onS
 
   const report = validateContent.data;
 
+  // Issue codes (e.g. "MISSING_REQUIRED_FIELD") are not check identifiers
+  // (e.g. "schema:required-fields"), so a per-check ✓/✗ cannot be derived
+  // faithfully from the report. Rule: a check is marked ✗ only on an EXACT
+  // code match; if any issue cannot be attributed to a listed check, the
+  // per-check list is hidden entirely (overall status + raw Diagnostics
+  // remain) rather than showing an invented pass state. All-✓ therefore
+  // appears only when the run produced zero issues.
+  const issueCodes = report ? new Set(report.issues.map((i) => i.code)) : new Set<string>();
+  const unattributedIssue = report
+    ? report.issues.some((i) => !report.checks.includes(i.code))
+    : false;
+  const failedChecks = new Set(
+    report ? report.checks.filter((c) => issueCodes.has(c)) : [],
+  );
+
   return (
-    <div className="p-4 space-y-6">
-      <p className="text-sm text-muted-foreground">
-        Run a structural and semantic analysis of the content graph to identify logical inconsistencies, dangling references, or missing attributes.
-      </p>
+    <div className="p-4 space-y-6" data-testid="card-data-quality">
+      <div>
+        <h3 className="text-sm font-bold mb-1">Data Quality</h3>
+        <p className="text-sm text-muted-foreground">
+          Run a structural and semantic analysis of the content graph to identify logical inconsistencies, dangling references, or missing attributes.
+        </p>
+      </div>
       
       <button
         onClick={handleValidate}
         disabled={validateContent.isPending}
+        data-testid="button-run-validation"
         className="w-full flex items-center justify-center gap-2 border border-primary text-primary h-10 px-4 font-bold text-sm transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {validateContent.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Activity className="h-4 w-4" />}
-        Execute Validation Sequence
+        Run validation
       </button>
 
       {report && (
@@ -460,6 +479,25 @@ function ValidationPanel({ contentId, onSelectObject }: { contentId: string, onS
               <div className="text-xs text-muted-foreground font-mono">Checked at {format(new Date(report.checkedAt), 'HH:mm:ss')}</div>
             </div>
           </div>
+
+          {report.checks.length > 0 && !unattributedIssue && (
+            <div className="space-y-1.5 mt-2" data-testid="list-validation-checks">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Checks</h4>
+              {report.checks.map((check) => {
+                const passed = !failedChecks.has(check);
+                return (
+                  <div key={check} className="flex items-center gap-2 text-sm" data-testid={`check-${check}`}>
+                    {passed ? (
+                      <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500 shrink-0" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                    )}
+                    <span className={passed ? "text-foreground" : "text-destructive font-semibold"}>{check}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {report.issues.length > 0 && (
             <div className="space-y-2 mt-4">

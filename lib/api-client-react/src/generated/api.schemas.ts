@@ -1004,6 +1004,29 @@ export interface Evaluation {
   createdAt: string;
 }
 
+export interface AgentLineage {
+  agentId: string;
+  snapshotId: string;
+  characterId: string;
+  samplingRunId: string | null;
+  populationId: string | null;
+  populationVersion: number | null;
+  seed: number | null;
+  /** Imported content id the population was bridged from. */
+  importId: string | null;
+  matraixId: string | null;
+  sourceUri: string | null;
+}
+
+export interface EvaluationLineage {
+  evaluationId: string;
+  kind: string;
+  simulationId: string;
+  simulationSeed: number;
+  /** @minItems 1 */
+  agents: AgentLineage[];
+}
+
 export type ProjectionInputTarget = typeof ProjectionInputTarget[keyof typeof ProjectionInputTarget];
 
 

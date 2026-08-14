@@ -67,17 +67,24 @@ export default function PopulationDetail() {
   const contextHeader = (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-serif" title={pop.name}>{formatDisplayName(pop.name)}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold font-serif" title={pop.name}>{formatDisplayName(pop.name)}</h1>
+          <span className="text-sm font-mono font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5" data-testid="text-population-version">
+            v{pop.version}
+          </span>
+        </div>
         <Link href={`/explorer?perspective=population&id=${id}`} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
           <Network className="h-4 w-4" /> View in Explorer
         </Link>
       </div>
       <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
-        <span>MatrAIx Source</span>
-        <span>Version {pop.version}</span>
+        <span className="text-primary" data-testid="text-origin">
+          Origin: {pop.provenance?.operation === "import-bridge" ? "Imported (MatrAIx)" : pop.provenance?.sourceType === "matraix" ? "Imported (MatrAIx)" : "Defined"}
+        </span>
         <span>{dimensions?.length || 0} Dimensions</span>
         <span>{rules?.length || 0} Dependency Rules</span>
         <span>{characters?.length || 0} Sampled Characters</span>
+        <span className="normal-case tracking-normal text-muted-foreground/70" title={pop.id}>ID: {pop.id}</span>
       </div>
     </div>
   );

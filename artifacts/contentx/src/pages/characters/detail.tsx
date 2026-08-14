@@ -56,8 +56,11 @@ export default function CharacterDetail() {
       </div>
       <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
         <span>Identity Record</span>
-        <span title={pop?.name}>Population: {formatDisplayName(pop?.name) || "Unknown"}</span>
-        <span>Seed: {character.provenance.seed || "N/A"}</span>
+        <span title={pop?.name}>Population: {formatDisplayName(pop?.name) || "Unknown"}{pop?.version != null ? ` v${pop.version}` : ""}</span>
+        <span>Seed: {character.provenance.seed ?? "N/A"}</span>
+        {(character.provenance.seed != null || character.provenance.strategy) && (
+          <span className="text-primary" data-testid="text-origin">Origin: Sampled</span>
+        )}
       </div>
       {isNameShortened(character.name) && (
         <div className="text-[10px] font-mono text-muted-foreground break-all normal-case tracking-normal">

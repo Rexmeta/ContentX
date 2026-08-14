@@ -22,6 +22,20 @@ import { Network, Database, Users, UserCircle, PlayCircle, GitMerge } from "luci
 
 type Perspective = "world" | "population" | "character" | "simulation" | "lineage";
 
+// Plain-English meaning per node kind, shown at the top of the inspector so a
+// reader understands what the selected concept represents. Keys match the
+// `kind` values produced by graph-layout.
+const KIND_MEANINGS: Record<string, string> = {
+  population: "A generative/statistical definition of a group.",
+  character: "A persistent identity.",
+  characterSnapshot: "An immutable resolved character state.",
+  agent: "A runtime actor.",
+  simulation: "Runtime execution.",
+  evaluation: "Assessment of behavior/outcome/persona fidelity.",
+  dependency: "A constraint between dimensions.",
+  relationship: "A semantic relation between entities.",
+};
+
 export default function Explorer() {
   const [location] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
@@ -290,6 +304,11 @@ export default function Explorer() {
                   <div className="border border-border p-4 bg-muted/10">
                     <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest mb-1">Selected Node</div>
                     <div className="text-lg font-bold uppercase tracking-wider">{selectedNode.kind}</div>
+                    {KIND_MEANINGS[selectedNode.kind] && (
+                      <div className="text-xs text-muted-foreground mt-1" data-testid="text-kind-meaning">
+                        {KIND_MEANINGS[selectedNode.kind]}
+                      </div>
+                    )}
                     <div className="text-2xl font-serif mt-2" title={selectedNode.fullLabel || selectedNode.label}>{selectedNode.label}</div>
                     {selectedNode.fullLabel && (
                       <div className="text-[10px] font-mono text-muted-foreground break-all mt-2">
@@ -374,6 +393,9 @@ export default function Explorer() {
                   <div className="border border-border p-4 bg-muted/10">
                     <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest mb-1">Relationship</div>
                     <div className="text-lg font-bold uppercase tracking-wider">{selectedEdge.type}</div>
+                    <div className="text-xs text-muted-foreground mt-1" data-testid="text-relationship-meaning">
+                      {KIND_MEANINGS.relationship}
+                    </div>
                   </div>
                   <div className="space-y-4 text-sm">
                     <div className="flex justify-between border-b border-border pb-2">

@@ -45,6 +45,7 @@ import type {
   EntityUpdate,
   Evaluation,
   EvaluationInput,
+  EvaluationLineage,
   GetPopulationDefinitionParams,
   HealthStatus,
   InteractionEvent,
@@ -4625,6 +4626,87 @@ export function useGetEvaluation<TData = Awaited<ReturnType<typeof getEvaluation
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetEvaluationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetEvaluationLineageUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/evaluations/${id}/lineage`
+}
+
+/**
+ * Walks stored references backwards: evaluation -> simulation -> agents ->
+ * snapshots -> sampling runs -> populations -> imported content (MatrAIx).
+ * Every hop is resolved from persisted relationships; a missing hop is a
+ * 409 lineage-broken error, never a silently shortened chain.
+ * @summary Resolve the full provenance chain of an evaluation back to its source
+ */
+export const getEvaluationLineage = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<EvaluationLineage> => {
+
+  return customFetch<EvaluationLineage>(getGetEvaluationLineageUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEvaluationLineageQueryKey = (id: string,) => {
+    return [
+    `/api/v1/evaluations/${id}/lineage`
+    ] as const;
+    }
+
+
+export const getGetEvaluationLineageQueryOptions = <TData = Awaited<ReturnType<typeof getEvaluationLineage>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvaluationLineage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEvaluationLineageQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvaluationLineage>>> = ({ signal }) => getEvaluationLineage(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEvaluationLineage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEvaluationLineageQueryResult = NonNullable<Awaited<ReturnType<typeof getEvaluationLineage>>>
+export type GetEvaluationLineageQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Resolve the full provenance chain of an evaluation back to its source
+ */
+
+export function useGetEvaluationLineage<TData = Awaited<ReturnType<typeof getEvaluationLineage>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvaluationLineage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEvaluationLineageQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

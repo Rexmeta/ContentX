@@ -49,6 +49,7 @@ export default function SimulationDetail() {
         <span>Seed: {sim.seed}</span>
         <span>{sim.turnsExecuted} Turns</span>
         <span className={sim.status === 'completed' ? 'text-green-500' : 'text-destructive'}>Status: {sim.status}</span>
+        <span className="text-primary" data-testid="text-origin">Origin: Simulated</span>
       </div>
     </div>
   );
