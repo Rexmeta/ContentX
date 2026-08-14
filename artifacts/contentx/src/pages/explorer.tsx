@@ -159,7 +159,8 @@ export default function Explorer() {
         nodes: [
           { label: 'Population', color: 'hsl(var(--primary))' },
           { label: 'Dimension', color: 'hsl(var(--card))' },
-          { label: 'Character', color: 'hsl(var(--secondary))' }
+          { label: 'Character', color: 'hsl(var(--secondary))' },
+          { label: 'Character Cluster', color: 'hsl(var(--secondary))' }
         ],
         edges: [
           { label: 'Has Dimension', strokeDasharray: '' },
@@ -299,7 +300,7 @@ export default function Explorer() {
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="grid grid-cols-2 gap-y-2 border-b border-border pb-4">
                       {selectedNode.metadata && Object.entries(selectedNode.metadata)
-                        .filter(([k]) => k !== 'stateBefore' && k !== 'stateAfter')
+                        .filter(([k]) => k !== 'stateBefore' && k !== 'stateAfter' && k !== 'characters')
                         .map(([k, v]) => (
                         <div key={k} className="col-span-2 sm:col-span-1">
                           <div className="text-[9px] font-mono uppercase tracking-widest">{k}</div>
@@ -337,6 +338,26 @@ export default function Explorer() {
                       </div>
                     )}
                     
+                    {selectedNode.kind === 'characterCluster' && Array.isArray(selectedNode.metadata?.characters) && (
+                      <div className="border-b border-border pb-4 mt-4">
+                        <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary mb-2">
+                          Characters in cluster ({selectedNode.metadata.characters.length})
+                        </div>
+                        <div className="max-h-72 overflow-auto custom-scrollbar space-y-1">
+                          {selectedNode.metadata.characters.map((c: { id: string; name: string }) => (
+                            <Link
+                              key={c.id}
+                              href={`/characters/${c.id}`}
+                              className="block text-xs font-mono truncate text-foreground hover:text-primary hover:underline"
+                              title={c.name}
+                            >
+                              {c.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <p className="pt-2">Internal ID: <span className="font-mono">{selectedNode.id}</span></p>
                     
                     {(selectedNode.kind === 'population' || selectedNode.kind === 'character' || selectedNode.kind === 'simulation' || selectedNode.kind === 'agent') && (

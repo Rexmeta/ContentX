@@ -62,6 +62,7 @@ export function computeWorldLayout(entities: any[], relationships: any[]): { nod
   return { nodes, edges };
 }
 
+export const CHARACTER_CLUSTER_THRESHOLD = 50;
 export function computePopulationLayout(population: any, dimensions: any[], rules: any[], characters: any[]): { nodes: GraphLayoutNode[], edges: GraphLayoutEdge[] } {
   const nodes: GraphLayoutNode[] = [];
   const edges: GraphLayoutEdge[] = [];
@@ -130,33 +131,78 @@ export function computePopulationLayout(population: any, dimensions: any[], rule
   // Start the character region safely below the last dimension row.
   const dimRows = Math.ceil(dimensions.length / 8);
   const charY = 180 + dimRows * 110 + 160;
-  characters.forEach((char, i) => {
-    const cols = Math.ceil(Math.sqrt(characters.length));
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = (col - (cols - 1) / 2) * 160;
-    const y = charY + row * 120;
 
-    nodes.push({
-      id: char.id,
-      ...labelPair(char.name),
-      sublabel: 'Character',
-      kind: 'character',
-      x,
-      y,
-      r: 12,
-      color: 'hsl(var(--secondary))',
-      metadata: { population: population.name, seed: char.provenance?.seed }
+  if (characters.length > CHARACTER_CLUSTER_THRESHOLD) {
+    // Too many characters to draw individually without labels overlapping.
+    // Group them into deterministic cluster nodes: characters are sorted by
+    // id, chunked into fixed-size groups, and each group becomes one node.
+    // Clicking a cluster shows its member list in the inspector; the layout
+    // never changes on click, so positions stay stable.
+    const sorted = [...characters].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const clusters: any[][] = [];
+    for (let i = 0; i < sorted.length; i += CHARACTER_CLUSTER_SIZE) {
+      clusters.push(sorted.slice(i, i + CHARACTER_CLUSTER_SIZE));
+    }
+    const perRow = 6;
+    clusters.forEach((group, i) => {
+      const row = Math.floor(i / perRow);
+      const inRow = i % perRow;
+      const rowCount = Math.min(perRow, clusters.length - row * perRow);
+      const x = (inRow - (rowCount - 1) / 2) * 220;
+      const y = charY + row * 150;
+      const clusterId = `char-cluster-${population.id}-${i}`;
+      nodes.push({
+        id: clusterId,
+        label: `${group.length} characters`,
+        sublabel: 'Character Cluster',
+        kind: 'characterCluster',
+        x,
+        y,
+        r: 18,
+        color: 'hsl(var(--secondary))',
+        metadata: {
+          population: population.name,
+          count: group.length,
+          characters: group.map(c => ({ id: c.id, name: c.name }))
+        }
+      });
+      edges.push({
+        id: `edge-pop-cluster-${clusterId}`,
+        source: population.id,
+        target: clusterId,
+        type: 'sampled',
+        lineType: 'dotted'
+      });
     });
+  } else {
+    characters.forEach((char, i) => {
+      const cols = Math.ceil(Math.sqrt(characters.length));
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = (col - (cols - 1) / 2) * 160;
+      const y = charY + row * 120;
 
-    edges.push({
-      id: `edge-pop-char-${char.id}`,
-      source: population.id,
-      target: char.id,
-      type: 'sampled',
-      lineType: 'dotted'
+      nodes.push({
+        id: char.id,
+        ...labelPair(char.name),
+        sublabel: 'Character',
+        kind: 'character',
+        x,
+        y,
+        r: 12,
+        color: 'hsl(var(--secondary))',
+        metadata: { population: population.name, seed: char.provenance?.seed }
+      });
+
+      edges.push({
+        id: `edge-pop-char-${char.id}`,
+        source: population.id,
+        target: char.id,
+        type: 'sampled',
+        lineType: 'dotted'
+      });
     });
-  });
+  }
 
   return { nodes, edges };
 }
@@ -451,3 +497,5 @@ export function computeLineageLayout(
 
   return { nodes, edges };
 }
+
+export const CHARACTER_CLUSTER_SIZE = 50;

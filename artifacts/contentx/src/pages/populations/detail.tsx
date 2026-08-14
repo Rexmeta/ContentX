@@ -12,7 +12,7 @@ import {
 import { format } from "date-fns";
 import { StableGraph, GraphNode, GraphEdge } from "@/components/stable-graph";
 import { computePopulationLayout } from "@/lib/graph-layout";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export default function PopulationDetail() {
   const [, params] = useRoute("/populations/:id");
@@ -37,6 +37,12 @@ export default function PopulationDetail() {
     if (!pop || !dimensions || !rules || !characters) return { nodes: [], edges: [] };
     return computePopulationLayout(pop, dimensions, rules, characters);
   }, [pop, dimensions, rules, characters]);
+
+  const [selectionId, setSelectionId] = useState<string | null>(null);
+  const selectedNode = nodes.find(n => n.id === selectionId);
+  const selectedCluster = selectedNode?.kind === 'characterCluster' && Array.isArray((selectedNode as any).metadata?.characters)
+    ? selectedNode as GraphNode & { metadata: { count: number; characters: { id: string; name: string }[] } }
+    : null;
 
   if (!isPopLoading && !pop) {
     return (
@@ -86,6 +92,9 @@ export default function PopulationDetail() {
           <StableGraph 
             nodes={nodes} 
             edges={edges}
+            selectionId={selectionId}
+            onSelectNode={(nodeId) => setSelectionId(nodeId)}
+            onEmptyClick={() => setSelectionId(null)}
           />
         </div>
         
@@ -124,6 +133,28 @@ export default function PopulationDetail() {
               </div>
             ))}
           </div>
+
+          {selectedCluster && (
+            <>
+              <div className="p-4 border-y border-border bg-muted/30">
+                <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-primary">
+                  Selected Cluster · {selectedCluster.metadata.characters.length} Characters
+                </h3>
+              </div>
+              <div className="p-4 max-h-80 overflow-auto custom-scrollbar space-y-1">
+                {selectedCluster.metadata.characters.map(c => (
+                  <Link
+                    key={c.id}
+                    href={`/characters/${c.id}`}
+                    className="block text-xs font-mono truncate text-foreground hover:text-primary hover:underline"
+                    title={c.name}
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="p-4 border-y border-border bg-muted/30 mt-auto">
             <h3 className="text-xs font-mono font-bold uppercase tracking-widest">Sampled Characters</h3>
