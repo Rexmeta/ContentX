@@ -3,6 +3,7 @@ import {
   db,
   contentsTable,
   contentVersionsTable,
+  populationsTable,
   type ContentRow,
   type ContentVersionRow,
 } from "@workspace/db";
@@ -210,8 +211,40 @@ export async function mutateGraph(
   });
 }
 
+/**
+ * Thrown when content cannot be deleted because downstream domain rows
+ * (e.g. populations bridged from a MatrAIx import) still reference it as
+ * their provenance source. Deleting it would silently break lineage.
+ */
+export class ContentReferencedError extends Error {
+  constructor(id: string, referencedBy: string) {
+    super(
+      `Content "${id}" cannot be deleted: it is still referenced as provenance by ${referencedBy}.`,
+    );
+    this.name = "ContentReferencedError";
+  }
+}
+
+/**
+ * Serialize content deletion against bridge creation (import → population).
+ * Both sides take this advisory xact lock so a delete cannot slip between
+ * the bridge's content read and its provenance-row commit.
+ */
+export function lineageLockSql(contentId: string) {
+  return sql`SELECT pg_advisory_xact_lock(hashtext(${`content-lineage:${contentId}`}))`;
+}
+
 export async function deleteContent(id: string): Promise<boolean> {
   return db.transaction(async (tx) => {
+    await tx.execute(lineageLockSql(id));
+    const [referencing] = await tx
+      .select({ id: populationsTable.id })
+      .from(populationsTable)
+      .where(sql`${populationsTable.provenance}->>'importId' = ${id}`)
+      .limit(1);
+    if (referencing) {
+      throw new ContentReferencedError(id, `population "${referencing.id}"`);
+    }
     await tx
       .delete(contentVersionsTable)
       .where(eq(contentVersionsTable.contentId, id));

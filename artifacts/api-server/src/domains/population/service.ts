@@ -113,6 +113,8 @@ export async function createPopulation(input: {
   distributions: Record<string, Distribution>;
   constraints?: PopulationConstraint[];
   samplingConfig?: SamplingConfig | null;
+  /** Origin provenance (e.g. import bridge); defaults to manual creation. */
+  provenance?: PopulationProvenance;
 }): Promise<Population> {
   validatePopulationDefinition(input, await registry());
   const row = await repo.insertPopulation({
@@ -124,7 +126,7 @@ export async function createPopulation(input: {
     distributions: input.distributions,
     constraints: input.constraints ?? [],
     samplingConfig: input.samplingConfig ?? null,
-    provenance: {
+    provenance: input.provenance ?? {
       operation: "create",
       createdAt: new Date().toISOString(),
       sourceType: "manual",
@@ -157,6 +159,8 @@ export async function createDependencyRule(input: {
   conditions: RuleCondition[];
   effect: RuleEffect;
   strength?: number | null;
+  /** Origin provenance (e.g. import bridge); defaults to manual creation. */
+  provenance?: PopulationProvenance;
 }): Promise<DependencyRule> {
   const populationRow = await repo.getPopulation(input.populationId);
   if (!populationRow) {
@@ -193,7 +197,7 @@ export async function createDependencyRule(input: {
       conditions: input.conditions,
       effect: input.effect,
       strength: input.strength ?? null,
-      provenance: {
+      provenance: input.provenance ?? {
         operation: "create",
         createdAt: new Date().toISOString(),
         sourceType: "manual",
@@ -315,6 +319,11 @@ export async function samplePopulation(input: {
 
   const depVersion = dependencyGraphVersion(rules);
 
+  // The run id is allocated BEFORE building character rows so every sampled
+  // character carries its SamplingRun reference (unbroken lineage:
+  // snapshot → samplingRunId → populationId → import provenance).
+  const samplingRunId = newId("samplingrun");
+
   // Build + fully validate ALL character rows before writing anything;
   // then commit characters + audit in one transaction (no orphans).
   const characterRows = [];
@@ -328,6 +337,7 @@ export async function samplePopulation(input: {
           createdAt: new Date().toISOString(),
           sourceType: "population",
           populationId: population.id,
+          samplingRunId,
           seed: input.seed,
           populationVersion: population.version,
           schemaVersion: population.schemaVersion,
@@ -341,7 +351,7 @@ export async function samplePopulation(input: {
   const characterIds = characterRows.map((r) => r.id);
 
   const run = await repo.insertSamplingRunWithCharacters(characterRows, {
-    id: newId("samplingrun"),
+    id: samplingRunId,
     populationId: population.id,
     seed: input.seed,
     strategy: input.strategy,

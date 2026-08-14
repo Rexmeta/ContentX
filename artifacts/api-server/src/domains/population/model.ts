@@ -49,6 +49,15 @@ export interface PopulationProvenance {
   operation: string;
   createdAt: string;
   sourceType?: string | null;
+  /**
+   * Import lineage (sourceType "matraix"): references to the import that
+   * produced this population — never copies of the imported data.
+   */
+  importId?: string | null;
+  contentVersion?: number | null;
+  sourceUri?: string | null;
+  sourceDataset?: string | null;
+  matraixId?: string | null;
 }
 
 export interface Population {

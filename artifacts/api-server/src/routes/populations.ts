@@ -17,6 +17,7 @@ import {
   InvalidPopulationError,
   PopulationNotFoundError,
 } from "../domains/population/service";
+import { PopulationReferencedError } from "../domains/population/repository";
 import { InvalidCharacterError } from "../domains/character/service";
 import type {
   Distribution,
@@ -83,9 +84,18 @@ router.get("/v1/populations/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/v1/populations/:id", async (req, res): Promise<void> => {
-  const deleted = await populationService.deletePopulation(
-    pathParam(req.params["id"]),
-  );
+  let deleted: boolean;
+  try {
+    deleted = await populationService.deletePopulation(
+      pathParam(req.params["id"]),
+    );
+  } catch (err) {
+    if (err instanceof PopulationReferencedError) {
+      res.status(409).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
   if (!deleted) {
     res.status(404).json({ error: "Population not found" });
     return;

@@ -68,6 +68,7 @@ export async function createSnapshot(input: {
     characterSchemaVersion: character.schemaVersion,
     populationId: p.populationId ?? null,
     populationVersion: p.populationVersion ?? null,
+    samplingRunId: p.samplingRunId ?? null,
     seed: p.seed ?? null,
     dependencyGraphVersion: p.dependencyGraphVersion ?? null,
     sampleIndex: p.sampleIndex ?? null,

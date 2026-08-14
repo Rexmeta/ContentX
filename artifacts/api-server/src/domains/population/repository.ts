@@ -1,10 +1,11 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import {
   db,
   populationsTable,
   dependencyRulesTable,
   samplingRunsTable,
   charactersTable,
+  characterSnapshotsTable,
   type PopulationRow,
   type DependencyRuleRow,
   type SamplingRunRow,
@@ -44,12 +45,65 @@ export async function insertPopulation(
   return inserted;
 }
 
+/**
+ * Thrown when a population cannot be deleted because immutable downstream
+ * lineage (character snapshots, and through them agents, simulations, and
+ * evaluations) still references it. Deleting would break lineage back-tracing.
+ */
+export class PopulationReferencedError extends Error {
+  constructor(id: string, referencedBy: string) {
+    super(
+      `Population "${id}" cannot be deleted: it is still referenced by ${referencedBy}.`,
+    );
+    this.name = "PopulationReferencedError";
+  }
+}
+
 export async function deletePopulation(id: string): Promise<boolean> {
-  const deleted = await db
-    .delete(populationsTable)
-    .where(eq(populationsTable.id, id))
-    .returning({ id: populationsTable.id });
-  return deleted.length > 0;
+  return db.transaction(async (tx) => {
+    // Row lock serializes deletion against concurrent sampling (which also
+    // locks the population row before inserting its run + characters).
+    const [locked] = await tx
+      .select({ id: populationsTable.id })
+      .from(populationsTable)
+      .where(eq(populationsTable.id, id))
+      .for("update");
+    if (!locked) return false;
+
+    const [run] = await tx
+      .select({ id: samplingRunsTable.id })
+      .from(samplingRunsTable)
+      .where(eq(samplingRunsTable.populationId, id))
+      .limit(1);
+    if (run) {
+      throw new PopulationReferencedError(id, `sampling run "${run.id}"`);
+    }
+    const [snapshot] = await tx
+      .select({ id: characterSnapshotsTable.id })
+      .from(characterSnapshotsTable)
+      .where(eq(characterSnapshotsTable.populationId, id))
+      .limit(1);
+    if (snapshot) {
+      throw new PopulationReferencedError(
+        id,
+        `character snapshot "${snapshot.id}"`,
+      );
+    }
+    const [character] = await tx
+      .select({ id: charactersTable.id })
+      .from(charactersTable)
+      .where(sql`${charactersTable.provenance}->>'populationId' = ${id}`)
+      .limit(1);
+    if (character) {
+      throw new PopulationReferencedError(id, `character "${character.id}"`);
+    }
+
+    const deleted = await tx
+      .delete(populationsTable)
+      .where(eq(populationsTable.id, id))
+      .returning({ id: populationsTable.id });
+    return deleted.length > 0;
+  });
 }
 
 export async function listRulesForPopulation(
@@ -91,6 +145,18 @@ export async function insertSamplingRunWithCharacters(
   run: InsertSamplingRun,
 ): Promise<SamplingRunRow> {
   return db.transaction(async (tx) => {
+    // Lock the population row so a concurrent deletePopulation cannot pass
+    // its "no sampling runs" check while this run is being written.
+    const [locked] = await tx
+      .select({ id: populationsTable.id })
+      .from(populationsTable)
+      .where(eq(populationsTable.id, run.populationId))
+      .for("update");
+    if (!locked) {
+      throw new Error(
+        `Population "${run.populationId}" no longer exists; sampling run aborted.`,
+      );
+    }
     if (characters.length > 0) {
       await tx.insert(charactersTable).values(characters);
     }

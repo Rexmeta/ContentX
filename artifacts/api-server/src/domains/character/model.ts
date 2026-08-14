@@ -45,6 +45,8 @@ export interface CharacterProvenance {
   createdAt: string;
   sourceType?: string | null;
   populationId?: string | null;
+  /** Sampling audit lineage: the SamplingRun that produced this character. */
+  samplingRunId?: string | null;
   seed?: number | null;
   populationVersion?: number | null;
   schemaVersion?: string | null;

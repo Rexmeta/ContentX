@@ -28,6 +28,8 @@ export interface SnapshotProvenance {
   characterSchemaVersion: string;
   populationId?: string | null;
   populationVersion?: number | null;
+  /** Sampling audit lineage copied from the character at snapshot time. */
+  samplingRunId?: string | null;
   seed?: number | null;
   dependencyGraphVersion?: string | null;
   sampleIndex?: number | null;

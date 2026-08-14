@@ -129,7 +129,16 @@ router.get("/v1/content/:id", async (req, res): Promise<void> => {
 
 router.delete("/v1/content/:id", async (req, res): Promise<void> => {
   const id = pathParam(req.params["id"]);
-  const deleted = await repo.deleteContent(id);
+  let deleted: boolean;
+  try {
+    deleted = await repo.deleteContent(id);
+  } catch (err) {
+    if (err instanceof repo.ContentReferencedError) {
+      res.status(409).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
   if (!deleted) {
     res.status(404).json({ error: "Content not found" });
     return;
