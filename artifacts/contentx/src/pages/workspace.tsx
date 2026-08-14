@@ -1,3 +1,6 @@
+import { Layout } from "@/components/layout";
+import { StableGraph, GraphNode, GraphEdge } from "@/components/stable-graph";
+import { computeWorldLayout } from "@/lib/graph-layout";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useRoute, Link } from "wouter";
 import { 
@@ -33,54 +36,96 @@ export default function Workspace() {
   });
   
   const [activePanel, setActivePanel] = useState<PanelType>('inspector');
-  const [selection, setSelection] = useState<SelectionType>(null);
+  const [selectionId, setSelectionId] = useState<string | null>(null);
   
+  const selection: SelectionType = useMemo(() => {
+    if (!selectionId || !content) return null;
+    const isEntity = content.entities.some(e => e.id === selectionId);
+    if (isEntity) return { type: 'entity', id: selectionId };
+    const isRel = content.relationships.some(r => r.id === selectionId);
+    if (isRel) return { type: 'relationship', id: selectionId };
+    return null;
+  }, [selectionId, content]);
+
   // Handlers for side panels
   const openPanel = (panel: PanelType) => setActivePanel(panel);
   const handleSelect = (type: 'entity' | 'relationship', objectId: string) => {
-    setSelection({ type, id: objectId });
+    setSelectionId(objectId);
     setActivePanel('inspector');
   };
 
+  const { nodes, edges } = useMemo(() => {
+    if (!content) return { nodes: [], edges: [] };
+    return computeWorldLayout(content.entities, content.relationships);
+  }, [content]);
+
   if (isContentLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="flex flex-col items-center text-primary">
-          <Loader2 className="h-8 w-8 animate-spin mb-4" />
-          <span className="font-mono text-sm tracking-widest uppercase">Initializing Workspace...</span>
+      <Layout breadcrumbs={[{label: "ContentX"}, {label: "Workspace"}, {label: "Loading..."}]}>
+        <div className="flex h-full w-full items-center justify-center bg-background">
+          <div className="flex flex-col items-center text-primary">
+            <Loader2 className="h-8 w-8 animate-spin mb-4" />
+            <span className="font-mono text-sm tracking-widest uppercase">Initializing Workspace...</span>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (!content) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="text-center">
-          <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Graph Not Found</h2>
-          <Link href="/" className="text-primary hover:underline font-mono text-sm">Return to Dashboard</Link>
+      <Layout breadcrumbs={[{label: "ContentX"}, {label: "Workspace"}, {label: "Not Found"}]}>
+        <div className="flex h-full w-full items-center justify-center bg-background">
+          <div className="text-center">
+            <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Graph Not Found</h2>
+            <Link href="/world" className="text-primary hover:underline font-mono text-sm">Return to World</Link>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
-  return (
-    <div className="flex h-screen w-full bg-background overflow-hidden font-sans selection:bg-primary/20 text-foreground">
-      {/* BACKGROUND NOISE */}
-      <div className="fixed inset-0 bg-noise z-0"></div>
+  const contextHeader = (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <h1 className="font-bold text-xl truncate max-w-xl" title={content.title}>{content.title}</h1>
+        <span className="px-2 py-0.5 bg-muted text-xs font-mono border border-border text-muted-foreground">
+          v{content.version}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={() => openPanel('validation')}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'validation' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
+        >
+          <CheckCircle className="h-3.5 w-3.5" /> Validate
+        </button>
+        <button 
+          onClick={() => openPanel('versions')}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'versions' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
+        >
+          <GitCommit className="h-3.5 w-3.5" /> Versions
+        </button>
+        <button 
+          onClick={() => openPanel('export')}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'export' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
+        >
+          <Download className="h-3.5 w-3.5" /> Export
+        </button>
+      </div>
+    </div>
+  );
 
-      {/* LEFT SIDEBAR: ENTITIES */}
-      <div className="relative z-10 w-72 border-r border-border bg-card flex flex-col shadow-sm">
-        <div className="h-14 border-b border-border flex items-center px-4 bg-muted/30">
-          <Link href="/" className="mr-3 text-muted-foreground hover:text-primary transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-bold text-sm tracking-wide">CONTENT<span className="text-muted-foreground">X</span></span>
-          </div>
-        </div>
+  return (
+    <Layout 
+      breadcrumbs={[{label: "ContentX"}, {label: "World", href: "/world"}, {label: "Content Workspace"}]}
+      contextHeader={contextHeader}
+    >
+      <div className="flex h-full w-full bg-background overflow-hidden font-sans selection:bg-primary/20 text-foreground">
+
+        {/* LEFT SIDEBAR: ENTITIES */}
+        <div className="relative z-10 w-72 border-r border-border bg-card flex flex-col shadow-sm">
         
         <div className="flex-1 overflow-auto p-4 custom-scrollbar">
           <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4">
@@ -97,42 +142,15 @@ export default function Workspace() {
 
       {/* MAIN CONTENT: GRAPH */}
       <div className="relative z-10 flex-1 flex flex-col">
-        {/* TOPBAR */}
-        <div className="h-14 border-b border-border flex items-center justify-between px-6 bg-card/80 backdrop-blur shadow-sm">
-          <div className="flex items-center gap-4">
-            <h1 className="font-bold text-lg truncate max-w-sm" title={content.title}>{content.title}</h1>
-            <span className="px-2 py-0.5 bg-muted text-xs font-mono border border-border text-muted-foreground">
-              v{content.version}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => openPanel('validation')}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'validation' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
-            >
-              <CheckCircle className="h-3.5 w-3.5" /> Validate
-            </button>
-            <button 
-              onClick={() => openPanel('versions')}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'versions' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
-            >
-              <GitCommit className="h-3.5 w-3.5" /> Versions
-            </button>
-            <button 
-              onClick={() => openPanel('export')}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'export' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
-            >
-              <Download className="h-3.5 w-3.5" /> Export
-            </button>
-          </div>
-        </div>
-
         {/* SVG GRAPH */}
-        <div className="flex-1 relative bg-background/50 overflow-hidden">
-          <GraphView 
-            graph={content} 
-            selection={selection} 
-            onSelect={handleSelect} 
+        <div className="flex-1 relative bg-background overflow-hidden border-r border-border">
+          <StableGraph 
+            nodes={nodes} 
+            edges={edges}
+            selectionId={selectionId} 
+            onSelectNode={(id) => handleSelect('entity', id)} 
+            onSelectEdge={(id) => handleSelect('relationship', id)}
+            onEmptyClick={() => setSelectionId(null)}
           />
         </div>
       </div>
@@ -175,6 +193,7 @@ export default function Workspace() {
         </div>
       </div>
     </div>
+    </Layout>
   );
 }
 
@@ -214,133 +233,6 @@ function EntityList({ entities, selectedId, onSelect }: { entities: any[], selec
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function GraphView({ graph, selection, onSelect }: { graph: any, selection: SelectionType, onSelect: (type: 'entity'|'relationship', id: string) => void }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ w: 800, h: 600 });
-
-  useEffect(() => {
-    const updateSize = () => {
-      if (containerRef.current) {
-        setDimensions({
-          w: containerRef.current.clientWidth,
-          h: containerRef.current.clientHeight
-        });
-      }
-    };
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
-
-  const { nodes, edges } = useMemo(() => {
-    const cx = dimensions.w / 2;
-    const cy = dimensions.h / 2;
-    // Base radius on min dimension
-    const radius = Math.min(cx, cy) * 0.75; 
-    
-    // Group entities to organize them nicely on the circle
-    const sortedEntities = [...graph.entities].sort((a, b) => a.kind.localeCompare(b.kind));
-    
-    const nodeData = sortedEntities.map((ent, i) => {
-      const angle = (i / sortedEntities.length) * 2 * Math.PI - Math.PI/2;
-      return {
-        ...ent,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle),
-        angle
-      };
-    });
-
-    const nodeMap = new Map(nodeData.map(n => [n.id, n]));
-
-    const edgeData = graph.relationships.map((rel: any) => {
-      const source = nodeMap.get(rel.source);
-      const target = nodeMap.get(rel.target);
-      return { ...rel, sourceNode: source, targetNode: target };
-    }).filter((e: any) => e.sourceNode && e.targetNode);
-
-    return { nodes: nodeData, edges: edgeData };
-  }, [graph, dimensions]);
-
-  return (
-    <div ref={containerRef} className="absolute inset-0">
-      <svg width="100%" height="100%" className="absolute inset-0">
-        <defs>
-          <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
-            <polygon points="0 0, 6 2, 0 4" fill="currentColor" className="text-muted-foreground/50" />
-          </marker>
-          <marker id="arrowhead-selected" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
-            <polygon points="0 0, 6 2, 0 4" fill="hsl(var(--secondary))" />
-          </marker>
-        </defs>
-
-        {/* Edges */}
-        {edges.map((edge: any) => {
-          const isSelected = selection?.type === 'relationship' && selection.id === edge.id;
-          const isSourceSel = selection?.type === 'entity' && selection.id === edge.source;
-          const isTargetSel = selection?.type === 'entity' && selection.id === edge.target;
-          const isHighlighted = isSelected || isSourceSel || isTargetSel;
-          
-          // Quadratic bezier curve bending towards center
-          const cx = dimensions.w / 2;
-          const cy = dimensions.h / 2;
-          
-          return (
-            <path
-              key={edge.id}
-              d={`M ${edge.sourceNode.x} ${edge.sourceNode.y} Q ${cx} ${cy} ${edge.targetNode.x} ${edge.targetNode.y}`}
-              fill="none"
-              stroke={isSelected ? "hsl(var(--secondary))" : isHighlighted ? "hsl(var(--primary))" : "currentColor"}
-              strokeWidth={isHighlighted ? 2 : 1.5}
-              className={`transition-colors cursor-pointer ${isHighlighted ? 'opacity-100' : 'text-muted-foreground/20'}`}
-              markerEnd={`url(#${isSelected ? 'arrowhead-selected' : 'arrowhead'})`}
-              onClick={() => onSelect('relationship', edge.id)}
-            />
-          );
-        })}
-
-        {/* Nodes */}
-        {nodes.map(node => {
-          const isSelected = selection?.type === 'entity' && selection.id === node.id;
-          
-          // Align text radially outwards
-          const textOffset = 20;
-          const tx = node.x + textOffset * Math.cos(node.angle);
-          const ty = node.y + textOffset * Math.sin(node.angle);
-          const textAnchor = Math.cos(node.angle) > 0 ? "start" : "end";
-
-          return (
-            <g
-              key={node.id}
-              className="cursor-pointer group"
-              onClick={() => onSelect('entity', node.id)}
-            >
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={8}
-                fill={isSelected ? "hsl(var(--primary))" : "hsl(var(--background))"}
-                stroke={isSelected ? "hsl(var(--primary))" : "currentColor"}
-                strokeWidth={2}
-                className={`transition-all duration-200 ${isSelected ? 'scale-125' : 'text-border group-hover:stroke-primary group-hover:scale-110'}`}
-              />
-              <text
-                x={tx}
-                y={ty}
-                textAnchor={textAnchor}
-                alignmentBaseline="middle"
-                className={`text-[11px] font-mono transition-colors pointer-events-none ${isSelected ? 'fill-foreground font-bold' : 'fill-muted-foreground group-hover:fill-foreground'}`}
-              >
-                {node.name}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
     </div>
   );
 }
