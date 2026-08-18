@@ -1,5 +1,8 @@
 # Output → Workflow → Operation → 기존 기능 매핑
 
+> **v2 reframe:** 이 문서는 Architecture v2(`docs/architecture-v2.md`)의
+> Output Engine(§F) 워크플로 카탈로그로 채택되었다. 방향이 일치하며 상충 없음.
+
 > 기준: 2026-08-18. "기존 ContentX 기능/API" 열은 `artifacts/api-server/src/routes/*` 에서 실제로 확인한 엔드포인트만 기재한다. 없는 것은 **신규 필요**로 명시한다.
 >
 > 범례 — 스텝 상태: ✓ Required · ● Recommended · ○ Optional

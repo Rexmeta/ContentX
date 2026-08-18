@@ -1,5 +1,11 @@
 # ContentX — Target State
 
+> **v2 reframe:** `docs/architecture-v2.md` reframes the product as an
+> output-first Creative Content Engine. This document remains valid as the
+> *simulation branch* (Population → Character → Agent → Simulation →
+> Evaluation) that supplies personas and behavioral evidence to the v2
+> engines; its binding decisions are reaffirmed there.
+
 ContentX is an **AI-native canonical content graph and world modeling platform**: it represents people, characters, populations, worlds, relationships, events, goals, conflicts, behaviors and rules, then uses AI agents to generate, simulate, transform, evaluate and project that canonical model into multiple content/runtime formats.
 
 Core pipeline (final structure):

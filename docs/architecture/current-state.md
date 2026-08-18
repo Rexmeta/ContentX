@@ -1,5 +1,8 @@
 # ContentX — Current State (Architecture Audit)
 
+> **v2 reframe:** this audit's findings (esp. §3 coupling hotspots) are carried
+> forward into `docs/architecture-v2.md` and `docs/domain-map-v2.md` §3.
+
 Audited: 2026-08-13. Monorepo: pnpm workspace; API server (Express + Drizzle/Postgres), web app (React + Vite), contract-first OpenAPI → Orval codegen (`@workspace/api-zod`, `@workspace/api-client-react`).
 
 ## 1. Canonical data model

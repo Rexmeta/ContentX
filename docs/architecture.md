@@ -1,5 +1,10 @@
 # ContentX Architecture
 
+> **v2 reframe:** the product is now framed as an output-first AI Creative
+> Content Engine — see `docs/architecture-v2.md` (framing, six engines) and
+> `docs/domain-map-v2.md` (domain → source map). This document remains
+> accurate for the canonical-model core described below.
+
 ContentX is a platform-independent AI Content Engine. Canonical structured
 content is created, edited, validated, versioned, exported, and projected to
 external platforms. RoleplayX is one downstream projection target, never the
