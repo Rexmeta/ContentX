@@ -2591,7 +2591,7 @@ components:
       properties:
         target:
           type: string
-          enum: [roleplayx, novel]
+          enum: [roleplayx, novel, business]
         contentId:
           type: string
           minLength: 1
@@ -2657,7 +2657,7 @@ components:
       properties:
         target:
           type: string
-          enum: [roleplayx, novel]
+          enum: [roleplayx, novel, business]
         payload:
           type: object
           additionalProperties: true

@@ -1033,6 +1033,7 @@ export type ProjectionInputTarget = typeof ProjectionInputTarget[keyof typeof Pr
 export const ProjectionInputTarget = {
   roleplayx: 'roleplayx',
   novel: 'novel',
+  business: 'business',
 } as const;
 
 /**
@@ -1101,6 +1102,7 @@ export type ProjectionResultTarget = typeof ProjectionResultTarget[keyof typeof 
 export const ProjectionResultTarget = {
   roleplayx: 'roleplayx',
   novel: 'novel',
+  business: 'business',
 } as const;
 
 /**

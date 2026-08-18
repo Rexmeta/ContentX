@@ -18,7 +18,7 @@ import type { Evaluation } from "../evaluation/model";
  *   canonical/runtime sources it was derived from.
  */
 
-export const PROJECTION_TARGETS = ["roleplayx", "novel"] as const;
+export const PROJECTION_TARGETS = ["roleplayx", "novel", "business"] as const;
 export type ProjectionTarget = (typeof PROJECTION_TARGETS)[number];
 
 /** Everything an adapter may read. At least one source must be present. */

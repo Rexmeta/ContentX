@@ -1099,7 +1099,7 @@ export const ExportContentResponse = zod.object({
 
 
 export const CreateProjectionBody = zod.union([zod.unknown(),zod.unknown()]).and(zod.object({
-  "target": zod.enum(['roleplayx', 'novel']),
+  "target": zod.enum(['roleplayx', 'novel', 'business']),
   "contentId": zod.string().min(1).optional(),
   "simulationId": zod.string().min(1).optional()
 })).describe('At least one of contentId or simulationId must be provided.')
@@ -1110,7 +1110,7 @@ export const createProjectionResponseProvenanceMax = 3;
 
 
 export const CreateProjectionResponse = zod.object({
-  "target": zod.enum(['roleplayx', 'novel']),
+  "target": zod.enum(['roleplayx', 'novel', 'business']),
   "payload": zod.record(zod.string(), zod.unknown()).describe('Runtime-specific JSON owned entirely by the adapter.'),
   "provenance": zod.array(zod.union([zod.object({
   "layer": zod.enum(['canonical']),

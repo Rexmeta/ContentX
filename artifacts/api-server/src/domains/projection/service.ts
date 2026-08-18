@@ -15,6 +15,7 @@ import {
 } from "./contract";
 import { roleplayxAdapter } from "./roleplayxAdapter";
 import { novelAdapter } from "./novelAdapter";
+import { businessAdapter } from "./businessAdapter";
 
 export {
   InvalidProjectionError,
@@ -25,6 +26,7 @@ export {
 const adapters: Record<ProjectionTarget, ProjectionAdapter> = {
   roleplayx: roleplayxAdapter,
   novel: novelAdapter,
+  business: businessAdapter,
 };
 
 export class ContentNotFoundError extends Error {

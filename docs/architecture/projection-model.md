@@ -40,11 +40,19 @@ Provenance chains are ordered `canonical → simulation → projection`:
 | --- | --- | --- | --- |
 | `roleplayx` | 2.0.0 | graph and/or simulation | none (deterministic) |
 | `novel` | 1.0.0 | graph and/or simulation | LLM, strict-validated |
+| `business` | 1.0.0 | graph and/or simulation | none (deterministic) |
 
 RoleplayX v2 maps simulation bundles to scenario concepts: participants +
 snapshot behavioral profiles → `personas` (traits), trace utterances/outcome
 → `recommendedFlow`, simulation config → `environment`, evaluation kinds →
 `evaluationContract`. Field mapping: `docs/projections/roleplayx.md`.
+
+The Business adapter produces a negotiation case study / training scenario:
+graph worlds/conflicts and simulation config → `background`, participants +
+snapshot behavioral profiles → `stakeholders` (interests, profile), trace
+utterances/decisions → `decisionPoints`, simulation outcome + evaluations →
+`outcomeAnalysis`, plus derived `learningObjectives` and
+`discussionQuestions`. Deterministic — no LLM, `modelVersion` is null.
 
 The Novel adapter proves multi-projection: it consumes the same canonical
 graph using only canonical vocabulary (entities, relationships,
@@ -55,7 +63,7 @@ implementing the same contract.
 
 ## API
 
-- `POST /v1/projections` `{ target: roleplayx|novel, contentId?, simulationId? }`
+- `POST /v1/projections` `{ target: roleplayx|novel|business, contentId?, simulationId? }`
   → `ProjectionResult` (computed on demand, not persisted).
   Errors: 400 (no source / bad input), 404 (unknown content or simulation),
   502 (LLM failure or invalid output).

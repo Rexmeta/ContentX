@@ -145,7 +145,7 @@ export default function Overview() {
       metrics: [
         { label: "Roleplay", value: "Available" },
         { label: "Novel", value: "Available" },
-        { label: "Business Scenario", value: "Planned" }
+        { label: "Business Scenario", value: "Available" }
       ]
     }
   ];

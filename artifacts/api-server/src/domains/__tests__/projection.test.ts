@@ -19,6 +19,7 @@ import {
   type ProvenanceLink,
 } from "../projection/contract";
 import { roleplayxAdapter } from "../projection/roleplayxAdapter";
+import { businessAdapter } from "../projection/businessAdapter";
 import { validContentGraph } from "./fixtures";
 import type { Simulation, InteractionEvent } from "../simulation/model";
 import type { CharacterSnapshot } from "../character/snapshotModel";
@@ -139,6 +140,9 @@ describe("projection contract", () => {
     ).rejects.toThrow(InvalidProjectionError);
     await expect(
       novelAdapter.project({ graph: null, simulation: null }),
+    ).rejects.toThrow(InvalidProjectionError);
+    await expect(
+      businessAdapter.project({ graph: null, simulation: null }),
     ).rejects.toThrow(InvalidProjectionError);
   });
 
@@ -301,6 +305,93 @@ describe("roleplayx adapter v2 (simulation source)", () => {
     });
     expect(payload.evaluationContract.kinds).toContain("behavior");
     expect(payload.objectives.some((o) => o.includes("Q3 budget"))).toBe(true);
+  });
+});
+
+describe("business adapter (deterministic case study)", () => {
+  it("maps simulation trace/evaluations to background, stakeholders, decision points and outcome analysis", async () => {
+    const bundle = makeSimulationBundle();
+    const result = await businessAdapter.project({
+      graph: null,
+      simulation: bundle,
+    });
+    expect(result.target).toBe("business");
+    const payload = result.payload as {
+      title: string;
+      background: string;
+      stakeholders: { id: string; role: string; profile: string[] }[];
+      decisionPoints: { turn: number; actor: string; description: string }[];
+      outcomeAnalysis: {
+        resolution: string;
+        agreementReached: boolean;
+        turnsUsed: number;
+        evaluationFindings: string[];
+      };
+      learningObjectives: string[];
+      discussionQuestions: string[];
+    };
+    expect(payload.title).toBe("Budget negotiation");
+    expect(payload.background).toContain("Q3 budget");
+    expect(payload.stakeholders).toHaveLength(2);
+    expect(
+      payload.stakeholders.find((s) => s.id === "character_a")!.profile,
+    ).toContain("risk_tolerance: high");
+    expect(
+      payload.decisionPoints.some((d) =>
+        d.description.includes("We need more budget"),
+      ),
+    ).toBe(true);
+    expect(payload.outcomeAnalysis.agreementReached).toBe(true);
+    expect(payload.outcomeAnalysis.turnsUsed).toBe(4);
+    expect(payload.outcomeAnalysis.resolution).toBe("Agreement reached.");
+    expect(
+      payload.outcomeAnalysis.evaluationFindings.some((f) =>
+        f.includes("behavior"),
+      ),
+    ).toBe(true);
+    expect(payload.learningObjectives.length).toBeGreaterThan(0);
+    expect(payload.discussionQuestions.length).toBeGreaterThan(0);
+  });
+
+  it("projects the canonical graph without mutating it and with valid provenance", async () => {
+    const graph = validContentGraph();
+    const serialized = JSON.stringify(graph);
+    // Canonical model must not carry business-specific vocabulary.
+    for (const forbidden of [
+      "stakeholders",
+      "decisionPoints",
+      "outcomeAnalysis",
+      "learningObjectives",
+      "discussionQuestions",
+    ]) {
+      expect(serialized).not.toContain(forbidden);
+    }
+    const result = await businessAdapter.project({ graph, simulation: null });
+    expect(JSON.stringify(graph)).toBe(serialized);
+    expect(result.provenance.map((l) => l.layer)).toEqual([
+      "canonical",
+      "projection",
+    ]);
+    expect(() => validateProvenanceChain(result.provenance)).not.toThrow();
+    const link = result.provenance.find((l) => l.layer === "projection")!;
+    expect(link).toMatchObject({
+      adapter: "business",
+      adapterVersion: "1.0.0",
+      modelVersion: null,
+    });
+  });
+
+  it("carries the full canonical → simulation → projection chain when both sources are present", async () => {
+    const result = await businessAdapter.project({
+      graph: validContentGraph(),
+      simulation: makeSimulationBundle(),
+    });
+    expect(result.provenance.map((l) => l.layer)).toEqual([
+      "canonical",
+      "simulation",
+      "projection",
+    ]);
+    expect(() => validateProvenanceChain(result.provenance)).not.toThrow();
   });
 });
 

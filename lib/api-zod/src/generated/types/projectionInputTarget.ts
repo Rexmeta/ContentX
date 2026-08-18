@@ -12,4 +12,5 @@ export type ProjectionInputTarget = typeof ProjectionInputTarget[keyof typeof Pr
 export const ProjectionInputTarget = {
   roleplayx: 'roleplayx',
   novel: 'novel',
+  business: 'business',
 } as const;
