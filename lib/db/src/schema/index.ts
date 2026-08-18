@@ -13,5 +13,6 @@ export * from "./characterSnapshots";
 export * from "./agents";
 export * from "./agentStates";
 export * from "./simulations";
+export * from "./workflows";
 export * from "./interactionEvents";
 export * from "./evaluations";

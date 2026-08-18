@@ -4,6 +4,10 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import Overview from '@/pages/overview';
+import Home from '@/pages/home';
+import Create from '@/pages/workflows/create';
+import WorkflowsList from '@/pages/workflows/list';
+import WorkflowDetail from '@/pages/workflows/detail';
 import World from '@/pages/world';
 import Workspace from '@/pages/workspace';
 import PopulationsList from '@/pages/populations/list';
@@ -35,7 +39,12 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Overview} />
+      <Route path="/" component={Home} />
+      <Route path="/create" component={Create} />
+      <Route path="/workflows" component={WorkflowsList} />
+      <Route path="/workflows/:id" component={WorkflowDetail} />
+      
+      <Route path="/overview" component={Overview} />
       <Route path="/world" component={World} />
       <Route path="/content/:id" component={Workspace} />
       

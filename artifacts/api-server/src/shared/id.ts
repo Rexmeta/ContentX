@@ -23,7 +23,9 @@ export type IdPrefix =
   | "agentstate"
   | "simulation"
   | "interaction"
-  | "evaluation";
+  | "evaluation"
+  | "workflow"
+  | "step";
 
 /** Stable prefixed identifiers. Never use array indexes as identity. */
 export function newId(prefix: IdPrefix): string {

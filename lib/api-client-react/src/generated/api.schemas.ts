@@ -1289,6 +1289,198 @@ export interface DashboardSummary {
   recentContent: ContentSummary[];
 }
 
+export type OutputIntentOutputType = typeof OutputIntentOutputType[keyof typeof OutputIntentOutputType];
+
+
+export const OutputIntentOutputType = {
+  movie: 'movie',
+  novel: 'novel',
+  roleplay: 'roleplay',
+  'product-reaction': 'product-reaction',
+  game: 'game',
+  advertisement: 'advertisement',
+  remix: 'remix',
+  'external-transform': 'external-transform',
+} as const;
+
+/**
+ * AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }
+ */
+export type OutputIntentExtractedInputs = {[key: string]: string};
+
+export interface OutputIntent {
+  outputType: OutputIntentOutputType;
+  /** User's original wording (empty when a choice was used without a description) */
+  description: string;
+  /** AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... } */
+  extractedInputs: OutputIntentExtractedInputs;
+}
+
+export type WorkflowStepBindingParams = { [key: string]: unknown };
+
+export interface WorkflowStepBinding {
+  /** Executor action key (e.g. draft_story, generate_personas, run_simulation) */
+  action: string;
+  /** Human-readable existing API the step reuses (e.g. POST /v1/sampling) */
+  api: string;
+  params?: WorkflowStepBindingParams;
+}
+
+export type WorkflowStepType = typeof WorkflowStepType[keyof typeof WorkflowStepType];
+
+
+export const WorkflowStepType = {
+  input: 'input',
+  generate: 'generate',
+  extract: 'extract',
+  analyze: 'analyze',
+  transform: 'transform',
+  compose: 'compose',
+  remix: 'remix',
+  simulate: 'simulate',
+  validate: 'validate',
+  compare: 'compare',
+  export: 'export',
+  project: 'project',
+} as const;
+
+export type WorkflowStepImportance = typeof WorkflowStepImportance[keyof typeof WorkflowStepImportance];
+
+
+export const WorkflowStepImportance = {
+  required: 'required',
+  recommended: 'recommended',
+  optional: 'optional',
+} as const;
+
+export type WorkflowStepStatus = typeof WorkflowStepStatus[keyof typeof WorkflowStepStatus];
+
+
+export const WorkflowStepStatus = {
+  pending: 'pending',
+  ready: 'ready',
+  running: 'running',
+  complete: 'complete',
+  failed: 'failed',
+  skipped: 'skipped',
+} as const;
+
+/**
+ * Step outcome summary recorded by the executor
+ * @nullable
+ */
+export type WorkflowStepResult = { [key: string]: unknown } | null;
+
+export interface WorkflowStep {
+  id: string;
+  type: WorkflowStepType;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  importance: WorkflowStepImportance;
+  status: WorkflowStepStatus;
+  /** Artifact keys this step consumes */
+  input: string[];
+  /** Artifact keys this step produces */
+  output: string[];
+  /** Ids of steps that must complete first */
+  dependencies: string[];
+  binding?: WorkflowStepBinding | null;
+  /**
+     * Step outcome summary recorded by the executor
+     * @nullable
+     */
+  result?: WorkflowStepResult;
+  /** @nullable */
+  error?: string | null;
+}
+
+/**
+ * Artifact key → resource id (scenarioId, contentId, simulationId, …)
+ */
+export type WorkflowRecordArtifacts = {[key: string]: string};
+
+export type WorkflowRecordStatus = typeof WorkflowRecordStatus[keyof typeof WorkflowRecordStatus];
+
+
+export const WorkflowRecordStatus = {
+  draft: 'draft',
+  running: 'running',
+  complete: 'complete',
+  failed: 'failed',
+} as const;
+
+export interface WorkflowRecord {
+  id: string;
+  title: string;
+  intent: OutputIntent;
+  steps: WorkflowStep[];
+  /** Artifact key → resource id (scenarioId, contentId, simulationId, …) */
+  artifacts: WorkflowRecordArtifacts;
+  status: WorkflowRecordStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowInput {
+  /** @minLength 1 */
+  title: string;
+  intent: OutputIntent;
+  steps: WorkflowStep[];
+}
+
+export type WorkflowUpdateArtifacts = {[key: string]: string};
+
+export type WorkflowUpdateStatus = typeof WorkflowUpdateStatus[keyof typeof WorkflowUpdateStatus];
+
+
+export const WorkflowUpdateStatus = {
+  draft: 'draft',
+  running: 'running',
+  complete: 'complete',
+  failed: 'failed',
+} as const;
+
+export interface WorkflowUpdate {
+  /** @minLength 1 */
+  title?: string;
+  steps?: WorkflowStep[];
+  artifacts?: WorkflowUpdateArtifacts;
+  status?: WorkflowUpdateStatus;
+}
+
+export type WorkflowPlanInputOutputType = typeof WorkflowPlanInputOutputType[keyof typeof WorkflowPlanInputOutputType];
+
+
+export const WorkflowPlanInputOutputType = {
+  movie: 'movie',
+  novel: 'novel',
+  roleplay: 'roleplay',
+  'product-reaction': 'product-reaction',
+  game: 'game',
+  advertisement: 'advertisement',
+  remix: 'remix',
+  'external-transform': 'external-transform',
+} as const;
+
+/**
+ * Either outputType (choice) or description (natural language) is required; both may be given.
+ */
+export interface WorkflowPlanInput {
+  outputType?: WorkflowPlanInputOutputType;
+  description?: string;
+}
+
+/**
+ * User-provided inputs for this step (e.g. idea text, sample size)
+ */
+export type WorkflowStepRunInputParams = { [key: string]: unknown };
+
+export interface WorkflowStepRunInput {
+  /** User-provided inputs for this step (e.g. idea text, sample size) */
+  params?: WorkflowStepRunInputParams;
+}
+
 export type GetPopulationDefinitionParams = {
 /**
  * @minimum 1

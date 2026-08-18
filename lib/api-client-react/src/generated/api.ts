@@ -74,7 +74,12 @@ import type {
   SynthesizeResult,
   ValidationReport,
   VersionInfo,
-  VersionInput
+  VersionInput,
+  WorkflowInput,
+  WorkflowPlanInput,
+  WorkflowRecord,
+  WorkflowStepRunInput,
+  WorkflowUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -4718,6 +4723,519 @@ export function useGetEvaluationLineage<TData = Awaited<ReturnType<typeof getEva
 
 
 
+
+export const getListWorkflowsUrl = () => {
+
+
+
+
+  return `/api/v1/workflows`
+}
+
+/**
+ * @summary List saved workflows
+ */
+export const listWorkflows = async ( options?: Parameters<typeof customFetch>[1]): Promise<WorkflowRecord[]> => {
+
+  return customFetch<WorkflowRecord[]>(getListWorkflowsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWorkflowsQueryKey = () => {
+    return [
+    `/api/v1/workflows`
+    ] as const;
+    }
+
+
+export const getListWorkflowsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkflows>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkflows>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkflowsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkflows>>> = ({ signal }) => listWorkflows({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkflows>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorkflowsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkflows>>>
+export type ListWorkflowsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List saved workflows
+ */
+
+export function useListWorkflows<TData = Awaited<ReturnType<typeof listWorkflows>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkflows>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorkflowsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateWorkflowUrl = () => {
+
+
+
+
+  return `/api/v1/workflows`
+}
+
+/**
+ * @summary Create a workflow directly (without the AI planner)
+ */
+export const createWorkflow = async (workflowInput: WorkflowInput, options?: Parameters<typeof customFetch>[1]): Promise<WorkflowRecord> => {
+
+  return customFetch<WorkflowRecord>(getCreateWorkflowUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workflowInput)
+  }
+);}
+
+
+
+
+
+export const getCreateWorkflowMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkflow>>, TError,{data: BodyType<WorkflowInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorkflow>>, TError,{data: BodyType<WorkflowInput>}, TContext> => {
+
+const mutationKey = ['createWorkflow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorkflow>>, {data: BodyType<WorkflowInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWorkflow(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkflowMutationResult = NonNullable<Awaited<ReturnType<typeof createWorkflow>>>
+    export type CreateWorkflowMutationBody = BodyType<WorkflowInput>
+    export type CreateWorkflowMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Create a workflow directly (without the AI planner)
+ */
+export const useCreateWorkflow = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkflow>>, TError,{data: BodyType<WorkflowInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWorkflow>>,
+        TError,
+        {data: BodyType<WorkflowInput>},
+        TContext
+      > => {
+      return useMutation(getCreateWorkflowMutationOptions(options));
+    }
+
+export const getPlanWorkflowUrl = () => {
+
+
+
+
+  return `/api/v1/workflows/plan`
+}
+
+/**
+ * @summary Resolve an output intent (choice or natural language) into a recommended workflow and persist it
+ */
+export const planWorkflow = async (workflowPlanInput: WorkflowPlanInput, options?: Parameters<typeof customFetch>[1]): Promise<WorkflowRecord> => {
+
+  return customFetch<WorkflowRecord>(getPlanWorkflowUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workflowPlanInput)
+  }
+);}
+
+
+
+
+
+export const getPlanWorkflowMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planWorkflow>>, TError,{data: BodyType<WorkflowPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof planWorkflow>>, TError,{data: BodyType<WorkflowPlanInput>}, TContext> => {
+
+const mutationKey = ['planWorkflow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof planWorkflow>>, {data: BodyType<WorkflowPlanInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  planWorkflow(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PlanWorkflowMutationResult = NonNullable<Awaited<ReturnType<typeof planWorkflow>>>
+    export type PlanWorkflowMutationBody = BodyType<WorkflowPlanInput>
+    export type PlanWorkflowMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Resolve an output intent (choice or natural language) into a recommended workflow and persist it
+ */
+export const usePlanWorkflow = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof planWorkflow>>, TError,{data: BodyType<WorkflowPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof planWorkflow>>,
+        TError,
+        {data: BodyType<WorkflowPlanInput>},
+        TContext
+      > => {
+      return useMutation(getPlanWorkflowMutationOptions(options));
+    }
+
+export const getGetWorkflowUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/workflows/${id}`
+}
+
+/**
+ * @summary Get a workflow
+ */
+export const getWorkflow = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<WorkflowRecord> => {
+
+  return customFetch<WorkflowRecord>(getGetWorkflowUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWorkflowQueryKey = (id: string,) => {
+    return [
+    `/api/v1/workflows/${id}`
+    ] as const;
+    }
+
+
+export const getGetWorkflowQueryOptions = <TData = Awaited<ReturnType<typeof getWorkflow>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkflow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWorkflowQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkflow>>> = ({ signal }) => getWorkflow(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkflow>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWorkflowQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkflow>>>
+export type GetWorkflowQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a workflow
+ */
+
+export function useGetWorkflow<TData = Awaited<ReturnType<typeof getWorkflow>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkflow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWorkflowQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateWorkflowUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/workflows/${id}`
+}
+
+/**
+ * @summary Update a workflow (title, steps, artifacts, status)
+ */
+export const updateWorkflow = async (id: string,
+    workflowUpdate: WorkflowUpdate, options?: Parameters<typeof customFetch>[1]): Promise<WorkflowRecord> => {
+
+  return customFetch<WorkflowRecord>(getUpdateWorkflowUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workflowUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateWorkflowMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkflow>>, TError,{id: string;data: BodyType<WorkflowUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWorkflow>>, TError,{id: string;data: BodyType<WorkflowUpdate>}, TContext> => {
+
+const mutationKey = ['updateWorkflow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWorkflow>>, {id: string;data: BodyType<WorkflowUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWorkflow(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWorkflowMutationResult = NonNullable<Awaited<ReturnType<typeof updateWorkflow>>>
+    export type UpdateWorkflowMutationBody = BodyType<WorkflowUpdate>
+    export type UpdateWorkflowMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Update a workflow (title, steps, artifacts, status)
+ */
+export const useUpdateWorkflow = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkflow>>, TError,{id: string;data: BodyType<WorkflowUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWorkflow>>,
+        TError,
+        {id: string;data: BodyType<WorkflowUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateWorkflowMutationOptions(options));
+    }
+
+export const getDeleteWorkflowUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/workflows/${id}`
+}
+
+/**
+ * @summary Delete a workflow
+ */
+export const deleteWorkflow = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteWorkflowUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteWorkflowMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWorkflow>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWorkflow>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteWorkflow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWorkflow>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteWorkflow(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWorkflowMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWorkflow>>>
+
+    export type DeleteWorkflowMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Delete a workflow
+ */
+export const useDeleteWorkflow = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWorkflow>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWorkflow>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteWorkflowMutationOptions(options));
+    }
+
+export const getRunWorkflowStepUrl = (id: string,
+    stepId: string,) => {
+
+
+
+
+  return `/api/v1/workflows/${id}/steps/${stepId}/run`
+}
+
+/**
+ * @summary Execute one workflow step against the existing engine and record its status/result
+ */
+export const runWorkflowStep = async (id: string,
+    stepId: string,
+    workflowStepRunInput: WorkflowStepRunInput, options?: Parameters<typeof customFetch>[1]): Promise<WorkflowRecord> => {
+
+  return customFetch<WorkflowRecord>(getRunWorkflowStepUrl(id,stepId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workflowStepRunInput)
+  }
+);}
+
+
+
+
+
+export const getRunWorkflowStepMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runWorkflowStep>>, TError,{id: string;stepId: string;data: BodyType<WorkflowStepRunInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runWorkflowStep>>, TError,{id: string;stepId: string;data: BodyType<WorkflowStepRunInput>}, TContext> => {
+
+const mutationKey = ['runWorkflowStep'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runWorkflowStep>>, {id: string;stepId: string;data: BodyType<WorkflowStepRunInput>}> = (props) => {
+          const {id,stepId,data} = props ?? {};
+
+          return  runWorkflowStep(id,stepId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunWorkflowStepMutationResult = NonNullable<Awaited<ReturnType<typeof runWorkflowStep>>>
+    export type RunWorkflowStepMutationBody = BodyType<WorkflowStepRunInput>
+    export type RunWorkflowStepMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Execute one workflow step against the existing engine and record its status/result
+ */
+export const useRunWorkflowStep = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runWorkflowStep>>, TError,{id: string;stepId: string;data: BodyType<WorkflowStepRunInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runWorkflowStep>>,
+        TError,
+        {id: string;stepId: string;data: BodyType<WorkflowStepRunInput>},
+        TContext
+      > => {
+      return useMutation(getRunWorkflowStepMutationOptions(options));
+    }
 
 export const getGetDashboardSummaryUrl = () => {
 

@@ -7,6 +7,7 @@ import charactersRouter from "./characters";
 import populationsRouter from "./populations";
 import agentsRouter from "./agents";
 import simulationsRouter from "./simulations";
+import workflowsRouter from "./workflows";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(charactersRouter);
 router.use(populationsRouter);
 router.use(agentsRouter);
 router.use(simulationsRouter);
+router.use(workflowsRouter);
 
 export default router;

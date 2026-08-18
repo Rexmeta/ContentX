@@ -2899,6 +2899,312 @@ export const GetEvaluationLineageResponse = zod.object({
 
 
 /**
+ * @summary List saved workflows
+ */
+export const ListWorkflowsResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+})),
+  "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListWorkflowsResponse = zod.array(ListWorkflowsResponseItem)
+
+
+/**
+ * @summary Create a workflow directly (without the AI planner)
+ */
+
+
+
+export const CreateWorkflowBody = zod.object({
+  "title": zod.string().min(1),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+}))
+})
+
+export const CreateWorkflowResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+})),
+  "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Resolve an output intent (choice or natural language) into a recommended workflow and persist it
+ */
+export const PlanWorkflowBody = zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']).optional(),
+  "description": zod.string().optional()
+}).describe('Either outputType (choice) or description (natural language) is required; both may be given.')
+
+export const PlanWorkflowResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+})),
+  "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get a workflow
+ */
+export const GetWorkflowParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetWorkflowResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+})),
+  "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update a workflow (title, steps, artifacts, status)
+ */
+export const UpdateWorkflowParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const UpdateWorkflowBody = zod.object({
+  "title": zod.string().min(1).optional(),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+})).optional(),
+  "artifacts": zod.record(zod.string(), zod.string()).optional(),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']).optional()
+})
+
+export const UpdateWorkflowResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+})),
+  "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a workflow
+ */
+export const DeleteWorkflowParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteWorkflowResponse = zod.void()
+
+
+/**
+ * @summary Execute one workflow step against the existing engine and record its status/result
+ */
+export const RunWorkflowStepParams = zod.object({
+  "id": zod.coerce.string(),
+  "stepId": zod.coerce.string()
+})
+
+export const RunWorkflowStepBody = zod.object({
+  "params": zod.record(zod.string(), zod.unknown()).optional().describe('User-provided inputs for this step (e.g. idea text, sample size)')
+})
+
+export const RunWorkflowStepResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish()
+})),
+  "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
  * @summary Aggregate stats across the content library
  */
 export const GetDashboardSummaryResponse = zod.object({
