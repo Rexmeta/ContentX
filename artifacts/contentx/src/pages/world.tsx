@@ -555,7 +555,7 @@ export default function Dashboard() {
                     value={draft.logline || ""}
                     onChange={(e) => handleDraftChange('logline', e.target.value)}
                     rows={2}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm font-medium focus:outline-none focus:border-primary transition-colors resize-none"
+                    className="w-full bg-background border border-border px-3 py-2 text-sm font-medium focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                   />
                 </div>
 
@@ -564,28 +564,28 @@ export default function Dashboard() {
                   <textarea 
                     value={draft.synopsis || ""}
                     onChange={(e) => handleDraftChange('synopsis', e.target.value)}
-                    rows={6}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed"
+                    rows={4}
+                    className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed field-sizing-content overflow-hidden"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold mb-1 uppercase text-muted-foreground">Theme</label>
-                    <input 
-                      type="text" 
+                    <textarea 
                       value={draft.theme || ""}
                       onChange={(e) => handleDraftChange('theme', e.target.value)}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+                      rows={1}
+                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1 uppercase text-muted-foreground">Stakes</label>
-                    <input 
-                      type="text" 
+                    <textarea 
                       value={draft.stakes || ""}
                       onChange={(e) => handleDraftChange('stakes', e.target.value)}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+                      rows={1}
+                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                     />
                   </div>
                 </div>
@@ -595,8 +595,8 @@ export default function Dashboard() {
                   <textarea 
                     value={draft.twist || ""}
                     onChange={(e) => handleDraftChange('twist', e.target.value)}
-                    rows={2}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none"
+                    rows={1}
+                    className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                   />
                 </div>
               </div>
@@ -696,7 +696,7 @@ export default function Dashboard() {
                   Structural Beats (Read-only)
                 </h3>
                 {draft.acts?.map((act: any, i: number) => (
-                  <details key={i} className="group border border-border bg-card open:bg-muted/10 transition-colors">
+                  <details key={i} open className="group border border-border bg-card open:bg-muted/10 transition-colors">
                     <summary className="cursor-pointer p-4 font-bold uppercase tracking-wider text-sm flex items-center justify-between hover:bg-muted/50 transition-colors">
                       {act.name}
                       <ChevronDown className="h-4 w-4 text-muted-foreground group-open:rotate-180 transition-transform" />
@@ -720,7 +720,7 @@ export default function Dashboard() {
                     <div key={i} className="border border-border p-4 bg-card">
                       <div className="font-bold text-base mb-1">{char.name}</div>
                       <div className="text-[10px] text-primary font-mono mb-3 uppercase tracking-widest">{char.role}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-3" title={char.motivation}>{char.motivation}</div>
+                      <div className="text-sm text-muted-foreground">{char.motivation}</div>
                     </div>
                   ))}
                 </div>
@@ -1289,7 +1289,7 @@ function SimilarScenariosPanel({ scenarioId, onOpen }: { scenarioId: string, onO
       <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest border-b border-border p-4 bg-muted/10 flex items-center gap-2">
         <GitMerge className="h-4 w-4" /> Similar Scenarios in Library
       </h3>
-      <div className="divide-y divide-border max-h-64 overflow-y-auto">
+      <div className="divide-y divide-border">
         {similar.map(record => (
           <div key={record.id} className="p-4 hover:bg-muted/50 transition-colors flex flex-col gap-2 group cursor-pointer" onClick={() => onOpen(record)}>
             <div className="font-bold text-sm group-hover:text-primary transition-colors">{record.title}</div>
@@ -1297,8 +1297,8 @@ function SimilarScenariosPanel({ scenarioId, onOpen }: { scenarioId: string, onO
             <div className="flex flex-wrap gap-1.5">
               {record.classification && (
                 <>
-                  <span className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono px-1 py-px uppercase truncate max-w-[100px]">{record.classification.domain}</span>
-                  <span className="bg-secondary/10 text-secondary border border-secondary/20 text-[9px] font-mono px-1 py-px uppercase truncate max-w-[100px]">{record.classification.conflictType}</span>
+                  <span className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono px-1 py-px uppercase">{record.classification.domain}</span>
+                  <span className="bg-secondary/10 text-secondary border border-secondary/20 text-[9px] font-mono px-1 py-px uppercase">{record.classification.conflictType}</span>
                 </>
               )}
             </div>
