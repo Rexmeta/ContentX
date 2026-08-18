@@ -1980,6 +1980,11 @@ components:
           items: { type: string }
           description: Transition requirements the bridge was generated against (bridge lineage only)
         synthesizedBy: { type: ["string", "null"] }
+        bridgeAnalysis:
+          description: Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)
+          oneOf:
+            - $ref: "#/components/schemas/BridgeAnalysis"
+            - type: "null"
     BridgeAnalyzeInput:
       type: object
       required: [sourceScenarioId, targetScenarioId]
@@ -2038,6 +2043,11 @@ components:
           type: string
           maxLength: 500
           description: Optional free-form guidance for the bridge generation (≤500 chars)
+        analysis:
+          description: Connection analysis from /analyze to persist with the bridge; server re-validates structure before storing
+          oneOf:
+            - $ref: "#/components/schemas/BridgeAnalysis"
+            - type: "null"
     SynthesizeResult:
       type: object
       required: [scenario, lineage]

@@ -74,7 +74,17 @@ export const CreateContentBody = zod.object({
 })).min(createContentBodyLineageParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }).optional()
 })
 
@@ -125,7 +135,17 @@ export const CreateContentResponse = zod.object({
 })).min(createContentResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
@@ -189,7 +209,17 @@ export const ImportMatraixContentResponse = zod.object({
 })).min(importMatraixContentResponseContentProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 }),
@@ -318,7 +348,17 @@ export const ListScenariosResponseItem = zod.object({
 })).min(listScenariosResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -366,7 +406,17 @@ export const CreateScenarioBody = zod.object({
 })).min(createScenarioBodyLineageParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }).optional()
 })
 
@@ -415,7 +465,17 @@ export const CreateScenarioResponse = zod.object({
 })).min(createScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -474,7 +534,17 @@ export const GetScenarioResponse = zod.object({
 })).min(getScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -563,7 +633,17 @@ export const UpdateScenarioResponse = zod.object({
 })).min(updateScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -644,7 +724,17 @@ export const SynthesizeScenarioResponse = zod.object({
 })).min(synthesizeScenarioResponseLineageParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })
 })
 
@@ -684,7 +774,17 @@ export const BridgeScenarioBody = zod.object({
   "sourceScenarioId": zod.string(),
   "targetScenarioId": zod.string(),
   "requirements": zod.array(zod.string().min(1).max(bridgeScenarioBodyRequirementsItemMax)).max(bridgeScenarioBodyRequirementsMax).describe('Adjusted transition requirements the bridge must satisfy'),
-  "instruction": zod.string().max(bridgeScenarioBodyInstructionMax).optional().describe('Optional free-form guidance for the bridge generation (≤500 chars)')
+  "instruction": zod.string().max(bridgeScenarioBodyInstructionMax).optional().describe('Optional free-form guidance for the bridge generation (≤500 chars)'),
+  "analysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis from \/analyze to persist with the bridge; server re-validates structure before storing')
 })
 
 export const bridgeScenarioResponseLineageParentsMin = 2;
@@ -722,7 +822,17 @@ export const BridgeScenarioResponse = zod.object({
 })).min(bridgeScenarioResponseLineageParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })
 })
 
@@ -788,7 +898,17 @@ export const ClassifyScenarioResponse = zod.object({
 })).min(classifyScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -847,7 +967,17 @@ export const ListSimilarScenariosResponseItem = zod.object({
 })).min(listSimilarScenariosResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 }),zod.null()]),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -909,7 +1039,17 @@ export const GetContentResponse = zod.object({
 })).min(getContentResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
@@ -992,7 +1132,17 @@ export const UpdateEntityResponse = zod.object({
 })).min(updateEntityResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
@@ -1063,7 +1213,17 @@ export const UpdateRelationshipResponse = zod.object({
 })).min(updateRelationshipResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })
@@ -1192,7 +1352,17 @@ export const ExportContentResponse = zod.object({
 })).min(exportContentResponseContentProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
   "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
-  "synthesizedBy": zod.string().nullish()
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
 })

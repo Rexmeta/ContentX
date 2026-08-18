@@ -5,6 +5,7 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { BridgeAnalysis } from './bridgeAnalysis';
 import type { LineageKind } from './lineageKind';
 import type { LineageParent } from './lineageParent';
 
@@ -25,4 +26,6 @@ export interface Lineage {
   requirements?: string[] | null;
   /** @nullable */
   synthesizedBy?: string | null;
+  /** Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only) */
+  bridgeAnalysis?: BridgeAnalysis | null;
 }

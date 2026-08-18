@@ -4,6 +4,29 @@
  * domain never depends on scenario/AI implementation modules.
  */
 
+// ---------------------------------------------------------------------------
+// Bridge analysis — stored verbatim with bridge lineage so the analysis can
+// be reviewed after the scenario is saved. Defined here (not in bridge.ts)
+// so the shared Lineage type doesn't pull in domain-layer dependencies.
+// ---------------------------------------------------------------------------
+
+export type BridgeGapStatus = "compatible" | "transition" | "conflict";
+
+export interface BridgeGapItem {
+  dimension: string;
+  status: BridgeGapStatus;
+  explanation: string;
+  requirement?: string | null;
+}
+
+export interface StoredBridgeAnalysis {
+  summary: string;
+  gaps: BridgeGapItem[];
+  requirements: string[];
+}
+
+// ---------------------------------------------------------------------------
+
 export const SCENARIO_ELEMENTS = [
   "characters",
   "conflict",
@@ -36,4 +59,6 @@ export interface Lineage {
   /** Bridge lineage only: transition requirements the bridge was generated against. */
   requirements?: string[] | null;
   synthesizedBy?: string | null;
+  /** Bridge lineage only: connection analysis produced by /analyze and stored verbatim. */
+  bridgeAnalysis?: StoredBridgeAnalysis | null;
 }

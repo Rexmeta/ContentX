@@ -400,6 +400,49 @@ describe("POST /api/v1/scenarios (save with bridge lineage)", () => {
     ]);
   });
 
+  it("saves bridgeAnalysis from lineage and stores the validated version", async () => {
+    const fullAnalysis = await mockBridgeAnalyzer(scenarioA, scenarioB);
+    const res = await request(app)
+      .post("/api/v1/scenarios")
+      .send(saveBody(bridgeLineage({ bridgeAnalysis: fullAnalysis })));
+    expect(res.status).toBe(201);
+    const lineage = insertScenario.mock.calls[0]![0].lineage as Lineage & {
+      bridgeAnalysis?: { summary: string; gaps: unknown[]; requirements: string[] } | null;
+    };
+    expect(lineage.bridgeAnalysis).not.toBeNull();
+    expect(lineage.bridgeAnalysis?.summary).toContain(scenarioA.title);
+    expect(lineage.bridgeAnalysis?.gaps).toHaveLength(9);
+    // Also present on the HTTP response body
+    expect(res.body.lineage.bridgeAnalysis).toMatchObject({
+      summary: expect.any(String),
+      gaps: expect.arrayContaining([
+        expect.objectContaining({ dimension: "timeline" }),
+      ]),
+    });
+  });
+
+  it("omits bridgeAnalysis from lineage when not supplied", async () => {
+    const res = await request(app)
+      .post("/api/v1/scenarios")
+      .send(saveBody(bridgeLineage())); // no bridgeAnalysis key
+    expect(res.status).toBe(201);
+    const lineage = insertScenario.mock.calls[0]![0].lineage as Lineage & {
+      bridgeAnalysis?: unknown;
+    };
+    expect(lineage.bridgeAnalysis ?? null).toBeNull();
+  });
+
+  it("rejects bridge lineage with a bridgeAnalysis missing dimensions", async () => {
+    const full = await mockBridgeAnalyzer(scenarioA, scenarioB);
+    const truncated = { ...full, gaps: full.gaps.slice(0, 7) }; // only 7 of 9 dimensions
+    const res = await request(app)
+      .post("/api/v1/scenarios")
+      .send(saveBody(bridgeLineage({ bridgeAnalysis: truncated })));
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/missing dimensions/i);
+    expect(insertScenario).not.toHaveBeenCalled();
+  });
+
   it("a saved bridge is a normal scenario reusable as a bridge parent", async () => {
     // Save the bridge, then register it in the mocked repo and use it as a
     // parent of a new bridge lineage — the chain must validate.

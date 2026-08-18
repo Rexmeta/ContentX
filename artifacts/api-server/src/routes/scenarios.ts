@@ -42,6 +42,7 @@ import {
   validateBridgeRequirements,
   InvalidLineageError,
 } from "../domains/scenario/lineageService";
+import type { StoredBridgeAnalysis } from "../shared/lineage";
 import * as repo from "../domains/scenario/repository";
 import { listCategories } from "../domains/scenario/categoryService";
 import {
@@ -264,6 +265,36 @@ router.post("/v1/scenarios/bridge", async (req, res): Promise<void> => {
   // Instruction is trimmed and bounded (≤500 chars, enforced by the request
   // schema) before it reaches the LLM or the lineage record.
   const instruction = parsed.data.instruction?.trim() || undefined;
+
+  // Optional analysis from the /analyze step: validate structure server-side
+  // (all 9 dimensions present, no duplicates) before storing.  The analysis is
+  // informational only — it does not influence bridge generation — so forging
+  // it does not compromise story integrity; the server validation is a
+  // structural guard that also prevents junk from landing in the DB.
+  let bridgeAnalysis: StoredBridgeAnalysis | null = null;
+  const rawAnalysis = parsed.data.analysis;
+  if (rawAnalysis != null) {
+    try {
+      const validated = validateBridgeAnalysis(rawAnalysis as Parameters<typeof validateBridgeAnalysis>[0]);
+      bridgeAnalysis = {
+        summary: validated.summary,
+        gaps: validated.gaps.map((g) => ({
+          dimension: g.dimension,
+          status: g.status,
+          explanation: g.explanation,
+          requirement: g.requirement ?? null,
+        })),
+        requirements: validated.requirements,
+      };
+    } catch (err) {
+      if (err instanceof BridgeError) {
+        res.status(400).json({ error: `Invalid bridge analysis: ${err.message}` });
+        return;
+      }
+      throw err;
+    }
+  }
+
   try {
     const scenario = await bridgeWithLLM(
       pair.source.scenario as DramaticScenario,
@@ -291,6 +322,7 @@ router.post("/v1/scenarios/bridge", async (req, res): Promise<void> => {
       instruction: instruction ?? null,
       requirements,
       synthesizedBy: scenario.amplifiedBy ?? BRIDGE_SYNTHESIZER_ID,
+      bridgeAnalysis,
     };
     res.json(BridgeScenarioResponse.parse({ scenario, lineage }));
   } catch (err) {

@@ -5,6 +5,7 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { BridgeAnalysis } from './bridgeAnalysis';
 
 export interface BridgeGenerateInput {
   sourceScenarioId: string;
@@ -21,4 +22,6 @@ export interface BridgeGenerateInput {
      * @maxLength 500
      */
   instruction?: string;
+  /** Connection analysis from /analyze to persist with the bridge; server re-validates structure before storing */
+  analysis?: BridgeAnalysis | null;
 }

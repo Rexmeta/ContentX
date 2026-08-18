@@ -459,7 +459,11 @@ export default function Dashboard() {
       sourceScenarioId: bridgeSelection[0],
       targetScenarioId: bridgeSelection[1],
       requirements: parsedBridgeRequirements,
-      instruction: bridgeInstruction.trim() || undefined
+      instruction: bridgeInstruction.trim() || undefined,
+      // Pass the server-generated analysis back so it is validated and stored
+      // with the bridge lineage. This lets the saved scenario show "why this
+      // bridge was needed" without a second LLM round-trip.
+      analysis: bridgeAnalysis ?? undefined,
     };
     bridgeScenario.mutate({ data: recipe }, {
       onSuccess: (res) => {
@@ -625,6 +629,12 @@ export default function Dashboard() {
             const lineage = (draftLineage?.kind === 'bridge' ? draftLineage : currentScenario?.lineage)!;
             const src = lineage.parents.find(p => p.role === 'source');
             const tgt = lineage.parents.find(p => p.role === 'target');
+            const analysis = lineage.bridgeAnalysis ?? null;
+            const statusIcon = (status: string) => {
+              if (status === 'compatible') return <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />;
+              if (status === 'transition') return <AlertTriangle className="h-3.5 w-3.5 text-yellow-500 shrink-0" />;
+              return <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />;
+            };
             return (
               <div className="border border-chart-3/40 bg-card shadow-sm p-4 space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
@@ -654,6 +664,44 @@ export default function Dashboard() {
                       <span key={i} className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[10px] font-mono px-1.5 py-0.5">{r}</span>
                     ))}
                   </div>
+                )}
+                {analysis && (
+                  <details className="group border border-chart-3/20 bg-chart-3/5">
+                    <summary className="cursor-pointer px-4 py-2.5 flex items-center justify-between hover:bg-chart-3/10 transition-colors">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-chart-3 flex items-center gap-2">
+                        Connection Analysis
+                        <span className="flex items-center gap-1">
+                          {analysis.gaps.map(g => (
+                            <span key={g.dimension} title={g.dimension}>
+                              {statusIcon(g.status)}
+                            </span>
+                          ))}
+                        </span>
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 text-chart-3 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <div className="border-t border-chart-3/20 px-4 py-3 space-y-3">
+                      {analysis.summary && (
+                        <p className="text-xs text-muted-foreground leading-relaxed font-serif italic border-l-2 border-chart-3/30 pl-3">
+                          {analysis.summary}
+                        </p>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {analysis.gaps.map(gap => (
+                          <div key={gap.dimension} className="flex items-start gap-2 text-xs p-2 bg-background border border-border">
+                            {statusIcon(gap.status)}
+                            <div className="min-w-0">
+                              <span className="font-mono font-bold uppercase text-[9px] tracking-wider text-muted-foreground block">{gap.dimension}</span>
+                              <span className="text-muted-foreground leading-snug">{gap.explanation}</span>
+                              {gap.requirement && (
+                                <span className="block mt-0.5 text-[10px] text-chart-3 font-medium">↳ {gap.requirement}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </details>
                 )}
               </div>
             );

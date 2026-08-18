@@ -94,6 +94,56 @@ export interface LineageParent {
   role?: LineageParentRole;
 }
 
+/**
+ * Gap dimension between the source ending and the target beginning
+ */
+export type BridgeGapDimension = typeof BridgeGapDimension[keyof typeof BridgeGapDimension];
+
+
+export const BridgeGapDimension = {
+  timeline: 'timeline',
+  location: 'location',
+  characters: 'characters',
+  goals: 'goals',
+  conflict: 'conflict',
+  relationships: 'relationships',
+  knowledge: 'knowledge',
+  threads: 'threads',
+  contradictions: 'contradictions',
+} as const;
+
+/**
+ * compatible = ✓, transition = ⚠ requires transition, conflict = ✕
+ */
+export type BridgeGapItemStatus = typeof BridgeGapItemStatus[keyof typeof BridgeGapItemStatus];
+
+
+export const BridgeGapItemStatus = {
+  compatible: 'compatible',
+  transition: 'transition',
+  conflict: 'conflict',
+} as const;
+
+export interface BridgeGapItem {
+  dimension: BridgeGapDimension;
+  /** compatible = ✓, transition = ⚠ requires transition, conflict = ✕ */
+  status: BridgeGapItemStatus;
+  explanation: string;
+  /**
+     * Draft transition requirement when status is transition/conflict
+     * @nullable
+     */
+  requirement?: string | null;
+}
+
+export interface BridgeAnalysis {
+  /** AI explanation of why (or why not) a bridge is needed */
+  summary: string;
+  gaps: BridgeGapItem[];
+  /** Draft transition requirements the user can adjust before generating */
+  requirements: string[];
+}
+
 export interface Lineage {
   /**
      * How the child was derived; null/synthesis = element remix, bridge = connecting story
@@ -111,6 +161,8 @@ export interface Lineage {
   requirements?: string[] | null;
   /** @nullable */
   synthesizedBy?: string | null;
+  /** Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only) */
+  bridgeAnalysis?: BridgeAnalysis | null;
 }
 
 export interface Provenance {
@@ -215,56 +267,6 @@ export interface BridgeAnalyzeInput {
   targetScenarioId: string;
 }
 
-/**
- * Gap dimension between the source ending and the target beginning
- */
-export type BridgeGapDimension = typeof BridgeGapDimension[keyof typeof BridgeGapDimension];
-
-
-export const BridgeGapDimension = {
-  timeline: 'timeline',
-  location: 'location',
-  characters: 'characters',
-  goals: 'goals',
-  conflict: 'conflict',
-  relationships: 'relationships',
-  knowledge: 'knowledge',
-  threads: 'threads',
-  contradictions: 'contradictions',
-} as const;
-
-/**
- * compatible = ✓, transition = ⚠ requires transition, conflict = ✕
- */
-export type BridgeGapItemStatus = typeof BridgeGapItemStatus[keyof typeof BridgeGapItemStatus];
-
-
-export const BridgeGapItemStatus = {
-  compatible: 'compatible',
-  transition: 'transition',
-  conflict: 'conflict',
-} as const;
-
-export interface BridgeGapItem {
-  dimension: BridgeGapDimension;
-  /** compatible = ✓, transition = ⚠ requires transition, conflict = ✕ */
-  status: BridgeGapItemStatus;
-  explanation: string;
-  /**
-     * Draft transition requirement when status is transition/conflict
-     * @nullable
-     */
-  requirement?: string | null;
-}
-
-export interface BridgeAnalysis {
-  /** AI explanation of why (or why not) a bridge is needed */
-  summary: string;
-  gaps: BridgeGapItem[];
-  /** Draft transition requirements the user can adjust before generating */
-  requirements: string[];
-}
-
 export interface BridgeGenerateInput {
   sourceScenarioId: string;
   targetScenarioId: string;
@@ -280,6 +282,8 @@ export interface BridgeGenerateInput {
      * @maxLength 500
      */
   instruction?: string;
+  /** Connection analysis from /analyze to persist with the bridge; server re-validates structure before storing */
+  analysis?: BridgeAnalysis | null;
 }
 
 export interface SynthesizeResult {

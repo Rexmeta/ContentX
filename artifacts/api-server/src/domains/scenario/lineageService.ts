@@ -1,11 +1,16 @@
 import * as repo from "./repository";
 import { SYNTHESIZER_ID } from "./synthesizer";
-import { BRIDGE_SYNTHESIZER_ID } from "./bridge";
+import {
+  BRIDGE_SYNTHESIZER_ID,
+  BridgeError,
+  validateBridgeAnalysis,
+} from "./bridge";
 import {
   SCENARIO_ELEMENTS,
   type BridgeRole,
   type Lineage,
   type ScenarioElement,
+  type StoredBridgeAnalysis,
 } from "../../shared/lineage";
 
 /** Thrown when client-provided lineage fails server-side invariants (→ 400). */
@@ -27,6 +32,8 @@ export interface LineageInput {
   }[];
   instruction?: string | null;
   requirements?: string[] | null;
+  /** Bridge lineage only: connection analysis to validate and persist. */
+  bridgeAnalysis?: StoredBridgeAnalysis | null;
 }
 
 function validatedInstruction(value: string | null | undefined): string | null {
@@ -149,6 +156,35 @@ async function validateBridgeLineage(input: LineageInput): Promise<Lineage> {
   const ordered = [source, target];
   const rows = await existingRows(ordered.map((p) => p.scenarioId));
 
+  // Validate and normalize bridge analysis if provided.
+  // validateBridgeAnalysis enforces the 9-dimension invariant (no missing,
+  // no duplicates) so a tampered or truncated analysis is rejected → 400.
+  let bridgeAnalysis: StoredBridgeAnalysis | null = null;
+  if (input.bridgeAnalysis != null) {
+    try {
+      const validated = validateBridgeAnalysis(
+        input.bridgeAnalysis as Parameters<typeof validateBridgeAnalysis>[0],
+      );
+      bridgeAnalysis = {
+        summary: validated.summary,
+        gaps: validated.gaps.map((g) => ({
+          dimension: g.dimension,
+          status: g.status,
+          explanation: g.explanation,
+          requirement: g.requirement ?? null,
+        })),
+        requirements: validated.requirements,
+      };
+    } catch (err) {
+      if (err instanceof BridgeError) {
+        throw new InvalidLineageError(
+          `Bridge analysis failed validation: ${err.message}`,
+        );
+      }
+      throw err;
+    }
+  }
+
   return {
     kind: "bridge",
     parents: ordered.map((p, i) => ({
@@ -160,5 +196,6 @@ async function validateBridgeLineage(input: LineageInput): Promise<Lineage> {
     instruction,
     requirements,
     synthesizedBy: BRIDGE_SYNTHESIZER_ID,
+    bridgeAnalysis,
   };
 }
