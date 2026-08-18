@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { Link } from "wouter";
 import { useListPopulations, getListPopulationsQueryKey } from "@workspace/api-client-react";
 import { Users, Loader2, FileText } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { format } from "date-fns";
 import { formatDisplayName } from "@/lib/display-name";
 
@@ -47,11 +48,10 @@ export default function PopulationsList() {
             ))}
             
             {populations?.length === 0 && (
-              <div className="col-span-full flex flex-col items-center justify-center border border-dashed border-border p-12 text-center text-muted-foreground bg-muted/10">
-                <Users className="h-8 w-8 mb-3 opacity-50" />
-                <h3 className="font-bold mb-1">No Populations</h3>
-                <p className="text-xs max-w-sm">Import a MatrAIx dataset to create populations.</p>
-              </div>
+              <EmptyState
+                icon={Users}
+                hint="가상 인구는 제품 반응 시뮬레이션 워크플로를 실행하면 자동으로 만들어져요."
+              />
             )}
           </div>
         )}

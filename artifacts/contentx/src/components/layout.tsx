@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { 
   Terminal, Globe, Users, UserCircle, PlayCircle, BarChart, Network, 
   ChevronRight, Box, LayoutGrid, PlusSquare, ListTodo, Settings2,
-  ChevronDown
+  ChevronDown, Lightbulb
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ const primaryItems = [
   { href: "/", label: "홈", icon: LayoutGrid },
   { href: "/create", label: "만들기", icon: PlusSquare },
   { href: "/workflows", label: "내 작업", icon: ListTodo },
+  { href: "/examples", label: "예시", icon: Lightbulb },
 ];
 
 const advancedItems = [

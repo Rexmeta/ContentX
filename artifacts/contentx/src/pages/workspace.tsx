@@ -21,6 +21,7 @@ import {
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { ReuseSection } from "@/components/reuse-section";
 
 type PanelType = 'inspector' | 'validation' | 'versions' | 'export';
 type SelectionType = { type: 'entity' | 'relationship', id: string } | null;
@@ -87,6 +88,7 @@ export default function Workspace() {
   }
 
   const contextHeader = (
+    <div className="space-y-3">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
         <h1 className="font-bold text-xl truncate max-w-xl" title={content.title}>{content.title}</h1>
@@ -114,6 +116,8 @@ export default function Workspace() {
           <Download className="h-3.5 w-3.5" /> Export
         </button>
       </div>
+    </div>
+      <ReuseSection sourceDescription={content.title} compact />
     </div>
   );
 

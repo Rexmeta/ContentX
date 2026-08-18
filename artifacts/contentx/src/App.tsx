@@ -21,6 +21,7 @@ import SimulationDetail from '@/pages/simulations/detail';
 import EvaluationsList from '@/pages/evaluations/list';
 import EvaluationDetail from '@/pages/evaluations/detail';
 import Explorer from '@/pages/explorer';
+import Examples from '@/pages/examples';
 import {
   Route,
   Switch,
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/create" component={Create} />
       <Route path="/workflows" component={WorkflowsList} />
       <Route path="/workflows/:id" component={WorkflowDetail} />
+      <Route path="/examples" component={Examples} />
       
       <Route path="/overview" component={Overview} />
       <Route path="/world" component={World} />

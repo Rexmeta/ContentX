@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { Link } from "wouter";
 import { useListCharacters, useListPopulations } from "@workspace/api-client-react";
 import { UserCircle, Loader2, Eye } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { formatDisplayName } from "@/lib/display-name";
 
 export default function CharactersList() {
@@ -53,11 +54,10 @@ export default function CharactersList() {
             ))}
             
             {characters?.length === 0 && (
-              <div className="col-span-full flex flex-col items-center justify-center border border-dashed border-border p-12 text-center text-muted-foreground bg-muted/10">
-                <UserCircle className="h-8 w-8 mb-3 opacity-50" />
-                <h3 className="font-bold mb-1">No Characters</h3>
-                <p className="text-xs max-w-sm">Run a Sampling operation on a Population to generate characters.</p>
-              </div>
+              <EmptyState
+                icon={UserCircle}
+                hint="캐릭터(가상 고객)는 제품 반응 시뮬레이션 워크플로의 '가상 고객 만들기' 단계에서 생성돼요."
+              />
             )}
           </div>
         )}

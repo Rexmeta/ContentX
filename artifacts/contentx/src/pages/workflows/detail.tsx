@@ -48,7 +48,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip, TooltipContent, TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 import { getNarrativeResult } from "./result-model";
+import { ReuseSection } from "@/components/reuse-section";
 
 // Catalog of executable step types the engine supports. Mirrors the server's
 // STEP_ACTIONS; adding one of these creates a runnable step with a binding.
@@ -79,11 +84,28 @@ function newStepId(): string {
   return `step_${Math.random().toString(16).slice(2, 10)}${Date.now().toString(16).slice(-6)}`;
 }
 
-// badges
+// badges — help text explains the importance levels inline (P2 inline help)
 const BADGE_MAP = {
-  required: { label: "✓ 필수", color: "border-primary/50 text-primary bg-primary/5" },
-  recommended: { label: "● 추천", color: "border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/5" },
-  optional: { label: "○ 선택", color: "border-muted-foreground/30 text-muted-foreground bg-muted/10" }
+  required: { label: "✓ 필수", color: "border-primary/50 text-primary bg-primary/5", help: "결과물을 만들기 위해 꼭 필요한 단계예요. 건너뛰거나 삭제할 수 없어요." },
+  recommended: { label: "● 추천", color: "border-blue-500/50 text-blue-600 dark:text-blue-400 bg-blue-500/5", help: "결과 품질을 높여주는 단계예요. 원하면 건너뛰어도 돼요." },
+  optional: { label: "○ 선택", color: "border-muted-foreground/30 text-muted-foreground bg-muted/10", help: "자유롭게 추가·삭제할 수 있는 단계예요." }
+};
+
+// Plain-language help per executable action (P2 inline help): what happens
+// when the step runs, without internal API vocabulary.
+const ACTION_HELP: Record<string, string> = {
+  provide_input: "여기에 적은 내용이 다음 단계들의 재료가 돼요. 언제든 다시 수정할 수 있어요.",
+  draft_story: "AI가 아이디어를 읽고 제목·로그라인·줄거리가 있는 초안을 만들어요.",
+  classify_story: "초안의 장르와 분위기를 자동으로 태그해서 나중에 찾기 쉽게 해줘요.",
+  build_world: "등장인물·장소·사건과 그 관계를 정리한 '이야기 구조'를 만들어요. 고급 도구에서 그래프로 볼 수 있어요.",
+  validate_world: "이야기 구조에 빠진 정보나 어긋난 연결이 없는지 자동으로 점검해요.",
+  project_novel: "완성된 이야기 구조를 장면과 문장이 있는 소설 형태로 바꿔요.",
+  project_roleplay: "이야기를 배경·역할·목표가 있는 롤플레이 시나리오로 바꿔요.",
+  define_audience: "제품 설명을 바탕으로 어떤 특성의 고객 집단을 만들지 정의해요.",
+  generate_personas: "정의한 특성에 따라 서로 다른 가상 고객 여러 명을 만들어요.",
+  prepare_actors: "가상 고객들이 대화 시뮬레이션에 참여할 수 있도록 자동으로 준비해요.",
+  run_simulation: "가상 고객들이 제품(또는 주제)에 대해 여러 차례 대화를 나눠요.",
+  analyze_results: "대화 내용을 분석해 긍정/부정 반응과 주요 이유를 리포트로 정리해요.",
 };
 
 export default function WorkflowDetail() {
@@ -512,6 +534,13 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
   const payload: any = projectionStep?.result?.payload;
   const narrative = getNarrativeResult(payload);
 
+  // Carry the original intent material into reuse suggestions.
+  const reuseDescription =
+    workflow.intent.description ||
+    workflow.intent.extractedInputs?.idea ||
+    workflow.intent.extractedInputs?.product ||
+    workflow.title;
+
   return (
     <div className="bg-primary/5 border border-primary/20 p-6 flex flex-col gap-6">
       <h2 className="text-lg font-bold flex items-center gap-2">
@@ -728,6 +757,13 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
           </div>
         </div>
       )}
+
+      <div className="pt-4 border-t border-primary/20">
+        <ReuseSection
+          sourceDescription={reuseDescription}
+          excludeOutputType={workflow.intent.outputType}
+        />
+      </div>
     </div>
   );
 }
@@ -842,10 +878,25 @@ function StepCard({
           <div className="p-4 flex items-start justify-between border-b border-border/50">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className={cn("text-[10px] font-mono px-1.5 py-0.5 border uppercase tracking-wider", badge.color)}>
-                  {badge.label}
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={cn("text-[10px] font-mono px-1.5 py-0.5 border uppercase tracking-wider cursor-help", badge.color)}>
+                      {badge.label}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">{badge.help}</TooltipContent>
+                </Tooltip>
                 <h3 className="font-bold">{step.title}</h3>
+                {step.binding?.action && ACTION_HELP[step.binding.action] && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-muted-foreground hover:text-foreground" data-testid={`button-step-help-${step.id}`}>
+                        <HelpCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">{ACTION_HELP[step.binding.action]}</TooltipContent>
+                  </Tooltip>
+                )}
               </div>
               {step.description && <p className="text-sm text-muted-foreground">{step.description}</p>}
               {!step.binding && (

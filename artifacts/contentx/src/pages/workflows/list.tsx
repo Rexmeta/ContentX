@@ -96,8 +96,17 @@ export default function WorkflowsList() {
                 </TableRow>
               ) : workflows?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    작업 내역이 없습니다.
+                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    <div className="font-semibold text-foreground mb-1">무엇부터 만들어볼까요?</div>
+                    <div className="text-xs mb-4">아직 작업 내역이 없어요. 예시로 시작하거나 새로 만들어보세요.</div>
+                    <div className="flex items-center justify-center gap-2">
+                      <Button asChild size="sm" data-testid="button-empty-example">
+                        <Link href="/examples">예시로 시작하기</Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline" data-testid="button-empty-create">
+                        <Link href="/create">새로 만들기</Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : workflows?.map((workflow) => {

@@ -4,6 +4,7 @@ import { useListAgents, getListAgentsQueryKey } from "@workspace/api-client-reac
 import { Terminal, Users, Database } from "lucide-react";
 import { format } from "date-fns";
 import { formatDisplayName } from "@/lib/display-name";
+import { EmptyState } from "@/components/empty-state";
 
 export default function AgentsList() {
   const { data: agents, isLoading } = useListAgents({ query: { queryKey: getListAgentsQueryKey() } });
@@ -31,11 +32,10 @@ export default function AgentsList() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : !agents || agents.length === 0 ? (
-          <div className="text-center py-16 border border-border bg-card">
-            <Terminal className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-lg font-bold">No Agents Found</h3>
-            <p className="text-sm text-muted-foreground">Agents are instantiated at the start of a simulation.</p>
-          </div>
+          <EmptyState
+            icon={Terminal}
+            hint="에이전트는 시뮬레이션이 시작될 때 자동으로 준비돼요. 제품 반응 시뮬레이션 워크플로를 실행해보세요."
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {agents.map((agent) => (

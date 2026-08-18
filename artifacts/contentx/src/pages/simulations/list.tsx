@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { Link } from "wouter";
 import { useListSimulations } from "@workspace/api-client-react";
 import { PlayCircle, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { format } from "date-fns";
 import { formatDisplayName } from "@/lib/display-name";
 
@@ -55,11 +56,10 @@ export default function SimulationsList() {
             ))}
             
             {simulations?.length === 0 && (
-              <div className="col-span-full flex flex-col items-center justify-center border border-dashed border-border p-12 text-center text-muted-foreground bg-muted/10">
-                <PlayCircle className="h-8 w-8 mb-3 opacity-50" />
-                <h3 className="font-bold mb-1">No Simulations</h3>
-                <p className="text-xs max-w-sm">Run a simulation from the API to generate traces.</p>
-              </div>
+              <EmptyState
+                icon={PlayCircle}
+                hint="시뮬레이션은 제품 반응 시뮬레이션 워크플로를 끝까지 실행하면 만들어져요."
+              />
             )}
           </div>
         )}

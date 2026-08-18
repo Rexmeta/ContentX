@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { Link } from "wouter";
 import { useListEvaluations } from "@workspace/api-client-react";
 import { BarChart, Loader2, PlayCircle } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { format } from "date-fns";
 
 export default function EvaluationsList() {
@@ -56,11 +57,10 @@ export default function EvaluationsList() {
             })}
             
             {evaluations?.length === 0 && (
-              <div className="col-span-full flex flex-col items-center justify-center border border-dashed border-border p-12 text-center text-muted-foreground bg-muted/10">
-                <BarChart className="h-8 w-8 mb-3 opacity-50" />
-                <h3 className="font-bold mb-1">No Evaluations</h3>
-                <p className="text-xs max-w-sm">Evaluations are generated after simulations complete.</p>
-              </div>
+              <EmptyState
+                icon={BarChart}
+                hint="결과 분석은 시뮬레이션이 완료된 뒤 만들어져요. 워크플로의 '결과 분석 보기' 단계에서 확인할 수 있어요."
+              />
             )}
           </div>
         )}
