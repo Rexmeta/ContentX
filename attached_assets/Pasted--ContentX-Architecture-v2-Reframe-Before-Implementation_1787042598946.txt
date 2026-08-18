@@ -1,0 +1,374 @@
+# ContentX Architecture v2 — Reframe Before Implementation
+
+You are working on the existing ContentX repository.
+
+IMPORTANT:
+Do NOT rewrite the project.
+Do NOT discard the existing Scenario system.
+Do NOT start implementing all proposed domains.
+First inspect the current repository and reframe the architecture around the new ContentX product definition.
+
+## 1. New Product Definition
+
+ContentX is an output-first AI Creative Content Engine.
+
+The user starts with a desired output, not with a predefined Scenario object.
+
+ContentX analyzes existing content and creative references, extracts reusable creative patterns, benchmarks them, generates new ideas/content, remixes existing content, reuses personas, and evaluates the generated result.
+
+Core product loop:
+
+User Intent
+→ Output Definition
+→ Reference / Existing Content
+→ Benchmark
+→ Creative Knowledge
+→ Idea / Story / Persona
+→ Generate / Remix / Transform
+→ Evaluation
+→ Final Output
+
+ContentX is NOT a Scenario Generator.
+
+Scenario is one content/output type inside ContentX.
+
+RoleplayX remains only one downstream projection target.
+
+## 2. Core Engines
+
+Reframe the architecture around these six engines:
+
+1. Output Engine
+2. Reference Engine
+3. Benchmark Engine
+4. Creative Engine
+5. Remix Engine
+6. Evaluation Engine
+
+Shared infrastructure:
+
+- Creative Graph
+- Canonical Content Model
+- Provenance
+- Versioning
+- Validation
+- Search
+- AI Provider abstraction
+- Projection
+
+Do NOT create all these modules immediately.
+
+First map the current implementation to this architecture.
+
+## 3. Existing Features Must Be Preserved
+
+Inspect and explicitly map the existing:
+
+- Content domain
+- Content Graph
+- Scenario Library
+- Scenario Amplification
+- Scenario Classification
+- Scenario Synthesis
+- Scenario Lineage
+- Provenance
+- Versioning
+- AI Orchestrator
+- Validation
+- RoleplayX Projection
+- OpenAPI contract
+- Zod validation
+- PostgreSQL JSONB persistence
+
+Do not replace working functionality unless there is a concrete architectural conflict.
+
+## 4. Required Analysis
+
+Create/update:
+
+docs/architecture-v2.md
+
+The document must contain:
+
+### A. Product Definition
+
+Define ContentX as an output-first Creative Content Engine.
+
+### B. Architecture v2
+
+Show this logical architecture:
+
+User Intent
+→ Output
+→ Reference
+→ Benchmark
+→ Creative Knowledge
+→ Generate / Remix
+→ Content Graph
+→ Evaluation
+→ Output Projection
+
+### C. Current → Future Mapping
+
+Create a table:
+
+Current Module
+→ New Architectural Role
+→ Keep / Refactor / Rename / Replace
+→ Reason
+
+Explicitly include Scenario, Scenario Amplifier, Scenario Synthesizer, Lineage, Classification, Content Graph, AI Orchestrator and RoleplayX Adapter.
+
+### D. Domain Model
+
+Define the relationship between:
+
+Output
+Content
+Reference
+Source
+Idea
+Story
+Persona
+Scenario
+Pattern
+Remix
+Provenance
+Evaluation
+
+Important:
+
+Scenario must NOT become the root entity.
+
+Content must remain canonical.
+
+### E. Creative Graph
+
+Define the graph relationships required to support:
+
+Reference → Pattern
+Pattern → Idea
+Idea → Story
+Story → Persona
+Story → Scenario
+Content → Remix
+Content → Output
+
+Do not introduce a graph database.
+
+Continue using the current canonical graph + PostgreSQL JSONB architecture.
+
+### F. Output-First Workflow
+
+Define how different user requests select different workflows.
+
+Examples:
+
+New Story:
+Output → Reference → Benchmark → Idea → Story → Persona → Scenario → Evaluation
+
+Remix:
+Output → Source Selection → Element Extraction → Remix → Evaluation
+
+Benchmark:
+Reference Set → Analysis → Benchmark → Pattern Report
+
+Persona-based:
+Persona → Context → Conflict → Story → Output
+
+### G. Remix Architecture
+
+Generalize the current Scenario Synthesis implementation.
+
+The future Remix Engine must be capable of remixing:
+
+- characters
+- personas
+- relationships
+- settings
+- conflicts
+- goals
+- events
+- twists
+- narrative structures
+- endings
+- other reusable creative elements
+
+Existing scenario synthesis must be preserved and gradually generalized.
+
+### H. Persona Architecture
+
+Define Persona as a reusable canonical content object.
+
+A Persona can:
+
+- belong to a Story
+- appear in a Scenario
+- be reused in another Story
+- participate in Remix
+- be extracted from existing content
+
+Do not implement the full MatrAIx persona schema yet.
+
+Create only the minimal extensible abstraction required by ContentX.
+
+### I. Benchmark Architecture
+
+Current Scenario Classification must be treated as a foundation for Benchmark.
+
+Define:
+
+Reference Dataset
+→ Classification
+→ Pattern Extraction
+→ Benchmark
+→ Generation Constraints
+
+Benchmark must describe characteristics of a group of contents, not reproduce a single source.
+
+### J. Evaluation
+
+Separate:
+
+Validation
+= structural correctness
+
+Evaluation
+= creative/content quality
+
+Future Evaluation dimensions:
+
+- output requirement compliance
+- narrative consistency
+- persona consistency
+- structural quality
+- source similarity
+- creative independence
+- remix coherence
+
+Do not claim that a numerical similarity threshold represents legal safety.
+
+## 5. UI Direction
+
+The current Scenario Library should remain functional.
+
+However, document the migration toward:
+
+Creative Workspace
+
+Primary interaction:
+
+"What do you want to create?"
+
+Then:
+
+Output Type
+→ Goal
+→ References
+→ Workflow
+→ Generate / Remix
+→ Review
+→ Export
+
+Do not build the entire new UI in this task.
+
+Only identify the required changes.
+
+## 6. Legal / Trust Layer
+
+Do NOT implement a complete legal engine yet.
+
+Define a future Trust Layer containing:
+
+- Source provenance
+- API/provider rights metadata
+- License / ToS metadata
+- Source dependency
+- Creative independence analysis
+- Human contribution
+- Generation history
+
+Important:
+
+ContentX must never claim that it can provide definitive legal clearance.
+
+It can provide structured risk analysis and provenance evidence.
+
+## 7. Architecture Constraints
+
+Preserve:
+
+- TypeScript
+- pnpm workspace
+- PostgreSQL
+- Drizzle
+- JSONB
+- OpenAPI
+- Zod
+- modular monolith
+- AIProvider abstraction
+- Canonical Content Model
+- Content Graph
+- RoleplayX Projection
+
+Do NOT introduce:
+
+- Neo4j
+- microservices
+- multi-agent swarm
+- large persona schema
+- marketplace
+- advanced media generation
+
+## 8. Required Output
+
+After inspection, produce:
+
+1. docs/architecture-v2.md
+2. docs/domain-map-v2.md
+
+domain-map-v2.md must map:
+
+Output
+Reference
+Benchmark
+Creative
+Remix
+Persona
+Content
+Scenario
+Evaluation
+Provenance
+Projection
+
+to the existing source files.
+
+Also include:
+
+- Current implementation status
+- Missing pieces
+- Architecture conflicts
+- Recommended next implementation order
+
+## 9. Critical Rule
+
+This is an architecture reframing task.
+
+Do NOT implement the complete v2 architecture yet.
+
+Do NOT rewrite the existing system.
+
+Do NOT remove Scenario functionality.
+
+First establish the new architecture and map the current implementation into it.
+
+At the end report:
+
+- what was inspected
+- what already satisfies Architecture v2
+- what needs refactoring
+- what needs to be added
+- what should explicitly NOT be built yet
+- the single highest-priority next implementation task
+
+Run typecheck after documentation changes and confirm the existing application remains intact.
