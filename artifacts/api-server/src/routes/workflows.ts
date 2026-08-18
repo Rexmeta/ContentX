@@ -77,6 +77,7 @@ router.post("/v1/workflows/plan", async (req, res): Promise<void> => {
     const workflow = await planWorkflow({
       outputType: parsed.data.outputType as OutputType | undefined,
       description: parsed.data.description,
+      existingArtifacts: parsed.data.existingArtifacts as Record<string, string> | undefined,
     });
     res.status(201).json(PlanWorkflowResponse.parse(workflow));
   } catch (err) {

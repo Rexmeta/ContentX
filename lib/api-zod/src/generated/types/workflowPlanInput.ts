@@ -13,4 +13,9 @@ import type { WorkflowPlanInputOutputType } from './workflowPlanInputOutputType'
 export interface WorkflowPlanInput {
   outputType?: WorkflowPlanInputOutputType;
   description?: string;
+  /**
+   * Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will
+   * be pre-marked complete so the new workflow only runs the remaining steps.
+   */
+  existingArtifacts?: { [key: string]: string };
 }

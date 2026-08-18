@@ -10,16 +10,24 @@ import { useState } from "react";
  * Reuse/Transform UX (P2): from a result or content detail, spin the same
  * material into another output. Picking a type asks the Workflow Planner for
  * a recommended workflow prefilled with the source description.
+ *
+ * When `existingArtifacts` is supplied the planner pre-marks steps that
+ * produced those artifacts as complete, so the new workflow starts from the
+ * first un-covered step instead of repeating work.
  */
 export function ReuseSection({
   sourceDescription,
   excludeOutputType,
+  existingArtifacts,
   compact = false,
 }: {
   /** Text carried into the new workflow's intent (idea/product summary). */
   sourceDescription: string;
   /** The output type already produced — hidden from the suggestions. */
   excludeOutputType?: string;
+  /** Artifact key → resource id from the current workflow. Passed to the
+   *  planner so it can skip steps already completed. */
+  existingArtifacts?: Record<string, string>;
   compact?: boolean;
 }) {
   const [, setLocation] = useLocation();
@@ -36,6 +44,9 @@ export function ReuseSection({
         data: {
           outputType: outputType as WorkflowPlanInputOutputType,
           ...(sourceDescription.trim() ? { description: sourceDescription.trim() } : {}),
+          ...(existingArtifacts && Object.keys(existingArtifacts).length
+            ? { existingArtifacts }
+            : {}),
         },
       },
       {

@@ -13,6 +13,7 @@ import { validateWorkflowSteps } from "../validation";
 import { runStep } from "../executor";
 import { InvalidWorkflowError } from "../model";
 import type { OutputIntent, Workflow, WorkflowStep } from "../model";
+import { applyExistingArtifacts } from "../planner";
 
 vi.mock("../repository", () => ({
   getWorkflow: vi.fn(),
@@ -194,5 +195,136 @@ describe("workflow graph validation", () => {
         { ...base, id: "b", dependencies: ["a"] },
       ]),
     ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyExistingArtifacts — reuse pre-completion logic
+// ---------------------------------------------------------------------------
+
+describe("applyExistingArtifacts", () => {
+  /**
+   * Simulated workflow.artifacts for a fully-completed novel workflow.
+   * Mirrors what the executor actually writes (see executor.ts).
+   */
+  const novelArtifacts: Record<string, string> = {
+    idea: "우주 정거장 미스터리",
+    scenarioId: "scenario_aaa",
+    contentId: "content_bbb",
+  };
+
+  /**
+   * Simulated workflow.artifacts for a fully-completed product-reaction workflow.
+   */
+  const productArtifacts: Record<string, string> = {
+    product: "무선 이어폰",
+    audience: "20-30대",
+    populationId: "pop_111",
+    samplingRunId: "run_222",
+    agentIds: "agent_1,agent_2",
+    simulationId: "sim_333",
+    evaluationIds: "eval_1,eval_2",
+  };
+
+  it("novel artifacts: idea-input and draft steps are pre-completed, world-build step is pre-completed, project_roleplay becomes ready", () => {
+    const steps = buildTemplateSteps({
+      ...intent("roleplay"),
+      extractedInputs: { idea: "우주 정거장 미스터리" },
+    });
+    const result = applyExistingArtifacts(steps, novelArtifacts);
+
+    const byAction = (action: string) => result.find((s) => s.binding?.action === action);
+
+    // Input step: provide_input with output ["idea"] — idea is in artifacts.
+    expect(byAction("provide_input")?.status).toBe("complete");
+
+    // draft_story produces idea + scenarioId — both present.
+    expect(byAction("draft_story")?.status).toBe("complete");
+
+    // classify_story: transparent side-effect (no artifact) — cascades after draft.
+    expect(byAction("classify_story")?.status).toBe("complete");
+
+    // build_world produces contentId — present.
+    expect(byAction("build_world")?.status).toBe("complete");
+
+    // validate_world: transparent side-effect — cascades after build_world.
+    expect(byAction("validate_world")?.status).toBe("complete");
+
+    // project_roleplay: final output step, NOT in cascade list → becomes ready.
+    expect(byAction("project_roleplay")?.status).toBe("ready");
+  });
+
+  it("novel artifacts → novel reuse: project_novel becomes ready", () => {
+    const steps = buildTemplateSteps({
+      ...intent("novel"),
+      extractedInputs: { idea: "우주 정거장 미스터리" },
+    });
+    const result = applyExistingArtifacts(steps, novelArtifacts);
+    const projectStep = result.find((s) => s.binding?.action === "project_novel");
+    expect(projectStep?.status).toBe("ready");
+    // All prerequisite steps must be complete.
+    for (const action of ["provide_input", "draft_story", "classify_story", "build_world", "validate_world"]) {
+      expect(result.find((s) => s.binding?.action === action)?.status).toBe("complete");
+    }
+  });
+
+  it("product-reaction artifacts: all steps pre-completed, no ready steps remain", () => {
+    const steps = buildTemplateSteps({
+      ...intent("product-reaction"),
+      extractedInputs: { product: "무선 이어폰", audience: "20-30대" },
+    });
+    const result = applyExistingArtifacts(steps, productArtifacts);
+
+    // provide_input: output is ["productBrief"] → mapped to "product" → present.
+    const inputStep = result.find((s) => s.binding?.action === "provide_input");
+    expect(inputStep?.status).toBe("complete");
+
+    for (const action of [
+      "define_audience",
+      "generate_personas",
+      "prepare_actors",
+      "run_simulation",
+      "analyze_results",
+    ]) {
+      expect(
+        result.find((s) => s.binding?.action === action)?.status,
+        `${action} should be complete`,
+      ).toBe("complete");
+    }
+
+    // No step should be left pending or ready.
+    expect(result.some((s) => s.status === "pending" || s.status === "ready")).toBe(false);
+  });
+
+  it("product-reaction artifacts: deriveInitialStatus produces 'complete' when all steps covered", () => {
+    // Verify the planner would persist the workflow as complete (not draft/running).
+    const steps = buildTemplateSteps({
+      ...intent("product-reaction"),
+      extractedInputs: { product: "무선 이어폰", audience: "20-30대" },
+    });
+    const result = applyExistingArtifacts(steps, productArtifacts);
+    const relevant = result.filter((s) => s.status !== "skipped");
+    const allComplete = relevant.every((s) => s.status === "complete");
+    expect(allComplete).toBe(true);
+  });
+
+  it("empty existing artifacts: no steps are pre-completed", () => {
+    const steps = buildTemplateSteps(intent("novel", "테스트 아이디어"));
+    const result = applyExistingArtifacts(steps, {});
+    expect(result).toEqual(steps); // unchanged
+  });
+
+  it("partial artifacts (only idea + scenarioId, no contentId): build_world stays pending", () => {
+    const steps = buildTemplateSteps({
+      ...intent("roleplay"),
+      extractedInputs: { idea: "우주" },
+    });
+    const partial = { idea: "우주", scenarioId: "scenario_aaa" };
+    const result = applyExistingArtifacts(steps, partial);
+
+    expect(result.find((s) => s.binding?.action === "draft_story")?.status).toBe("complete");
+    expect(result.find((s) => s.binding?.action === "classify_story")?.status).toBe("complete");
+    // build_world needs contentId which is absent → not pre-completed, becomes ready.
+    expect(result.find((s) => s.binding?.action === "build_world")?.status).toBe("ready");
   });
 });

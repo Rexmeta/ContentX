@@ -3190,6 +3190,10 @@ components:
           type: string
           enum: [movie, novel, roleplay, product-reaction, game, advertisement, remix, external-transform]
         description: { type: string }
+        existingArtifacts:
+          type: object
+          additionalProperties: { type: string }
+          description: "Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will be pre-marked complete so the new workflow only runs the remaining steps."
     WorkflowStepRunInput:
       type: object
       properties:

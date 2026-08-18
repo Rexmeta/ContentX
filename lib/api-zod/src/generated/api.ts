@@ -3006,7 +3006,8 @@ export const CreateWorkflowResponse = zod.object({
  */
 export const PlanWorkflowBody = zod.object({
   "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']).optional(),
-  "description": zod.string().optional()
+  "description": zod.string().optional(),
+  "existingArtifacts": zod.record(zod.string(), zod.string()).optional()
 }).describe('Either outputType (choice) or description (natural language) is required; both may be given.')
 
 export const PlanWorkflowResponse = zod.object({

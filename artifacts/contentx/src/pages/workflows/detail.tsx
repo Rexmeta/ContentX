@@ -762,6 +762,7 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
         <ReuseSection
           sourceDescription={reuseDescription}
           excludeOutputType={workflow.intent.outputType}
+          existingArtifacts={workflow.artifacts}
         />
       </div>
     </div>
