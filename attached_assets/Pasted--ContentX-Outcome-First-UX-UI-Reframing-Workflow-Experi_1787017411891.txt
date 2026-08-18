@@ -1,0 +1,1152 @@
+# ContentX — Outcome-First UX/UI Reframing & Workflow Experience
+
+너는 현재 진행 중인 ContentX 프로젝트의
+Lead Product Designer + UX Architect + Senior Full-Stack Engineer다.
+
+IMPORTANT:
+
+이것은 새로운 프로젝트를 만드는 작업이 아니다.
+
+현재 ContentX repository에 이미 구현되어 있는 기능과 architecture를
+최대한 보존하면서,
+
+"사용자가 원하는 결과(Output)를 말하면
+ContentX가 필요한 Workflow를 추천하고,
+사용자가 이를 추가/삭제/수정한 후 실행할 수 있는
+직관적인 Outcome-First Content Platform"
+
+으로 UX/UI를 재구성하는 것이 이번 작업의 목표다.
+
+RoleplayX는 ContentX의 일부 사용처일 뿐이다.
+
+ContentX 자체가 독립적인 Content Engine / Content Platform으로
+발전할 수 있어야 한다.
+
+==================================================
+1. CORE UX PRINCIPLE
+==================================================
+
+기존의 사용자 경험:
+
+Content
+→ Entity
+→ Graph
+→ Scenario
+→ Projection
+
+을 사용자가 직접 이해하고 조작하는 방식은 피한다.
+
+새로운 UX의 핵심은:
+
+USER INTENT
+→ DESIRED OUTPUT
+→ AI RECOMMENDED WORKFLOW
+→ USER ADJUSTMENT
+→ EXECUTION
+→ OUTPUT
+
+이다.
+
+핵심 문장:
+
+"사용자는 무엇을 어떻게 만들지 알 필요가 없다.
+원하는 결과를 말하면 ContentX가 필요한 작업을 제안한다."
+
+AI는 Workflow를 추천하지만 사용자가 최종 결정한다.
+
+AI recommends.
+User decides.
+
+
+==================================================
+2. FIRST — ANALYZE THE EXISTING PROJECT
+==================================================
+
+코딩하기 전에 현재 repository를 먼저 분석하라.
+
+현재 구현된:
+
+- frontend
+- routing
+- navigation
+- pages
+- components
+- content domain
+- AI domain
+- scenario domain
+- graph
+- generation
+- synthesis
+- classification
+- validation
+- projection
+- RoleplayX adapter
+- versioning
+- export
+- API
+- database
+- existing workflows
+
+를 실제 코드 기준으로 파악한다.
+
+특히 현재 UX/UI가:
+
+1. 사용자가 무엇을 해야 하는지 명확한가?
+2. 처음 접했을 때 ContentX가 무엇인지 이해할 수 있는가?
+3. Graph가 사용자에게 과도하게 노출되어 있는가?
+4. 내부 architecture terminology가 사용자 UX에 노출되어 있는가?
+5. 원하는 Output까지 도달하는 경로가 복잡한가?
+6. 기존 기능을 사용자가 발견하기 어려운가?
+7. 빈 화면에서 무엇을 해야 하는지 알기 어려운가?
+8. Workflow를 사용자가 직접 설계해야 하는 부분이 있는가?
+
+를 평가한다.
+
+현재 구현을 확인하지 않고 추측해서 변경하지 마라.
+
+
+==================================================
+3. DO NOT REBUILD THE ENGINE
+==================================================
+
+이번 작업의 목적은 Content Engine을 새로 만드는 것이 아니다.
+
+기존 ContentX의:
+
+- Content Model
+- Content Graph
+- Generation
+- Synthesis
+- Scenario Graph Builder
+- Projection
+- RoleplayX Adapter
+- Versioning
+- Export
+- API
+
+등의 기능을 최대한 재사용한다.
+
+현재 기능을 삭제하거나 재작성하기 전에 반드시:
+
+- 왜 필요한지
+- 어떤 기존 기능을 대체하는지
+- migration risk가 무엇인지
+
+확인한다.
+
+
+==================================================
+4. NEW UX MODEL
+==================================================
+
+ContentX의 사용자 경험을 다음 구조로 재설계한다.
+
+                    HOME
+                      ↓
+              "무엇을 만들고 싶나요?"
+                      ↓
+                OUTPUT INTENT
+                      ↓
+             AI WORKFLOW PLANNER
+                      ↓
+        RECOMMENDED WORKFLOW
+                      ↓
+       User can Add / Remove / Edit
+                      ↓
+                  WORKSPACE
+                      ↓
+               CONTENT ENGINE
+                      ↓
+                   OUTPUT
+                      ↓
+        Export / Share / Project / API
+
+
+==================================================
+5. OUTPUT-FIRST UX
+==================================================
+
+사용자가 처음부터:
+
+- Entity
+- Relationship
+- Graph
+- Projection
+- Canonical Model
+
+을 선택하게 하지 마라.
+
+대신 사용자가 원하는 결과를 선택하거나 자연어로 설명할 수 있도록 한다.
+
+예:
+
+"What do you want to create?"
+
+또는:
+
+"무엇을 만들고 싶으세요?"
+
+선택 예:
+
+- 🎬 영화 이야기
+- 📖 소설
+- 🎭 롤플레이
+- 🚀 제품 반응 시뮬레이션
+- 🎮 게임 콘텐츠
+- 📢 광고 콘텐츠
+- 🧩 새로운 콘텐츠 조합
+- 📚 기존 콘텐츠 재구성
+- ✨ 직접 설명하기
+
+
+==================================================
+6. OUTPUT INTENT
+==================================================
+
+사용자가 원하는 결과를 Output Intent로 정의한다.
+
+예:
+
+User:
+
+"새로운 AI 노트북을 출시하려고 하는데
+타겟 고객들이 어떻게 반응할지 알고 싶어요."
+
+ContentX:
+
+Output Intent:
+
+Product Launch Reaction Simulation
+
+
+필요한 요소를 AI가 분석한다.
+
+예:
+
+- Product
+- Target Audience
+- Persona
+- Decision Factors
+- Simulation Scenario
+- Simulation
+- Result Analysis
+
+
+==================================================
+7. AI WORKFLOW PLANNER
+==================================================
+
+Output Intent를 분석한 뒤
+AI가 Recommended Workflow를 생성한다.
+
+예:
+
+Product Definition
+        ↓
+Target Audience
+        ↓
+Persona Generation
+        ↓
+Decision Factors
+        ↓
+Simulation Scenario
+        ↓
+Reaction Simulation
+        ↓
+Result Analysis
+
+
+중요:
+
+AI가 Workflow를 결정해서 강제하지 않는다.
+
+AI가 "추천"한다.
+
+
+==================================================
+8. WORKFLOW STEP TYPES
+==================================================
+
+Workflow Step은 향후 확장 가능한 구조로 설계한다.
+
+예:
+
+- Input
+- Generate
+- Extract
+- Analyze
+- Transform
+- Compose
+- Remix
+- Simulate
+- Validate
+- Compare
+- Export
+- Project
+
+
+각 Step은:
+
+- id
+- type
+- title
+- description
+- required
+- recommended
+- optional
+- input
+- output
+- status
+- dependencies
+
+등을 표현할 수 있어야 한다.
+
+현재 시스템에 이미 유사한 구조가 있다면 재사용한다.
+
+
+==================================================
+9. REQUIRED / RECOMMENDED / OPTIONAL
+==================================================
+
+Workflow의 각 단계는 사용자가 쉽게 이해할 수 있도록
+다음 세 가지 상태를 지원한다.
+
+Required
+✓ 필수
+
+Recommended
+● 추천
+
+Optional
+○ 선택
+
+
+예:
+
+✓ Product Definition
+✓ Target Audience
+● Persona Generation
+● Decision Factors
+○ Competitor Analysis
+✓ Simulation
+● Result Analysis
+
+
+==================================================
+10. USER CONTROL
+==================================================
+
+사용자는 AI가 만든 Workflow를 수정할 수 있어야 한다.
+
+각 Step에:
+
+[ Edit ]
+[ Remove ]
+
+를 제공한다.
+
+Workflow 전체에는:
+
+[ + Add Step ]
+
+을 제공한다.
+
+예:
+
++ Add Step
+
+선택:
+
+- 경쟁사 분석
+- 시장 분석
+- Persona 추가
+- 인터뷰 생성
+- 역할극
+- A/B 테스트
+- 결과 비교
+- 직접 입력
+
+
+사용자가 Step을 제거하면
+의존 관계가 깨지는 경우 이를 알려준다.
+
+예:
+
+"이 단계를 제거하면 Simulation에 필요한 Persona 정보가 없습니다."
+
+[ 자동으로 대체 ]
+[ 계속 진행 ]
+[ 취소 ]
+
+
+==================================================
+11. WORKFLOW IS NOT THE CONTENT
+==================================================
+
+매우 중요하다.
+
+Workflow와 Content를 혼동하지 마라.
+
+Workflow:
+
+"어떤 작업을 어떤 순서로 수행할 것인가"
+
+Content:
+
+"작업 결과로 생성/관리되는 실제 콘텐츠"
+
+예:
+
+Workflow:
+
+Product
+→ Audience
+→ Persona
+→ Simulation
+
+Content:
+
+Product A
+Persona B
+Scenario C
+Simulation Result D
+
+
+==================================================
+12. CONTENT GRAPH SHOULD BE SECONDARY
+==================================================
+
+Content Graph는 삭제하지 않는다.
+
+그러나 일반 사용자가 첫 화면부터 Graph를 이해해야 할 필요는 없다.
+
+기본 UX:
+
+Intent
+→ Workflow
+→ Workspace
+→ Output
+
+Advanced UX:
+
+Advanced View
+→ Content Graph
+→ Entities
+→ Relationships
+→ Dependencies
+→ Provenance
+→ Versions
+
+
+Graph는 강력한 전문가 기능으로 유지한다.
+
+Beginner UX와 Advanced UX를 분리한다.
+
+
+==================================================
+13. PROGRESSIVE DISCLOSURE
+==================================================
+
+ContentX의 복잡성을 단계적으로 노출한다.
+
+Beginner:
+
+Create
+→ Describe
+→ Review
+→ Generate
+→ Output
+
+Intermediate:
+
+Workflow
+→ Steps
+→ Content
+→ Operations
+→ Output
+
+Advanced:
+
+Graph
+→ Entities
+→ Relationships
+→ Provenance
+→ Version
+→ Projection
+→ API
+
+
+사용자가 필요할 때만 더 복잡한 기능을 노출한다.
+
+
+==================================================
+14. KEY USE CASE 1
+==================================================
+
+Example:
+
+"새로운 이야기를 만들어서
+영화 / 소설 / 롤플레이로 활용하고 싶다."
+
+
+Workflow:
+
+Idea
+ ↓
+Characters
+ ↓
+World
+ ↓
+Conflict
+ ↓
+Story
+ ↓
+Choose Output
+
+
+Output:
+
+🎬 Movie
+📖 Novel
+🎭 Roleplay
+
+
+같은 Canonical Content를 기반으로
+다른 Output으로 Projection할 수 있어야 한다.
+
+
+==================================================
+15. KEY USE CASE 2
+==================================================
+
+Example:
+
+"신제품 출시 전에 타겟 고객의 반응을 알고 싶다."
+
+
+Workflow:
+
+Product Definition
+ ↓
+Target Audience
+ ↓
+Persona
+ ↓
+Decision Factors
+ ↓
+Simulation Scenario
+ ↓
+Reaction Simulation
+ ↓
+Result Analysis
+
+
+Output:
+
+- Purchase Intent
+- Positive / Neutral / Negative
+- Key Objections
+- Key Drivers
+- Segment Comparison
+- Summary
+
+
+이것은 단순한 Scenario Generator가 아니다.
+
+ContentX가 Content + Persona + Scenario + Simulation을
+조합하여 결과를 만드는 대표적인 Use Case로 취급한다.
+
+
+==================================================
+16. KEY USE CASE 3
+==================================================
+
+Example:
+
+"외부 콘텐츠를 가져와 새로운 콘텐츠를 만들고 싶다."
+
+
+Input:
+
+- URL
+- Text
+- File
+- Public Content
+- User Content
+
+
+Workflow:
+
+Import
+ ↓
+Extract
+ ↓
+Structure
+ ↓
+Review
+ ↓
+Edit
+ ↓
+Remix
+ ↓
+New Content
+
+
+사용자는:
+
+"Extract"
+
+라는 내부 용어를 몰라도 된다.
+
+UI에서는:
+
+"콘텐츠에서 핵심 요소 가져오기"
+
+처럼 쉽게 표현할 수 있다.
+
+내부 operation과 사용자 표현을 분리한다.
+
+
+==================================================
+17. KEY USE CASE 4
+==================================================
+
+Example:
+
+"두 개의 콘텐츠를 결합해서 새로운 이야기를 만들고 싶다."
+
+
+Workflow:
+
+Content A
++
+Content B
+ ↓
+Analyze
+ ↓
+Find Compatible Elements
+ ↓
+Resolve Conflicts
+ ↓
+Compose
+ ↓
+Review
+ ↓
+New Content
+
+
+사용자에게:
+
+"콘텐츠 조합하기"
+
+로 표현할 수 있다.
+
+
+==================================================
+18. KEY USE CASE 5
+==================================================
+
+Example:
+
+"기존 이야기를 롤플레이로 만들고 싶다."
+
+
+Workflow:
+
+Story
+ ↓
+Characters
+ ↓
+Goals
+ ↓
+Conflict
+ ↓
+Interaction Rules
+ ↓
+Roleplay Output
+
+
+RoleplayX는 첫 번째 Projection Adapter로 사용한다.
+
+하지만 UX에서는 RoleplayX의 내부 schema를 노출하지 않는다.
+
+
+==================================================
+19. EXAMPLE-DRIVEN ONBOARDING
+==================================================
+
+ContentX의 User Guide는 문서 중심으로 만들지 않는다.
+
+실제 사용할 수 있는 Example 중심으로 만든다.
+
+Example Gallery:
+
+1.
+🎬 아이디어 하나로 영화 이야기 만들기
+
+2.
+🎭 이야기를 롤플레이로 바꾸기
+
+3.
+🚀 신제품 고객 반응 시뮬레이션
+
+4.
+🧩 두 콘텐츠를 조합하여 새로운 이야기 만들기
+
+5.
+📚 외부 콘텐츠를 가져와 새로운 콘텐츠 만들기
+
+
+각 Example은 단순 설명 페이지가 아니다.
+
+"Try this example"
+
+버튼을 통해 실제 ContentX Workflow를 실행할 수 있어야 한다.
+
+
+==================================================
+20. EMPTY STATE
+==================================================
+
+빈 화면을 보여주지 마라.
+
+예:
+
+Library가 비어 있으면:
+
+"No content yet."
+
+만 보여주지 말고:
+
+"무엇부터 만들어볼까요?"
+
+[ Example 시작 ]
+[ 새 콘텐츠 만들기 ]
+[ 콘텐츠 가져오기 ]
+
+
+를 제공한다.
+
+
+==================================================
+21. WORKFLOW UI
+==================================================
+
+기본 Workflow UI는 복잡한 Node Graph보다
+Vertical Stepper / Cards 기반으로 구현한다.
+
+예:
+
+01
+Product Definition
+✓ Complete
+
+↓
+
+02
+Target Audience
+✓ Complete
+
+↓
+
+03
+Persona Generation
+● Recommended
+
+↓
+
+04
+Simulation
+○ Optional
+
+
+Advanced 사용자는 필요할 경우
+Graph View로 전환할 수 있다.
+
+
+==================================================
+22. OUTPUT-FOCUSED RESULT SCREEN
+==================================================
+
+Workflow가 끝난 후
+사용자는 기술적인 내부 데이터보다
+결과를 먼저 봐야 한다.
+
+예:
+
+Simulation Result
+
+Overall Reaction
+82% Positive
+
+Key Drivers
+- AI Features
+- Battery Life
+
+Key Concerns
+- Price
+- Compatibility
+
+Segment Results
+Students: 86%
+Developers: 91%
+Designers: 88%
+
+
+그 다음:
+
+[ 상세 보기 ]
+[ Workflow 보기 ]
+[ Content Graph 보기 ]
+[ 다른 Output 만들기 ]
+
+
+==================================================
+23. REUSE / TRANSFORM
+==================================================
+
+결과 화면에서
+콘텐츠를 다른 Output으로 재사용할 수 있어야 한다.
+
+예:
+
+"This content can be used for:"
+
+🎭 Roleplay
+🎬 Movie
+📖 Novel
+🎮 Game
+📢 Advertisement
+🧪 Simulation
+
+
+사용자가 선택하면
+해당 Output에 필요한 Workflow를 AI가 추천한다.
+
+
+==================================================
+24. UI TERMINOLOGY
+==================================================
+
+내부 용어와 사용자 용어를 분리한다.
+
+예:
+
+Internal:
+Extract
+
+User:
+"핵심 내용 가져오기"
+
+Internal:
+Compose
+
+User:
+"콘텐츠 조합하기"
+
+Internal:
+Remix
+
+User:
+"새로운 버전 만들기"
+
+Internal:
+Projection
+
+User:
+"다른 형태로 활용하기"
+
+Internal:
+Entity
+
+User:
+"구성 요소"
+
+Internal:
+Content Graph
+
+User:
+"콘텐츠 구조"
+
+
+전문 사용자에게는 Advanced View에서
+원래 terminology를 제공한다.
+
+
+==================================================
+25. INFORMATION ARCHITECTURE
+==================================================
+
+현재 구조를 분석한 후
+가능하다면 다음 방향으로 재구성한다.
+
+Home
+Create
+Library
+Projects
+Examples
+Explore
+
+Workspace
+
+Workflow
+Content
+Result
+
+Advanced
+
+Graph
+Versions
+Provenance
+Projection
+API
+
+
+기존 routing과 기능을 확인한 뒤
+가장 적은 변경으로 적용한다.
+
+
+==================================================
+26. OUTPUT → WORKFLOW → OPERATION MAPPING
+==================================================
+
+반드시 다음 문서를 만든다.
+
+docs/ux/output-workflow-map.md
+
+표 형식:
+
+Output
+→ Required Inputs
+→ Recommended Workflow
+→ Operations
+→ Existing ContentX Feature
+→ UI Step
+→ Final Output
+
+
+최소 다음 Output을 정의한다.
+
+1. Movie Story
+2. Novel
+3. Roleplay
+4. Product Reaction Simulation
+5. Game Content
+6. Advertisement
+7. Content Remix
+8. External Content Transformation
+
+
+==================================================
+27. UX AUDIT DOCUMENT
+==================================================
+
+다음 문서를 만든다.
+
+docs/ux/current-ux-audit.md
+
+포함:
+
+- Current Navigation
+- Current Screens
+- Current User Flow
+- Current Terminology
+- UX Problems
+- Cognitive Load
+- Discoverability Problems
+- Empty States
+- Workflow Problems
+- Graph UX Problems
+- Output Visibility
+- Recommended Improvements
+
+
+==================================================
+28. NEW UX ARCHITECTURE DOCUMENT
+==================================================
+
+다음 문서를 만든다.
+
+docs/ux/outcome-first-ux.md
+
+포함:
+
+- UX Philosophy
+- Output Intent
+- Workflow Planner
+- Workflow Step Model
+- User Control
+- Progressive Disclosure
+- Beginner UX
+- Advanced UX
+- Example-driven Onboarding
+- Result UX
+- Reuse UX
+
+
+==================================================
+29. DO NOT OVERENGINEER
+==================================================
+
+이번 단계에서는 다음을 하지 마라.
+
+- 전체 UI 재작성
+- 새로운 Graph database 도입
+- Microservices
+- 새로운 AI Agent framework
+- 모든 Projection 구현
+- Marketplace payment
+- Social features
+- 복잡한 Workflow engine 재작성
+
+현재 architecture를 최대한 활용한다.
+
+
+==================================================
+30. IMPLEMENTATION PRIORITY
+==================================================
+
+우선순위:
+
+P0
+
+1. Current UX Audit
+2. Output → Workflow mapping
+3. New IA proposal
+4. Example use cases
+
+P1
+
+5. Home / Create UX
+6. Output Intent selection
+7. Recommended Workflow UI
+8. Add / Remove / Edit Step
+9. Result-focused UI
+
+P2
+
+10. Example Gallery
+11. Interactive User Guide
+12. Advanced Graph View separation
+13. Reuse / Transform UX
+
+
+==================================================
+31. IMPORTANT IMPLEMENTATION RULE
+==================================================
+
+첫 단계에서는 코드 변경보다 분석이 우선이다.
+
+먼저:
+
+1. 현재 UI 분석
+2. 현재 기능 분석
+3. Output 정의
+4. Workflow 정의
+5. 기존 기능과 매핑
+6. UX Architecture 제안
+
+을 수행한다.
+
+그 결과를 보고한 후
+P0/P1 중 실제 구현 가능한 변경을 시작한다.
+
+대규모 UI migration을 한 번에 하지 마라.
+
+
+==================================================
+32. ACCEPTANCE CRITERIA
+==================================================
+
+사용자가 ContentX를 처음 사용했을 때
+다음 질문에 답할 수 있어야 한다.
+
+"이 서비스로 무엇을 할 수 있지?"
+
+→ Example Gallery 또는 Output 선택에서 즉시 이해할 수 있어야 한다.
+
+"내가 원하는 결과를 어떻게 만들지?"
+
+→ AI가 Workflow를 제안해야 한다.
+
+"AI가 정한 대로 해야 하나?"
+
+→ 아니다. Step을 추가/삭제/수정할 수 있어야 한다.
+
+"Content Graph를 알아야 하나?"
+
+→ 아니다.
+
+"RoleplayX를 알아야 하나?"
+
+→ 아니다.
+
+"콘텐츠를 다른 형태로 사용할 수 있나?"
+
+→ 결과 화면에서 즉시 다른 Output을 선택할 수 있어야 한다.
+
+
+==================================================
+33. FINAL PRODUCT PRINCIPLE
+==================================================
+
+ContentX는 사용자에게:
+
+"콘텐츠 구조를 관리하는 시스템"
+
+처럼 느껴져서는 안 된다.
+
+사용자에게는:
+
+"내가 원하는 결과물을 만들어주는 서비스"
+
+처럼 느껴져야 한다.
+
+내부적으로는:
+
+Canonical Content
++
+Content Graph
++
+AI Operations
++
+Workflow
++
+Projection
++
+Provenance
+
+를 사용한다.
+
+그러나 사용자에게는:
+
+Intent
+→ Recommended Workflow
+→ Customize
+→ Run
+→ Result
+
+로 보여준다.
+
+
+==================================================
+START
+==================================================
+
+현재 ContentX repository를 먼저 분석하라.
+
+특히 현재 UI/UX와 실제 구현된 기능을 확인하라.
+
+그 다음:
+
+1. Current UX Audit
+2. Output → Workflow → Operation → Existing Feature Mapping
+3. New IA
+4. Example Use Cases
+5. Implementation Plan
+
+을 먼저 제시하라.
+
+분석 없이 전체 UI를 바로 수정하지 마라.
+
+그리고 P0부터 단계적으로 구현하라.
