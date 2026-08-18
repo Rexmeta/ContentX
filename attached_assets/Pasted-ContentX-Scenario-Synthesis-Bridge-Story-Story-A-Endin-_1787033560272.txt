@@ -1,0 +1,128 @@
+ContentX의 기존 Scenario Synthesis 기능을 유지하면서
+새로운 "Bridge Story / 연결 이야기" 기능을 구현한다.
+
+목표:
+
+Story A의 Ending State와
+Story B의 Beginning State 사이의
+시간, 공간, 인물, 목표, 갈등, 관계, 정보 상태의 차이를 분석하고
+
+A → Bridge Story → B
+
+형태로 자연스럽게 연결되는 중간 이야기를 생성한다.
+
+중요:
+
+Bridge Story는 단순 prompt 결과가 아니다.
+
+일반 Scenario와 동일한 canonical structure를 가지며
+독립적인 Scenario로 저장할 수 있어야 한다.
+
+반드시 provenance/lineage를 유지한다.
+
+Architecture:
+
+Remix Engine
+├── Element Remix
+│   └── existing /v1/scenarios/synthesize
+├── Bridge Remix
+│   └── new Bridge Workflow
+└── Story Chain
+    └── future composition layer
+
+Bridge Workflow:
+
+1. Select Source Story
+2. Select Target Story
+3. Analyze Connection
+4. Generate Transition Requirements
+5. User Adjust
+6. Generate Bridge Story
+7. Review A → Bridge → B
+8. Save
+9. Continue to Movie / Novel / Roleplay / Game etc.
+
+Connection Analysis must identify:
+
+- timeline gap
+- location gap
+- character continuity
+- goal transition
+- conflict continuity
+- relationship transition
+- knowledge/state transition
+- unresolved threads
+- contradictions
+
+Show:
+
+✓ compatible
+⚠ requires transition
+✕ conflict
+
+AI must explain why the connection needs a bridge.
+
+Generate multiple bridge candidates where useful.
+
+Example:
+
+A → Bridge 1 → B
+A → Bridge 2 → B
+A → Bridge 3 → B
+
+User can compare and choose.
+
+Store:
+
+- sourceScenarioId
+- targetScenarioId
+- bridgeScenarioId
+- transition requirements
+- selected elements
+- user instruction
+- lineage
+- synthesizer/model
+- version
+
+Do not replace the existing synthesize API.
+
+Extend the existing Remix architecture.
+
+Before coding:
+
+1. inspect existing scenario schema
+2. inspect lineage implementation
+3. inspect existing synthesize implementation
+4. inspect workflow architecture
+5. propose minimal schema/API changes
+6. implement backend
+7. implement workflow
+8. implement UI
+9. add tests
+
+Create:
+
+docs/architecture/bridge-story.md
+docs/ux/bridge-remix.md
+
+Acceptance criteria:
+
+Story A and Story B can be selected from Library.
+
+ContentX analyzes the gap.
+
+User can modify transition requirements.
+
+ContentX generates a Bridge Story.
+
+Bridge Story is saved as a normal reusable Scenario.
+
+Lineage shows:
+
+A → Bridge → B
+
+Bridge Story can itself be remixed.
+
+The resulting chain can later be projected to Movie / Novel / Roleplay / Game.
+
+Do not rewrite the existing Content Engine.
