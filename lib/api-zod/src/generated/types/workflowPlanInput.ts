@@ -5,6 +5,7 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { WorkflowPlanInputExistingArtifacts } from './workflowPlanInputExistingArtifacts';
 import type { WorkflowPlanInputOutputType } from './workflowPlanInputOutputType';
 
 /**
@@ -13,9 +14,6 @@ import type { WorkflowPlanInputOutputType } from './workflowPlanInputOutputType'
 export interface WorkflowPlanInput {
   outputType?: WorkflowPlanInputOutputType;
   description?: string;
-  /**
-   * Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will
-   * be pre-marked complete so the new workflow only runs the remaining steps.
-   */
-  existingArtifacts?: { [key: string]: string };
+  /** Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will be pre-marked complete so the new workflow only runs the remaining steps. */
+  existingArtifacts?: WorkflowPlanInputExistingArtifacts;
 }

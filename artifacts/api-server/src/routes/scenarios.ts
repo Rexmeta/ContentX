@@ -19,6 +19,10 @@ import {
   ListSimilarScenariosResponse,
   SynthesizeScenarioBody,
   SynthesizeScenarioResponse,
+  AnalyzeBridgeBody,
+  AnalyzeBridgeResponse,
+  BridgeScenarioBody,
+  BridgeScenarioResponse,
 } from "@workspace/api-zod";
 import {
   synthesizeWithLLM,
@@ -27,7 +31,15 @@ import {
   type ScenarioElement,
 } from "../domains/scenario/synthesizer";
 import {
+  analyzeBridgeWithLLM,
+  bridgeWithLLM,
+  validateBridgeAnalysis,
+  BridgeError,
+  BRIDGE_SYNTHESIZER_ID,
+} from "../domains/scenario/bridge";
+import {
   validateLineage,
+  validateBridgeRequirements,
   InvalidLineageError,
 } from "../domains/scenario/lineageService";
 import * as repo from "../domains/scenario/repository";
@@ -159,6 +171,130 @@ router.post("/v1/scenarios/synthesize", async (req, res): Promise<void> => {
     res.json(SynthesizeScenarioResponse.parse({ scenario, lineage }));
   } catch (err) {
     if (err instanceof SynthesisError) {
+      res.status(502).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
+/** Load and pair the source/target scenarios of a bridge request (or 400). */
+async function loadBridgePair(
+  sourceScenarioId: string,
+  targetScenarioId: string,
+): Promise<
+  | { ok: true; source: ScenarioRow; target: ScenarioRow }
+  | { ok: false; error: string }
+> {
+  if (sourceScenarioId === targetScenarioId) {
+    return { ok: false, error: "Source and target must be different scenarios." };
+  }
+  const [source, target] = await Promise.all([
+    repo.getScenario(sourceScenarioId),
+    repo.getScenario(targetScenarioId),
+  ]);
+  const missing = [
+    ...(source ? [] : [sourceScenarioId]),
+    ...(target ? [] : [targetScenarioId]),
+  ];
+  if (missing.length > 0) {
+    return { ok: false, error: `Unknown scenarios: ${missing.join(", ")}` };
+  }
+  return { ok: true, source: source!, target: target! };
+}
+
+router.post(
+  "/v1/scenarios/bridge/analyze",
+  async (req, res): Promise<void> => {
+    const parsed = AnalyzeBridgeBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const pair = await loadBridgePair(
+      parsed.data.sourceScenarioId,
+      parsed.data.targetScenarioId,
+    );
+    if (!pair.ok) {
+      res.status(400).json({ error: pair.error });
+      return;
+    }
+    try {
+      const analysis = validateBridgeAnalysis(
+        await analyzeBridgeWithLLM(
+          pair.source.scenario as DramaticScenario,
+          pair.target.scenario as DramaticScenario,
+        ),
+      );
+      res.json(AnalyzeBridgeResponse.parse(analysis));
+    } catch (err) {
+      if (err instanceof BridgeError) {
+        res.status(502).json({ error: err.message });
+        return;
+      }
+      throw err;
+    }
+  },
+);
+
+router.post("/v1/scenarios/bridge", async (req, res): Promise<void> => {
+  const parsed = BridgeScenarioBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const pair = await loadBridgePair(
+    parsed.data.sourceScenarioId,
+    parsed.data.targetScenarioId,
+  );
+  if (!pair.ok) {
+    res.status(400).json({ error: pair.error });
+    return;
+  }
+  let requirements: string[];
+  try {
+    requirements = validateBridgeRequirements(parsed.data.requirements);
+  } catch (err) {
+    if (err instanceof InvalidLineageError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+  // Instruction is trimmed and bounded (≤500 chars, enforced by the request
+  // schema) before it reaches the LLM or the lineage record.
+  const instruction = parsed.data.instruction?.trim() || undefined;
+  try {
+    const scenario = await bridgeWithLLM(
+      pair.source.scenario as DramaticScenario,
+      pair.target.scenario as DramaticScenario,
+      requirements,
+      instruction,
+    );
+    // Lineage is server-authoritative: derived from the validated pair.
+    const lineage: Lineage = {
+      kind: "bridge",
+      parents: [
+        {
+          scenarioId: pair.source.id,
+          title: pair.source.title,
+          elements: [],
+          role: "source",
+        },
+        {
+          scenarioId: pair.target.id,
+          title: pair.target.title,
+          elements: [],
+          role: "target",
+        },
+      ],
+      instruction: instruction ?? null,
+      requirements,
+      synthesizedBy: scenario.amplifiedBy ?? BRIDGE_SYNTHESIZER_ID,
+    };
+    res.json(BridgeScenarioResponse.parse({ scenario, lineage }));
+  } catch (err) {
+    if (err instanceof BridgeError) {
       res.status(502).json({ error: err.message });
       return;
     }

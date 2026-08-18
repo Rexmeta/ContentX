@@ -46,6 +46,18 @@ export interface Relationship {
 }
 
 /**
+ * How the child was derived; null/synthesis = element remix, bridge = connecting story
+ * @nullable
+ */
+export type LineageKind = typeof LineageKind[keyof typeof LineageKind] | null;
+
+
+export const LineageKind = {
+  synthesis: 'synthesis',
+  bridge: 'bridge',
+} as const;
+
+/**
  * Which element to borrow from a source scenario
  */
 export type ScenarioElement = typeof ScenarioElement[keyof typeof ScenarioElement];
@@ -59,18 +71,44 @@ export const ScenarioElement = {
   structure: 'structure',
 } as const;
 
+/**
+ * Bridge role — which side of the bridge this parent is (bridge lineage only)
+ * @nullable
+ */
+export type LineageParentRole = typeof LineageParentRole[keyof typeof LineageParentRole] | null;
+
+
+export const LineageParentRole = {
+  source: 'source',
+  target: 'target',
+} as const;
+
 export interface LineageParent {
   scenarioId: string;
   title: string;
-  /** @minItems 1 */
   elements: ScenarioElement[];
+  /**
+     * Bridge role — which side of the bridge this parent is (bridge lineage only)
+     * @nullable
+     */
+  role?: LineageParentRole;
 }
 
 export interface Lineage {
+  /**
+     * How the child was derived; null/synthesis = element remix, bridge = connecting story
+     * @nullable
+     */
+  kind?: LineageKind;
   /** @minItems 2 */
   parents: LineageParent[];
   /** @nullable */
   instruction?: string | null;
+  /**
+     * Transition requirements the bridge was generated against (bridge lineage only)
+     * @nullable
+     */
+  requirements?: string[] | null;
   /** @nullable */
   synthesizedBy?: string | null;
 }
@@ -167,6 +205,80 @@ export interface SynthesizeInput {
   /** @minItems 2 */
   sources: SynthesisSource[];
   /** Optional free-form guidance for the synthesis */
+  instruction?: string;
+}
+
+export interface BridgeAnalyzeInput {
+  /** Story A — the bridge continues from its ending state */
+  sourceScenarioId: string;
+  /** Story B — the bridge must land at its beginning state */
+  targetScenarioId: string;
+}
+
+/**
+ * Gap dimension between the source ending and the target beginning
+ */
+export type BridgeGapDimension = typeof BridgeGapDimension[keyof typeof BridgeGapDimension];
+
+
+export const BridgeGapDimension = {
+  timeline: 'timeline',
+  location: 'location',
+  characters: 'characters',
+  goals: 'goals',
+  conflict: 'conflict',
+  relationships: 'relationships',
+  knowledge: 'knowledge',
+  threads: 'threads',
+  contradictions: 'contradictions',
+} as const;
+
+/**
+ * compatible = ✓, transition = ⚠ requires transition, conflict = ✕
+ */
+export type BridgeGapItemStatus = typeof BridgeGapItemStatus[keyof typeof BridgeGapItemStatus];
+
+
+export const BridgeGapItemStatus = {
+  compatible: 'compatible',
+  transition: 'transition',
+  conflict: 'conflict',
+} as const;
+
+export interface BridgeGapItem {
+  dimension: BridgeGapDimension;
+  /** compatible = ✓, transition = ⚠ requires transition, conflict = ✕ */
+  status: BridgeGapItemStatus;
+  explanation: string;
+  /**
+     * Draft transition requirement when status is transition/conflict
+     * @nullable
+     */
+  requirement?: string | null;
+}
+
+export interface BridgeAnalysis {
+  /** AI explanation of why (or why not) a bridge is needed */
+  summary: string;
+  gaps: BridgeGapItem[];
+  /** Draft transition requirements the user can adjust before generating */
+  requirements: string[];
+}
+
+export interface BridgeGenerateInput {
+  sourceScenarioId: string;
+  targetScenarioId: string;
+  /**
+     * Adjusted transition requirements the bridge must satisfy
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 500
+     */
+  requirements: string[];
+  /**
+     * Optional free-form guidance for the bridge generation (≤500 chars)
+     * @maxLength 500
+     */
   instruction?: string;
 }
 
@@ -1464,16 +1576,18 @@ export const WorkflowPlanInputOutputType = {
 } as const;
 
 /**
+ * Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will be pre-marked complete so the new workflow only runs the remaining steps.
+ */
+export type WorkflowPlanInputExistingArtifacts = {[key: string]: string};
+
+/**
  * Either outputType (choice) or description (natural language) is required; both may be given.
  */
 export interface WorkflowPlanInput {
   outputType?: WorkflowPlanInputOutputType;
   description?: string;
-  /**
-   * Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will
-   * be pre-marked complete so the new workflow only runs the remaining steps.
-   */
-  existingArtifacts?: { [key: string]: string };
+  /** Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will be pre-marked complete so the new workflow only runs the remaining steps. */
+  existingArtifacts?: WorkflowPlanInputExistingArtifacts;
 }
 
 /**

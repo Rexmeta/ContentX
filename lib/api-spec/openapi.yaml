@@ -286,6 +286,66 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/scenarios/bridge/analyze:
+    post:
+      operationId: analyzeBridge
+      tags: [content]
+      summary: Analyze the narrative gap between a source and a target scenario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BridgeAnalyzeInput"
+      responses:
+        "200":
+          description: Structured connection analysis with draft transition requirements (not persisted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BridgeAnalysis"
+        "400":
+          description: Invalid input or unknown scenarios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "502":
+          description: AI analysis failed (provider error or invalid AI output)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+  /v1/scenarios/bridge:
+    post:
+      operationId: bridgeScenario
+      tags: [content]
+      summary: Generate a bridge scenario draft connecting a source to a target scenario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BridgeGenerateInput"
+      responses:
+        "200":
+          description: Bridge scenario draft with bridge lineage (not yet persisted)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SynthesizeResult"
+        "400":
+          description: Invalid input or unknown scenarios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "502":
+          description: AI bridge generation failed (provider error or invalid AI output)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/scenarios/reclassify:
     post:
       operationId: reclassifyScenarios
@@ -1895,20 +1955,89 @@ components:
         title: { type: string }
         elements:
           type: array
-          minItems: 1
           items:
             $ref: "#/components/schemas/ScenarioElement"
+        role:
+          type: ["string", "null"]
+          enum: [source, target, null]
+          description: Bridge role — which side of the bridge this parent is (bridge lineage only)
     Lineage:
       type: object
       required: [parents]
       properties:
+        kind:
+          type: ["string", "null"]
+          enum: [synthesis, bridge, null]
+          description: How the child was derived; null/synthesis = element remix, bridge = connecting story
         parents:
           type: array
           minItems: 2
           items:
             $ref: "#/components/schemas/LineageParent"
         instruction: { type: ["string", "null"] }
+        requirements:
+          type: ["array", "null"]
+          items: { type: string }
+          description: Transition requirements the bridge was generated against (bridge lineage only)
         synthesizedBy: { type: ["string", "null"] }
+    BridgeAnalyzeInput:
+      type: object
+      required: [sourceScenarioId, targetScenarioId]
+      properties:
+        sourceScenarioId:
+          type: string
+          description: Story A — the bridge continues from its ending state
+        targetScenarioId:
+          type: string
+          description: Story B — the bridge must land at its beginning state
+    BridgeGapDimension:
+      type: string
+      enum: [timeline, location, characters, goals, conflict, relationships, knowledge, threads, contradictions]
+      description: Gap dimension between the source ending and the target beginning
+    BridgeGapItem:
+      type: object
+      required: [dimension, status, explanation]
+      properties:
+        dimension:
+          $ref: "#/components/schemas/BridgeGapDimension"
+        status:
+          type: string
+          enum: [compatible, transition, conflict]
+          description: compatible = ✓, transition = ⚠ requires transition, conflict = ✕
+        explanation: { type: string }
+        requirement:
+          type: ["string", "null"]
+          description: Draft transition requirement when status is transition/conflict
+    BridgeAnalysis:
+      type: object
+      required: [summary, gaps, requirements]
+      properties:
+        summary:
+          type: string
+          description: AI explanation of why (or why not) a bridge is needed
+        gaps:
+          type: array
+          items:
+            $ref: "#/components/schemas/BridgeGapItem"
+        requirements:
+          type: array
+          items: { type: string }
+          description: Draft transition requirements the user can adjust before generating
+    BridgeGenerateInput:
+      type: object
+      required: [sourceScenarioId, targetScenarioId, requirements]
+      properties:
+        sourceScenarioId: { type: string }
+        targetScenarioId: { type: string }
+        requirements:
+          type: array
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 500 }
+          description: Adjusted transition requirements the bridge must satisfy
+        instruction:
+          type: string
+          maxLength: 500
+          description: Optional free-form guidance for the bridge generation (≤500 chars)
     SynthesizeResult:
       type: object
       required: [scenario, lineage]

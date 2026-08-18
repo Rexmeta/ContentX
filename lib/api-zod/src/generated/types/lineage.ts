@@ -5,13 +5,24 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { LineageKind } from './lineageKind';
 import type { LineageParent } from './lineageParent';
 
 export interface Lineage {
+  /**
+     * How the child was derived; null/synthesis = element remix, bridge = connecting story
+     * @nullable
+     */
+  kind?: LineageKind;
   /** @minItems 2 */
   parents: LineageParent[];
   /** @nullable */
   instruction?: string | null;
+  /**
+     * Transition requirements the bridge was generated against (bridge lineage only)
+     * @nullable
+     */
+  requirements?: string[] | null;
   /** @nullable */
   synthesizedBy?: string | null;
 }

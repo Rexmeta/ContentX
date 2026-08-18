@@ -16,6 +16,9 @@ import {
   useReclassifyScenarios,
   useListSimilarScenarios,
   useSynthesizeScenario,
+  useAnalyzeBridge,
+  useBridgeScenario,
+  BridgeAnalysis,
   getListScenariosQueryKey,
   getListCategoriesQueryKey,
   ScenarioRecord,
@@ -42,7 +45,11 @@ import {
   Search,
   Filter,
   RefreshCw,
-  GitMerge
+  GitMerge,
+  Link2,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import LineageTree from "@/components/lineage-tree";
@@ -64,6 +71,8 @@ export default function Dashboard() {
   const classifyScenario = useClassifyScenario();
   const reclassifyScenarios = useReclassifyScenarios();
   const synthesizeScenario = useSynthesizeScenario();
+  const analyzeBridge = useAnalyzeBridge();
+  const bridgeScenario = useBridgeScenario();
   
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -86,15 +95,26 @@ export default function Dashboard() {
   const [synthesisElements, setSynthesisElements] = useState<Record<string, ("characters"|"conflict"|"setting"|"twist"|"structure")[]>>({});
   const [synthesisInstruction, setSynthesisInstruction] = useState("");
 
+  // Bridge mode state: pick source (A) then target (B), analyze the gap,
+  // adjust transition requirements, generate bridge candidates.
+  const [isBridgeMode, setIsBridgeMode] = useState(false);
+  const [bridgeSelection, setBridgeSelection] = useState<string[]>([]); // [sourceId, targetId] in click order
+  const [isBridgePanelOpen, setIsBridgePanelOpen] = useState(false);
+  const [bridgeAnalysis, setBridgeAnalysis] = useState<BridgeAnalysis | null>(null);
+  const [bridgeRequirements, setBridgeRequirements] = useState(""); // one requirement per line
+  const [bridgeInstruction, setBridgeInstruction] = useState("");
+
   // Re-roll & candidate comparison state
   type SynthesisElement = "characters"|"conflict"|"setting"|"twist"|"structure";
   const [synthesisRecipe, setSynthesisRecipe] = useState<{ sources: { scenarioId: string, elements: SynthesisElement[] }[], instruction?: string } | null>(null);
+  const [bridgeRecipe, setBridgeRecipe] = useState<{ sourceScenarioId: string, targetScenarioId: string, requirements: string[], instruction?: string } | null>(null);
   const [candidates, setCandidates] = useState<{ scenario: any, lineage: Lineage }[]>([]);
   const [activeCandidate, setActiveCandidate] = useState(0);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
   const clearCandidates = () => {
     setSynthesisRecipe(null);
+    setBridgeRecipe(null);
     setCandidates([]);
     setActiveCandidate(0);
     setIsCompareOpen(false);
@@ -368,6 +388,7 @@ export default function Dashboard() {
     }, {
       onSuccess: (res) => {
         toast({ title: "Synthesis complete" });
+        setBridgeRecipe(null);
         setSynthesisRecipe(recipe);
         setCandidates([{ scenario: res.scenario, lineage: res.lineage }]);
         setActiveCandidate(0);
@@ -396,27 +417,97 @@ export default function Dashboard() {
     });
   };
 
-  const handleReroll = () => {
-    if (!synthesisRecipe || synthesizeScenario.isPending) return;
-    synthesizeScenario.mutate({ data: synthesisRecipe }, {
+  // Shared landing for a fresh synthesis/bridge draft (first candidate).
+  const landFirstCandidate = (res: { scenario: any, lineage: Lineage }, promptText: string, titleText: string) => {
+    setCandidates([{ scenario: res.scenario, lineage: res.lineage }]);
+    setActiveCandidate(0);
+    setIsCompareOpen(false);
+    setDraft(res.scenario);
+    setDraftLineage(res.lineage);
+    setCurrentScenario(null);
+    setEditedClassification({ domain: "", conflictType: "", tone: "", tags: "" });
+    setPrompt(promptText);
+    setTitle(titleText);
+    setStep('SCENARIO');
+    window.scrollTo(0, 0);
+  };
+
+  const parsedBridgeRequirements = bridgeRequirements
+    .split('\n')
+    .map(r => r.trim())
+    .filter(Boolean);
+
+  const handleAnalyzeBridge = () => {
+    if (bridgeSelection.length !== 2) return;
+    analyzeBridge.mutate(
+      { data: { sourceScenarioId: bridgeSelection[0], targetScenarioId: bridgeSelection[1] } },
+      {
+        onSuccess: (res) => {
+          setBridgeAnalysis(res);
+          setBridgeRequirements(res.requirements.join('\n'));
+        },
+        onError: (err) => {
+          toast({ title: "Connection analysis failed", description: err.message, variant: "destructive" });
+        }
+      }
+    );
+  };
+
+  const handleGenerateBridge = () => {
+    if (bridgeSelection.length !== 2 || bridgeScenario.isPending) return;
+    const recipe = {
+      sourceScenarioId: bridgeSelection[0],
+      targetScenarioId: bridgeSelection[1],
+      requirements: parsedBridgeRequirements,
+      instruction: bridgeInstruction.trim() || undefined
+    };
+    bridgeScenario.mutate({ data: recipe }, {
       onSuccess: (res) => {
-        toast({ title: "Re-run complete", description: `Candidate ${candidates.length + 1} added.` });
-        const newIndex = candidates.length;
-        setCandidates(prev => {
-          const copy = [...prev];
-          // Persist any manual edits made to the currently viewed candidate
-          if (copy[activeCandidate]) copy[activeCandidate] = { scenario: draft, lineage: draftLineage! };
-          return [...copy, { scenario: res.scenario, lineage: res.lineage }];
-        });
-        setActiveCandidate(newIndex);
-        setDraft(res.scenario);
-        setDraftLineage(res.lineage);
-        window.scrollTo(0, 0);
+        toast({ title: "Bridge story generated" });
+        setSynthesisRecipe(null);
+        setBridgeRecipe(recipe);
+        const src = res.lineage.parents.find(p => p.role === 'source')?.title || 'A';
+        const tgt = res.lineage.parents.find(p => p.role === 'target')?.title || 'B';
+        landFirstCandidate(res, `Bridge story: ${src} → ${tgt}`, `Bridge: ${src} → ${tgt}`);
+        setIsBridgePanelOpen(false);
+        setIsBridgeMode(false);
+        setBridgeSelection([]);
+        setBridgeAnalysis(null);
+        setBridgeRequirements("");
+        setBridgeInstruction("");
       },
       onError: (err) => {
-        toast({ title: "Re-run failed", description: err.message, variant: "destructive" });
+        toast({ title: "Bridge generation failed", description: err.message, variant: "destructive" });
       }
     });
+  };
+
+  const isRerolling = synthesizeScenario.isPending || bridgeScenario.isPending;
+
+  const handleReroll = () => {
+    if (isRerolling) return;
+    const onRerollSuccess = (res: { scenario: any, lineage: Lineage }) => {
+      toast({ title: "Re-run complete", description: `Candidate ${candidates.length + 1} added.` });
+      const newIndex = candidates.length;
+      setCandidates(prev => {
+        const copy = [...prev];
+        if (copy[activeCandidate]) copy[activeCandidate] = { scenario: draft, lineage: draftLineage! };
+        return [...copy, { scenario: res.scenario, lineage: res.lineage }];
+      });
+      setActiveCandidate(newIndex);
+      setDraft(res.scenario);
+      setDraftLineage(res.lineage);
+      window.scrollTo(0, 0);
+    };
+    const onRerollError = (err: { message: string }) => {
+      toast({ title: "Re-run failed", description: err.message, variant: "destructive" });
+    };
+    if (bridgeRecipe) {
+      bridgeScenario.mutate({ data: bridgeRecipe }, { onSuccess: onRerollSuccess, onError: onRerollError });
+      return;
+    }
+    if (!synthesisRecipe) return;
+    synthesizeScenario.mutate({ data: synthesisRecipe }, { onSuccess: onRerollSuccess, onError: onRerollError });
   };
 
   const handleSelectCandidate = (index: number) => {
@@ -449,11 +540,12 @@ export default function Dashboard() {
           </div>
 
           {/* Synthesis Candidates Bar */}
-          {synthesisRecipe && candidates.length > 0 && !currentScenarioId && (
+          {(synthesisRecipe || bridgeRecipe) && candidates.length > 0 && !currentScenarioId && (
             <div className="border border-secondary/40 bg-card shadow-sm">
               <div className="p-4 flex flex-wrap items-center gap-3">
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-secondary flex items-center gap-2">
-                  <GitMerge className="h-4 w-4" /> Candidates
+                  {bridgeRecipe ? <Link2 className="h-4 w-4" /> : <GitMerge className="h-4 w-4" />}
+                  {bridgeRecipe ? 'Bridge Candidates' : 'Candidates'}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {candidates.map((c, i) => (
@@ -484,15 +576,15 @@ export default function Dashboard() {
                   )}
                   <button
                     onClick={handleReroll}
-                    disabled={synthesizeScenario.isPending}
+                    disabled={isRerolling}
                     className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-1.5 text-xs font-bold border border-secondary transition-colors hover:bg-secondary/90 disabled:opacity-50"
                   >
-                    {synthesizeScenario.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
-                    {synthesizeScenario.isPending ? 'Re-rolling (takes ~1 min)...' : 'Re-run Same Ingredients'}
+                    {isRerolling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                    {isRerolling ? 'Re-rolling (takes ~1 min)...' : 'Re-run Same Ingredients'}
                   </button>
                 </div>
               </div>
-              {synthesizeScenario.isPending && (
+              {isRerolling && (
                 <div className="h-1 bg-secondary animate-pulse w-full"></div>
               )}
               {isCompareOpen && candidates.length > 1 && (
@@ -527,6 +619,45 @@ export default function Dashboard() {
               )}
             </div>
           )}
+
+          {/* Bridge Review Strip: A → Bridge → B */}
+          {(draftLineage?.kind === 'bridge' || currentScenario?.lineage?.kind === 'bridge') && (() => {
+            const lineage = (draftLineage?.kind === 'bridge' ? draftLineage : currentScenario?.lineage)!;
+            const src = lineage.parents.find(p => p.role === 'source');
+            const tgt = lineage.parents.find(p => p.role === 'target');
+            return (
+              <div className="border border-chart-3/40 bg-card shadow-sm p-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-chart-3 flex items-center gap-2">
+                    <Link2 className="h-4 w-4" /> Bridge Story
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="border border-border bg-background px-3 py-1.5 flex items-center gap-2">
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Source A</span>
+                      <span className="font-bold">{src?.title || '?'}</span>
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-chart-3" />
+                    <span className="border border-chart-3 bg-chart-3/10 px-3 py-1.5 font-bold text-chart-3">
+                      {draft.title || 'Bridge'}
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-chart-3" />
+                    <span className="border border-border bg-background px-3 py-1.5 flex items-center gap-2">
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Target B</span>
+                      <span className="font-bold">{tgt?.title || '?'}</span>
+                    </span>
+                  </div>
+                </div>
+                {lineage.requirements && lineage.requirements.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Transition requirements:</span>
+                    {lineage.requirements.map((r, i) => (
+                      <span key={i} className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[10px] font-mono px-1.5 py-0.5">{r}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column: Editable Core Structure */}
@@ -949,6 +1080,8 @@ export default function Dashboard() {
                     onClick={() => {
                       setIsSynthesizeMode(!isSynthesizeMode);
                       setSelectedForSynthesis([]);
+                      setIsBridgeMode(false);
+                      setBridgeSelection([]);
                     }}
                     className={`flex items-center gap-1.5 px-3 py-1 font-bold border transition-colors ${
                       isSynthesizeMode 
@@ -966,6 +1099,36 @@ export default function Dashboard() {
                       className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-3 py-1 font-bold border border-secondary transition-colors disabled:opacity-50"
                     >
                       Synthesize ({selectedForSynthesis.length})
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setIsBridgeMode(!isBridgeMode);
+                      setBridgeSelection([]);
+                      setIsSynthesizeMode(false);
+                      setSelectedForSynthesis([]);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1 font-bold border transition-colors ${
+                      isBridgeMode
+                        ? 'bg-chart-3 text-background border-chart-3'
+                        : 'bg-background border-border hover:border-chart-3 hover:text-chart-3'
+                    }`}
+                  >
+                    <Link2 className="h-3 w-3" />
+                    {isBridgeMode ? 'Cancel Bridge' : 'Bridge Mode'}
+                  </button>
+                  {isBridgeMode && (
+                    <button
+                      disabled={bridgeSelection.length !== 2}
+                      onClick={() => {
+                        setBridgeAnalysis(null);
+                        setBridgeRequirements("");
+                        setBridgeInstruction("");
+                        setIsBridgePanelOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 bg-chart-3 text-background px-3 py-1 font-bold border border-chart-3 transition-colors disabled:opacity-50"
+                    >
+                      {bridgeSelection.length === 0 ? 'Pick Source (A)' : bridgeSelection.length === 1 ? 'Pick Target (B)' : 'Analyze Connection'}
                     </button>
                   )}
                   <div className="w-px h-4 bg-border mx-1"></div>
@@ -1049,13 +1212,21 @@ export default function Dashboard() {
                         className={`p-6 transition-colors group flex flex-col ${
                           isSynthesizeMode && selectedForSynthesis.includes(record.id) 
                             ? 'bg-secondary/10 border-l-4 border-secondary -ml-[1px]' 
-                            : 'hover:bg-muted'
+                            : isBridgeMode && bridgeSelection.includes(record.id)
+                              ? 'bg-chart-3/10 border-l-4 border-chart-3 -ml-[1px]'
+                              : 'hover:bg-muted'
                         }`}
                         onClick={() => {
                           if (isSynthesizeMode) {
                             setSelectedForSynthesis(prev => 
                               prev.includes(record.id) ? prev.filter(id => id !== record.id) : [...prev, record.id]
                             );
+                          } else if (isBridgeMode) {
+                            setBridgeSelection(prev => {
+                              if (prev.includes(record.id)) return prev.filter(id => id !== record.id);
+                              if (prev.length >= 2) return prev;
+                              return [...prev, record.id];
+                            });
                           }
                         }}
                       >
@@ -1069,8 +1240,19 @@ export default function Dashboard() {
                                 className="h-4 w-4 rounded-none border-border text-secondary focus:ring-secondary cursor-pointer"
                               />
                             )}
+                            {isBridgeMode && (
+                              <span className={`h-6 min-w-6 px-1 flex items-center justify-center text-[10px] font-mono font-bold border ${
+                                bridgeSelection[0] === record.id
+                                  ? 'bg-chart-3 text-background border-chart-3'
+                                  : bridgeSelection[1] === record.id
+                                    ? 'bg-chart-3/20 text-chart-3 border-chart-3'
+                                    : 'bg-background text-muted-foreground border-border'
+                              }`}>
+                                {bridgeSelection[0] === record.id ? 'A' : bridgeSelection[1] === record.id ? 'B' : '·'}
+                              </span>
+                            )}
                             <h3 className="text-lg font-bold group-hover:text-primary transition-colors cursor-pointer" onClick={(e) => {
-                               if (!isSynthesizeMode) {
+                               if (!isSynthesizeMode && !isBridgeMode) {
                                  handleOpenScenario(record);
                                }
                             }}>{record.title || "Untitled Scenario"}</h3>
@@ -1097,9 +1279,15 @@ export default function Dashboard() {
                         
                         <div className="flex flex-wrap gap-2 mb-3">
                           {record.lineage && (
-                            <span className="bg-foreground text-background border border-foreground text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider flex items-center gap-1">
-                              <GitMerge className="h-2.5 w-2.5" /> SYNTHESIZED ({record.lineage.parents.length})
-                            </span>
+                            record.lineage.kind === 'bridge' ? (
+                              <span className="bg-chart-3 text-background border border-chart-3 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider flex items-center gap-1">
+                                <Link2 className="h-2.5 w-2.5" /> BRIDGE ({record.lineage.parents.find(p => p.role === 'source')?.title} → {record.lineage.parents.find(p => p.role === 'target')?.title})
+                              </span>
+                            ) : (
+                              <span className="bg-foreground text-background border border-foreground text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider flex items-center gap-1">
+                                <GitMerge className="h-2.5 w-2.5" /> SYNTHESIZED ({record.lineage.parents.length})
+                              </span>
+                            )
                           )}
                           {record.classification ? (
                             <>
@@ -1125,7 +1313,7 @@ export default function Dashboard() {
                             {format(new Date(record.updatedAt), "yyyy-MM-dd HH:mm")}
                           </span>
                           
-                          {!isSynthesizeMode && (
+                          {!isSynthesizeMode && !isBridgeMode && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleOpenScenario(record); }}
                               className="flex items-center gap-2 bg-background border border-border px-3 py-1.5 text-xs font-semibold hover:border-primary hover:text-primary transition-colors"
@@ -1164,6 +1352,153 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Bridge Panel Overlay: analyze → adjust requirements → generate */}
+      {isBridgePanelOpen && bridgeSelection.length === 2 && (() => {
+        const sourceRecord = scenarios?.find(s => s.id === bridgeSelection[0]);
+        const targetRecord = scenarios?.find(s => s.id === bridgeSelection[1]);
+        const statusIcon = (status: string) =>
+          status === 'compatible' ? <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+          : status === 'transition' ? <AlertTriangle className="h-4 w-4 text-chart-3 shrink-0" />
+          : <XCircle className="h-4 w-4 text-destructive shrink-0" />;
+        const statusLabel = (status: string) =>
+          status === 'compatible' ? '✓ COMPATIBLE' : status === 'transition' ? '⚠ REQUIRES TRANSITION' : '✕ CONFLICT';
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
+            <div className="bg-card border border-border w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative">
+              <div className="p-4 border-b border-border bg-muted/30 flex justify-between items-center">
+                <h2 className="text-sm font-mono font-bold uppercase tracking-wider flex items-center gap-2">
+                  <Link2 className="h-4 w-4" /> Bridge Story
+                </h2>
+                <button
+                  onClick={() => setIsBridgePanelOpen(false)}
+                  className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto p-6 space-y-6">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="border border-border bg-background px-3 py-1.5">
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mr-2">Source A</span>
+                    <span className="font-bold">{sourceRecord?.title || bridgeSelection[0]}</span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-chart-3" />
+                  <span className="border border-dashed border-chart-3 text-chart-3 px-3 py-1.5 font-mono text-xs uppercase tracking-wider">Bridge</span>
+                  <ArrowRight className="h-4 w-4 text-chart-3" />
+                  <span className="border border-border bg-background px-3 py-1.5">
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mr-2">Target B</span>
+                    <span className="font-bold">{targetRecord?.title || bridgeSelection[1]}</span>
+                  </span>
+                </div>
+
+                {!bridgeAnalysis ? (
+                  <div className="border border-border bg-background/50 p-6 flex flex-col items-center gap-4 text-center">
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      Analyze the gap between Story A's ending and Story B's beginning — timeline, location,
+                      characters, goals, conflict, relationships, knowledge, unresolved threads, and contradictions.
+                    </p>
+                    <button
+                      onClick={handleAnalyzeBridge}
+                      disabled={analyzeBridge.isPending}
+                      className="flex items-center gap-2 bg-chart-3 text-background px-6 py-2 text-sm font-bold border border-chart-3 transition-colors hover:bg-chart-3/90 disabled:opacity-50"
+                    >
+                      {analyzeBridge.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                      {analyzeBridge.isPending ? 'Analyzing connection (takes ~1 min)...' : 'Analyze Connection'}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="border border-chart-3/40 bg-chart-3/5 p-4">
+                      <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-chart-3 mb-1.5">Why a bridge is needed</div>
+                      <p className="text-sm leading-relaxed">{bridgeAnalysis.summary}</p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-semibold uppercase text-muted-foreground">Connection Analysis</div>
+                      {bridgeAnalysis.gaps.map((gap) => (
+                        <div key={gap.dimension} className="border border-border bg-background/50 p-3 flex items-start gap-3">
+                          {statusIcon(gap.status)}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-mono font-bold uppercase tracking-wider">{gap.dimension}</span>
+                              <span className={`text-[9px] font-mono px-1 py-px border ${
+                                gap.status === 'compatible' ? 'text-primary border-primary/30 bg-primary/10'
+                                : gap.status === 'transition' ? 'text-chart-3 border-chart-3/30 bg-chart-3/10'
+                                : 'text-destructive border-destructive/30 bg-destructive/10'
+                              }`}>{statusLabel(gap.status)}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">{gap.explanation}</p>
+                            {gap.requirement && (
+                              <p className="text-xs mt-1"><span className="font-mono text-[9px] uppercase tracking-wider text-chart-3 mr-1">Requirement</span>{gap.requirement}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase text-muted-foreground">
+                        Transition Requirements (one per line — adjust freely)
+                      </label>
+                      <textarea
+                        value={bridgeRequirements}
+                        onChange={(e) => setBridgeRequirements(e.target.value)}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-chart-3 focus:ring-1 focus:ring-chart-3 transition-all font-mono min-h-[120px]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase text-muted-foreground">Bridge Instruction (Optional)</label>
+                      <textarea
+                        value={bridgeInstruction}
+                        onChange={(e) => setBridgeInstruction(e.target.value)}
+                        placeholder="e.g. Keep the tone quiet and melancholic; a year passes between the two stories..."
+                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-chart-3 focus:ring-1 focus:ring-chart-3 transition-all resize-none font-mono min-h-[80px]"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-border bg-muted/10 flex justify-end gap-3">
+                <button
+                  onClick={() => setIsBridgePanelOpen(false)}
+                  className="px-4 py-2 text-sm font-semibold border border-transparent hover:bg-muted transition-colors"
+                  disabled={bridgeScenario.isPending}
+                >
+                  Cancel
+                </button>
+                {bridgeAnalysis && (
+                  <>
+                    <button
+                      onClick={handleAnalyzeBridge}
+                      disabled={analyzeBridge.isPending || bridgeScenario.isPending}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-semibold border border-border hover:border-chart-3 hover:text-chart-3 transition-colors disabled:opacity-50"
+                    >
+                      {analyzeBridge.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                      Re-analyze
+                    </button>
+                    <button
+                      onClick={handleGenerateBridge}
+                      disabled={bridgeScenario.isPending}
+                      className="flex items-center gap-2 bg-chart-3 text-background px-6 py-2 text-sm font-bold border border-chart-3 transition-colors hover:bg-chart-3/90 disabled:opacity-50"
+                    >
+                      {bridgeScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                      {bridgeScenario.isPending ? 'Generating bridge (takes ~1 min)...' : 'Generate Bridge Story'}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {(analyzeBridge.isPending || bridgeScenario.isPending) && (
+                <div className="absolute bottom-0 left-0 h-1 bg-chart-3 animate-pulse w-full"></div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Synthesis Panel Overlay */}
       {isSynthesisPanelOpen && (

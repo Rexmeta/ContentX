@@ -37,7 +37,6 @@ export const ListContentResponse = zod.array(ListContentResponseItem)
  * @summary Generate a content graph from a natural language prompt
  */
 
-
 export const createContentBodyLineageParentsMin = 2;
 
 
@@ -66,16 +65,18 @@ export const CreateContentBody = zod.object({
   "amplifiedBy": zod.string().optional()
 }).optional(),
   "lineage": zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createContentBodyLineageParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }).optional()
 })
-
 
 
 export const createContentResponseProvenanceLineageTwoParentsMin = 2;
@@ -115,12 +116,15 @@ export const CreateContentResponse = zod.object({
   "generatedByProvider": zod.string().nullish(),
   "generatedByModel": zod.string().nullish(),
   "lineage": zod.union([zod.null(),zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createContentResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
@@ -136,7 +140,6 @@ export const ImportMatraixContentBody = zod.object({
   "title": zod.string().optional().describe('Optional title for the imported content graph'),
   "dryRun": zod.boolean().optional().describe('Map and validate without committing')
 })
-
 
 
 export const importMatraixContentResponseContentProvenanceLineageTwoParentsMin = 2;
@@ -177,12 +180,15 @@ export const ImportMatraixContentResponse = zod.object({
   "generatedByProvider": zod.string().nullish(),
   "generatedByModel": zod.string().nullish(),
   "lineage": zod.union([zod.null(),zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(importMatraixContentResponseContentProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
@@ -267,7 +273,6 @@ export const DraftScenarioResponse = zod.object({
 /**
  * @summary List saved scenarios
  */
-
 export const listScenariosResponseLineageOneParentsMin = 2;
 
 
@@ -304,12 +309,15 @@ export const ListScenariosResponseItem = zod.object({
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
   "lineage": zod.union([zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(listScenariosResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }),zod.null()]),
   "createdAt": zod.string(),
@@ -321,7 +329,6 @@ export const ListScenariosResponse = zod.array(ListScenariosResponseItem)
 /**
  * @summary Save a scenario to the scenario library
  */
-
 
 export const createScenarioBodyLineageParentsMin = 2;
 
@@ -350,16 +357,18 @@ export const CreateScenarioBody = zod.object({
   "amplifiedBy": zod.string().optional()
 }),
   "lineage": zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createScenarioBodyLineageParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }).optional()
 })
-
 
 export const createScenarioResponseLineageOneParentsMin = 2;
 
@@ -397,12 +406,15 @@ export const CreateScenarioResponse = zod.object({
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
   "lineage": zod.union([zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }),zod.null()]),
   "createdAt": zod.string(),
@@ -416,7 +428,6 @@ export const CreateScenarioResponse = zod.object({
 export const GetScenarioParams = zod.object({
   "id": zod.coerce.string()
 })
-
 
 export const getScenarioResponseLineageOneParentsMin = 2;
 
@@ -454,12 +465,15 @@ export const GetScenarioResponse = zod.object({
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
   "lineage": zod.union([zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(getScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }),zod.null()]),
   "createdAt": zod.string(),
@@ -504,7 +518,6 @@ export const UpdateScenarioBody = zod.object({
 }).optional().describe('Manual classification override; when present it is stored as-is (no auto-classify)')
 })
 
-
 export const updateScenarioResponseLineageOneParentsMin = 2;
 
 
@@ -541,12 +554,15 @@ export const UpdateScenarioResponse = zod.object({
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
   "lineage": zod.union([zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(updateScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }),zod.null()]),
   "createdAt": zod.string(),
@@ -593,7 +609,6 @@ export const SynthesizeScenarioBody = zod.object({
   "instruction": zod.string().optional().describe('Optional free-form guidance for the synthesis')
 })
 
-
 export const synthesizeScenarioResponseLineageParentsMin = 2;
 
 
@@ -620,12 +635,93 @@ export const SynthesizeScenarioResponse = zod.object({
   "amplifiedBy": zod.string().optional()
 }),
   "lineage": zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(synthesizeScenarioResponseLineageParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
+  "synthesizedBy": zod.string().nullish()
+})
+})
+
+
+/**
+ * @summary Analyze the narrative gap between a source and a target scenario
+ */
+export const AnalyzeBridgeBody = zod.object({
+  "sourceScenarioId": zod.string().describe('Story A — the bridge continues from its ending state'),
+  "targetScenarioId": zod.string().describe('Story B — the bridge must land at its beginning state')
+})
+
+export const AnalyzeBridgeResponse = zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition\/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+})
+
+
+/**
+ * @summary Generate a bridge scenario draft connecting a source to a target scenario
+ */
+export const bridgeScenarioBodyRequirementsItemMax = 500;
+
+export const bridgeScenarioBodyRequirementsMax = 20;
+
+export const bridgeScenarioBodyInstructionMax = 500;
+
+
+
+export const BridgeScenarioBody = zod.object({
+  "sourceScenarioId": zod.string(),
+  "targetScenarioId": zod.string(),
+  "requirements": zod.array(zod.string().min(1).max(bridgeScenarioBodyRequirementsItemMax)).max(bridgeScenarioBodyRequirementsMax).describe('Adjusted transition requirements the bridge must satisfy'),
+  "instruction": zod.string().max(bridgeScenarioBodyInstructionMax).optional().describe('Optional free-form guidance for the bridge generation (≤500 chars)')
+})
+
+export const bridgeScenarioResponseLineageParentsMin = 2;
+
+
+
+export const BridgeScenarioResponse = zod.object({
+  "scenario": zod.object({
+  "title": zod.string(),
+  "logline": zod.string(),
+  "synopsis": zod.string(),
+  "theme": zod.string(),
+  "stakes": zod.string(),
+  "twist": zod.string(),
+  "acts": zod.array(zod.object({
+  "name": zod.string(),
+  "summary": zod.string(),
+  "beats": zod.array(zod.string())
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string(),
+  "role": zod.string(),
+  "motivation": zod.string()
+})),
+  "sourceIdea": zod.string().optional(),
+  "amplifiedBy": zod.string().optional()
+}),
+  "lineage": zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
+})).min(bridgeScenarioResponseLineageParentsMin),
+  "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 })
 })
@@ -646,7 +742,6 @@ export const ReclassifyScenariosResponse = zod.object({
 export const ClassifyScenarioParams = zod.object({
   "id": zod.coerce.string()
 })
-
 
 export const classifyScenarioResponseLineageOneParentsMin = 2;
 
@@ -684,12 +779,15 @@ export const ClassifyScenarioResponse = zod.object({
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
   "lineage": zod.union([zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(classifyScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }),zod.null()]),
   "createdAt": zod.string(),
@@ -703,7 +801,6 @@ export const ClassifyScenarioResponse = zod.object({
 export const ListSimilarScenariosParams = zod.object({
   "id": zod.coerce.string()
 })
-
 
 export const listSimilarScenariosResponseLineageOneParentsMin = 2;
 
@@ -741,12 +838,15 @@ export const ListSimilarScenariosResponseItem = zod.object({
   "classifiedBy": zod.string().nullish()
 }),zod.null()]),
   "lineage": zod.union([zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(listSimilarScenariosResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 }),zod.null()]),
   "createdAt": zod.string(),
@@ -761,7 +861,6 @@ export const ListSimilarScenariosResponse = zod.array(ListSimilarScenariosRespon
 export const GetContentParams = zod.object({
   "id": zod.coerce.string()
 })
-
 
 
 export const getContentResponseProvenanceLineageTwoParentsMin = 2;
@@ -801,12 +900,15 @@ export const GetContentResponse = zod.object({
   "generatedByProvider": zod.string().nullish(),
   "generatedByModel": zod.string().nullish(),
   "lineage": zod.union([zod.null(),zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(getContentResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
@@ -842,7 +944,6 @@ export const UpdateEntityBody = zod.object({
   "description": zod.string().nullish(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })
-
 
 
 export const updateEntityResponseProvenanceLineageTwoParentsMin = 2;
@@ -882,12 +983,15 @@ export const UpdateEntityResponse = zod.object({
   "generatedByProvider": zod.string().nullish(),
   "generatedByModel": zod.string().nullish(),
   "lineage": zod.union([zod.null(),zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(updateEntityResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
@@ -911,7 +1015,6 @@ export const UpdateRelationshipBody = zod.object({
   "source": zod.string().optional(),
   "attributes": zod.record(zod.string(), zod.unknown()).optional()
 })
-
 
 
 export const updateRelationshipResponseProvenanceLineageTwoParentsMin = 2;
@@ -951,12 +1054,15 @@ export const UpdateRelationshipResponse = zod.object({
   "generatedByProvider": zod.string().nullish(),
   "generatedByModel": zod.string().nullish(),
   "lineage": zod.union([zod.null(),zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(updateRelationshipResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
@@ -1037,7 +1143,6 @@ export const ExportContentParams = zod.object({
 })
 
 
-
 export const exportContentResponseContentProvenanceLineageTwoParentsMin = 2;
 
 
@@ -1078,12 +1183,15 @@ export const ExportContentResponse = zod.object({
   "generatedByProvider": zod.string().nullish(),
   "generatedByModel": zod.string().nullish(),
   "lineage": zod.union([zod.null(),zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null\/synthesis = element remix, bridge = connecting story'),
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(exportContentResponseContentProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
   "synthesizedBy": zod.string().nullish()
 })]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
 }).optional()
@@ -3007,7 +3115,7 @@ export const CreateWorkflowResponse = zod.object({
 export const PlanWorkflowBody = zod.object({
   "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']).optional(),
   "description": zod.string().optional(),
-  "existingArtifacts": zod.record(zod.string(), zod.string()).optional()
+  "existingArtifacts": zod.record(zod.string(), zod.string()).optional().describe('Artifact key → resource id from a prior workflow. Steps whose outputs are fully covered will be pre-marked complete so the new workflow only runs the remaining steps.')
 }).describe('Either outputType (choice) or description (natural language) is required; both may be given.')
 
 export const PlanWorkflowResponse = zod.object({

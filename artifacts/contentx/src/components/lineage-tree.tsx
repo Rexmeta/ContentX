@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { ScenarioRecord } from "@workspace/api-client-react";
-import { GitMerge, GitBranch, FileText, Ghost, CornerDownRight } from "lucide-react";
+import { GitMerge, GitBranch, FileText, Ghost, CornerDownRight, Link2 } from "lucide-react";
 
 /**
  * Scenario lineage family tree.
@@ -17,6 +17,7 @@ interface TreeNode {
   record: ScenarioRecord | null; // null => ghost (deleted parent)
   ghostTitle?: string;
   elements?: string[]; // elements this node contributed to its child context (set on children)
+  bridgeRole?: string | null; // role this node's parent played in producing THIS bridge child (source/target)
   children: TreeNode[];
   multiParent: boolean;
 }
@@ -24,7 +25,7 @@ interface TreeNode {
 function buildForest(scenarios: ScenarioRecord[]): { roots: TreeNode[]; involved: number } {
   const byId = new Map(scenarios.map((s) => [s.id, s]));
   // parentId -> children entries
-  const childrenOf = new Map<string, { child: ScenarioRecord; elements: string[] }[]>();
+  const childrenOf = new Map<string, { child: ScenarioRecord; elements: string[]; role?: string | null }[]>();
   const ghostTitles = new Map<string, string>();
   const hasParents = new Set<string>();
   const isParent = new Set<string>();
@@ -36,7 +37,7 @@ function buildForest(scenarios: ScenarioRecord[]): { roots: TreeNode[]; involved
       isParent.add(p.scenarioId);
       if (!byId.has(p.scenarioId)) ghostTitles.set(p.scenarioId, p.title);
       const list = childrenOf.get(p.scenarioId) || [];
-      list.push({ child: s, elements: p.elements as string[] });
+      list.push({ child: s, elements: p.elements as string[], role: p.role ?? null });
       childrenOf.set(p.scenarioId, list);
     }
   }
@@ -48,13 +49,14 @@ function buildForest(scenarios: ScenarioRecord[]): { roots: TreeNode[]; involved
 
   const involvedIds = new Set<string>([...hasParents, ...isParent]);
 
-  const build = (id: string, elements: string[] | undefined, visited: Set<string>): TreeNode => {
+  const build = (id: string, elements: string[] | undefined, bridgeRole: string | null | undefined, visited: Set<string>): TreeNode => {
     const record = byId.get(id) || null;
     const node: TreeNode = {
       id,
       record,
       ghostTitle: record ? undefined : ghostTitles.get(id) || "Deleted scenario",
       elements,
+      bridgeRole,
       children: [],
       multiParent: parentCount(id) > 1,
     };
@@ -63,7 +65,7 @@ function buildForest(scenarios: ScenarioRecord[]): { roots: TreeNode[]; involved
     const kids = childrenOf.get(id) || [];
     node.children = kids
       .sort((a, b) => a.child.createdAt.localeCompare(b.child.createdAt))
-      .map((k) => build(k.child.id, k.elements, nextVisited));
+      .map((k) => build(k.child.id, k.elements, k.role, nextVisited));
     return node;
   };
 
@@ -81,7 +83,7 @@ function buildForest(scenarios: ScenarioRecord[]): { roots: TreeNode[]; involved
       const rb = byId.get(b);
       return (ra?.createdAt || "").localeCompare(rb?.createdAt || "");
     })
-    .map((id) => build(id, undefined, new Set()));
+    .map((id) => build(id, undefined, undefined, new Set()));
 
   return { roots, involved: involvedIds.size };
 }
@@ -101,6 +103,7 @@ function NodeCard({
 }) {
   const isGhost = !node.record;
   const isSynth = Boolean(node.record?.lineage && node.record.lineage.parents.length > 0);
+  const isBridge = node.record?.lineage?.kind === "bridge";
   const descendants = depth === 0 ? countDescendants(node) : 0;
 
   return (
@@ -120,6 +123,8 @@ function NodeCard({
         <div className="flex items-center gap-2 flex-wrap">
           {isGhost ? (
             <Ghost className="h-3.5 w-3.5 shrink-0" />
+          ) : isBridge ? (
+            <Link2 className="h-3.5 w-3.5 text-chart-3 shrink-0" />
           ) : isSynth ? (
             <GitMerge className="h-3.5 w-3.5 text-primary shrink-0" />
           ) : (
@@ -133,6 +138,11 @@ function NodeCard({
               deleted
             </span>
           )}
+          {isBridge && (
+            <span className="text-[9px] font-mono uppercase tracking-wider bg-chart-3/10 text-chart-3 border border-chart-3/20 px-1 py-px flex items-center gap-1">
+              <Link2 className="h-2.5 w-2.5" /> bridge
+            </span>
+          )}
           {node.multiParent && (
             <span className="text-[9px] font-mono uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 px-1 py-px flex items-center gap-1">
               <GitBranch className="h-2.5 w-2.5" /> multi-parent
@@ -144,6 +154,15 @@ function NodeCard({
             </span>
           )}
         </div>
+        {node.bridgeRole && (
+          <div className="flex flex-wrap items-center gap-1">
+            <CornerDownRight className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[9px] font-mono text-muted-foreground uppercase mr-1">via</span>
+            <span className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[9px] font-mono px-1 py-px uppercase tracking-wider">
+              {node.bridgeRole === "source" ? "bridged from (A)" : "bridged into (B)"}
+            </span>
+          </div>
+        )}
         {node.elements && node.elements.length > 0 && (
           <div className="flex flex-wrap items-center gap-1">
             <CornerDownRight className="h-3 w-3 text-muted-foreground" />

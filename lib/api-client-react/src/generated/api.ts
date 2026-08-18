@@ -26,6 +26,9 @@ import type {
   AgentStateUpdate,
   AgentWithState,
   ApiMessage,
+  BridgeAnalysis,
+  BridgeAnalyzeInput,
+  BridgeGenerateInput,
   CanonicalExport,
   Category,
   Character,
@@ -992,6 +995,148 @@ export const useSynthesizeScenario = <TError = ErrorType<ApiMessage>,
         TContext
       > => {
       return useMutation(getSynthesizeScenarioMutationOptions(options));
+    }
+
+export const getAnalyzeBridgeUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios/bridge/analyze`
+}
+
+/**
+ * @summary Analyze the narrative gap between a source and a target scenario
+ */
+export const analyzeBridge = async (bridgeAnalyzeInput: BridgeAnalyzeInput, options?: Parameters<typeof customFetch>[1]): Promise<BridgeAnalysis> => {
+
+  return customFetch<BridgeAnalysis>(getAnalyzeBridgeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(bridgeAnalyzeInput)
+  }
+);}
+
+
+
+
+
+export const getAnalyzeBridgeMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzeBridge>>, TError,{data: BodyType<BridgeAnalyzeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof analyzeBridge>>, TError,{data: BodyType<BridgeAnalyzeInput>}, TContext> => {
+
+const mutationKey = ['analyzeBridge'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analyzeBridge>>, {data: BodyType<BridgeAnalyzeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  analyzeBridge(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalyzeBridgeMutationResult = NonNullable<Awaited<ReturnType<typeof analyzeBridge>>>
+    export type AnalyzeBridgeMutationBody = BodyType<BridgeAnalyzeInput>
+    export type AnalyzeBridgeMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Analyze the narrative gap between a source and a target scenario
+ */
+export const useAnalyzeBridge = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzeBridge>>, TError,{data: BodyType<BridgeAnalyzeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof analyzeBridge>>,
+        TError,
+        {data: BodyType<BridgeAnalyzeInput>},
+        TContext
+      > => {
+      return useMutation(getAnalyzeBridgeMutationOptions(options));
+    }
+
+export const getBridgeScenarioUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios/bridge`
+}
+
+/**
+ * @summary Generate a bridge scenario draft connecting a source to a target scenario
+ */
+export const bridgeScenario = async (bridgeGenerateInput: BridgeGenerateInput, options?: Parameters<typeof customFetch>[1]): Promise<SynthesizeResult> => {
+
+  return customFetch<SynthesizeResult>(getBridgeScenarioUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(bridgeGenerateInput)
+  }
+);}
+
+
+
+
+
+export const getBridgeScenarioMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bridgeScenario>>, TError,{data: BodyType<BridgeGenerateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bridgeScenario>>, TError,{data: BodyType<BridgeGenerateInput>}, TContext> => {
+
+const mutationKey = ['bridgeScenario'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bridgeScenario>>, {data: BodyType<BridgeGenerateInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bridgeScenario(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BridgeScenarioMutationResult = NonNullable<Awaited<ReturnType<typeof bridgeScenario>>>
+    export type BridgeScenarioMutationBody = BodyType<BridgeGenerateInput>
+    export type BridgeScenarioMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Generate a bridge scenario draft connecting a source to a target scenario
+ */
+export const useBridgeScenario = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bridgeScenario>>, TError,{data: BodyType<BridgeGenerateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bridgeScenario>>,
+        TError,
+        {data: BodyType<BridgeGenerateInput>},
+        TContext
+      > => {
+      return useMutation(getBridgeScenarioMutationOptions(options));
     }
 
 export const getReclassifyScenariosUrl = () => {

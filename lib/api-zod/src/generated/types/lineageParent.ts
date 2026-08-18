@@ -5,11 +5,16 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { LineageParentRole } from './lineageParentRole';
 import type { ScenarioElement } from './scenarioElement';
 
 export interface LineageParent {
   scenarioId: string;
   title: string;
-  /** @minItems 1 */
   elements: ScenarioElement[];
+  /**
+     * Bridge role — which side of the bridge this parent is (bridge lineage only)
+     * @nullable
+     */
+  role?: LineageParentRole;
 }
