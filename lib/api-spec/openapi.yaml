@@ -1923,7 +1923,7 @@ components:
         amplifiedBy: { type: string }
     ScenarioElement:
       type: string
-      enum: [characters, conflict, setting, twist, structure]
+      enum: [characters, conflict, setting, twist, structure, relationship, goal, event, ending]
       description: Which element to borrow from a source scenario
     SynthesisSource:
       type: object

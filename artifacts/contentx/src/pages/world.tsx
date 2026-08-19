@@ -92,7 +92,7 @@ export default function Dashboard() {
   const [isSynthesizeMode, setIsSynthesizeMode] = useState(false);
   const [selectedForSynthesis, setSelectedForSynthesis] = useState<string[]>([]);
   const [isSynthesisPanelOpen, setIsSynthesisPanelOpen] = useState(false);
-  const [synthesisElements, setSynthesisElements] = useState<Record<string, ("characters"|"conflict"|"setting"|"twist"|"structure")[]>>({});
+  const [synthesisElements, setSynthesisElements] = useState<Record<string, ("characters"|"conflict"|"setting"|"twist"|"structure"|"relationship"|"goal"|"event"|"ending")[]>>({});
   const [synthesisInstruction, setSynthesisInstruction] = useState("");
 
   // Bridge mode state: pick source (A) then target (B), analyze the gap,
@@ -105,7 +105,7 @@ export default function Dashboard() {
   const [bridgeInstruction, setBridgeInstruction] = useState("");
 
   // Re-roll & candidate comparison state
-  type SynthesisElement = "characters"|"conflict"|"setting"|"twist"|"structure";
+  type SynthesisElement = "characters"|"conflict"|"setting"|"twist"|"structure"|"relationship"|"goal"|"event"|"ending";
   const [synthesisRecipe, setSynthesisRecipe] = useState<{ sources: { scenarioId: string, elements: SynthesisElement[] }[], instruction?: string } | null>(null);
   const [bridgeRecipe, setBridgeRecipe] = useState<{ sourceScenarioId: string, targetScenarioId: string, requirements: string[], instruction?: string } | null>(null);
   const [candidates, setCandidates] = useState<{ scenario: any, lineage: Lineage }[]>([]);
@@ -1574,7 +1574,7 @@ export default function Dashboard() {
                   const record = scenarios?.find(s => s.id === id);
                   if (!record) return null;
                   
-                  const toggleElement = (el: "characters"|"conflict"|"setting"|"twist"|"structure") => {
+                  const toggleElement = (el: SynthesisElement) => {
                     setSynthesisElements(prev => {
                       const current = prev[id] || [];
                       const updated = current.includes(el) ? current.filter(e => e !== el) : [...current, el];
@@ -1593,7 +1593,7 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {(["characters", "conflict", "setting", "twist", "structure"] as const).map(el => {
+                        {(["characters", "conflict", "setting", "twist", "structure", "relationship", "goal", "event", "ending"] as const).map(el => {
                           const isSelected = (synthesisElements[id] || []).includes(el);
                           return (
                             <button

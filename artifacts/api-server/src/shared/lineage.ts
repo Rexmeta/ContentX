@@ -28,11 +28,17 @@ export interface StoredBridgeAnalysis {
 // ---------------------------------------------------------------------------
 
 export const SCENARIO_ELEMENTS = [
+  // Original 5 elements — kept for backward compatibility with stored lineages
   "characters",
   "conflict",
   "setting",
   "twist",
   "structure",
+  // Extended element vocabulary (phase 1)
+  "relationship", // 인물 간 관계 역학
+  "goal",         // 인물들의 목표·동기
+  "event",        // 핵심 사건·전환점
+  "ending",       // 결말·해소 방식
 ] as const;
 
 export type ScenarioElement = (typeof SCENARIO_ELEMENTS)[number];

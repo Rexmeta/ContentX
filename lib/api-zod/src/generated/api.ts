@@ -69,7 +69,7 @@ export const CreateContentBody = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createContentBodyLineageParentsMin),
   "instruction": zod.string().nullish(),
@@ -130,7 +130,7 @@ export const CreateContentResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createContentResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
@@ -204,7 +204,7 @@ export const ImportMatraixContentResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(importMatraixContentResponseContentProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
@@ -343,7 +343,7 @@ export const ListScenariosResponseItem = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(listScenariosResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
@@ -401,7 +401,7 @@ export const CreateScenarioBody = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createScenarioBodyLineageParentsMin),
   "instruction": zod.string().nullish(),
@@ -460,7 +460,7 @@ export const CreateScenarioResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(createScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
@@ -529,7 +529,7 @@ export const GetScenarioResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(getScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
@@ -628,7 +628,7 @@ export const UpdateScenarioResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(updateScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
@@ -684,7 +684,7 @@ export const synthesizeScenarioBodySourcesMin = 2;
 export const SynthesizeScenarioBody = zod.object({
   "sources": zod.array(zod.object({
   "scenarioId": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')).min(1)
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')).min(1)
 })).min(synthesizeScenarioBodySourcesMin),
   "instruction": zod.string().optional().describe('Optional free-form guidance for the synthesis')
 })
@@ -719,7 +719,7 @@ export const SynthesizeScenarioResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(synthesizeScenarioResponseLineageParentsMin),
   "instruction": zod.string().nullish(),
@@ -817,7 +817,7 @@ export const BridgeScenarioResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(bridgeScenarioResponseLineageParentsMin),
   "instruction": zod.string().nullish(),
@@ -893,7 +893,7 @@ export const ClassifyScenarioResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(classifyScenarioResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
@@ -962,7 +962,7 @@ export const ListSimilarScenariosResponseItem = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(listSimilarScenariosResponseLineageOneParentsMin),
   "instruction": zod.string().nullish(),
@@ -1034,7 +1034,7 @@ export const GetContentResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(getContentResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
@@ -1127,7 +1127,7 @@ export const UpdateEntityResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(updateEntityResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
@@ -1208,7 +1208,7 @@ export const UpdateRelationshipResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(updateRelationshipResponseProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),
@@ -1347,7 +1347,7 @@ export const ExportContentResponse = zod.object({
   "parents": zod.array(zod.object({
   "scenarioId": zod.string(),
   "title": zod.string(),
-  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure']).describe('Which element to borrow from a source scenario')),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
   "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
 })).min(exportContentResponseContentProvenanceLineageTwoParentsMin),
   "instruction": zod.string().nullish(),

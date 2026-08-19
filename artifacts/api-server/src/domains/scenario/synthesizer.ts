@@ -21,11 +21,17 @@ export type Synthesizer = (
 ) => Promise<DramaticScenario>;
 
 const ELEMENT_LABEL: Record<ScenarioElement, string> = {
+  // Original 5 elements
   characters: "인물과 인물 관계",
   conflict: "갈등 구조 (주제·걸린 것·이해관계 충돌)",
   setting: "배경·무대 (장소, 조직, 세계)",
   twist: "반전 장치",
   structure: "3막 사건 구조와 전개 리듬",
+  // Extended elements (phase 1)
+  relationship: "인물 간 관계 역학",
+  goal: "인물들의 목표와 동기",
+  event: "핵심 사건·전환점",
+  ending: "결말·해소 방식",
 };
 
 /** Extract only the selected elements of a source scenario, structured. */
@@ -63,6 +69,39 @@ export function extractElements(
             )
             .join("\n")}`,
         );
+        break;
+      case "relationship":
+        parts.push(
+          `- 인물 간 관계 역학:\n${scenario.characters
+            .map((c) => `  · ${c.name} (${c.role})`)
+            .join("\n")}\n  로그라인 맥락: "${scenario.logline}"`,
+        );
+        break;
+      case "goal":
+        parts.push(
+          `- 인물 목표·동기:\n${scenario.characters
+            .map((c) => `  · ${c.name}: ${c.motivation}`)
+            .join("\n")}`,
+        );
+        break;
+      case "event":
+        // Key turning-point beats from each act
+        parts.push(
+          `- 핵심 사건·전환점:\n${scenario.acts
+            .map((a) => `  · [${a.name}] ${a.beats[0] ?? a.summary}`)
+            .join("\n")}`,
+        );
+        break;
+      case "ending":
+        // Final act represents the resolution/ending
+        {
+          const finalAct = scenario.acts[scenario.acts.length - 1];
+          parts.push(
+            finalAct
+              ? `- 결말·해소: [${finalAct.name}] ${finalAct.summary}`
+              : `- 결말·해소: ${scenario.twist}`,
+          );
+        }
         break;
     }
   }

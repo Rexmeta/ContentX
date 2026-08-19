@@ -69,6 +69,11 @@ export const ScenarioElement = {
   setting: 'setting',
   twist: 'twist',
   structure: 'structure',
+  // Extended vocabulary (phase 1)
+  relationship: 'relationship',
+  goal: 'goal',
+  event: 'event',
+  ending: 'ending',
 } as const;
 
 /**
