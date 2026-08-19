@@ -7,7 +7,11 @@
  */
 import { randomUUID } from "node:crypto";
 import { orchestrator } from "../ai/orchestrator";
-import { AmplificationError, amplifyIdeaWithLLM } from "../ai/llmAmplifier";
+import {
+  AmplificationError,
+  amplifyIdeaWithLLM,
+  type DraftPreview,
+} from "../ai/llmAmplifier";
 import * as scenarioRepo from "../scenario/repository";
 import {
   classifyScenario,
@@ -73,6 +77,7 @@ interface ActionContext {
     label: string,
     checkpoint?: Omit<WorkflowCheckpoint, "at">,
   ) => Promise<void>;
+  reportPartial: (preview: DraftPreview) => Promise<void>;
 }
 
 const SENSITIVE_CHECKPOINT_KEY =
@@ -401,6 +406,7 @@ async function actDraftStory(ctx: ActionContext): Promise<ActionOutcome> {
       title,
       benchmarkConstraints,
       ctx.reportProgress,
+      ctx.reportPartial,
     );
     await ctx.reportProgress(
       "draft-preview",
@@ -1050,11 +1056,37 @@ export async function runStep(input: {
       "workflow step progressed",
     );
   };
+  const reportPartial = async (preview: DraftPreview): Promise<void> => {
+    const details = safeCheckpointDetails(
+      preview as Record<string, unknown>,
+    );
+    if (details.length === 0) return;
+    const title =
+      (typeof preview.title === "string" && preview.title.trim()) ||
+      (typeof preview.logline === "string" && preview.logline.trim()) ||
+      "AI 초안";
+    const summary =
+      typeof preview.logline === "string" && preview.logline.trim()
+        ? preview.logline
+        : "AI가 지금까지 완성한 안전한 초안 일부입니다.";
+    await reportProgress("draft-partial", "AI 초안 내용을 조금씩 만들고 있어요.", {
+      kind: "preview",
+      title: `${title} — 현재까지의 초안`,
+      summary: summary.slice(0, 1_200),
+      details,
+    });
+  };
 
   let failed = false;
   try {
     try {
-      const outcome = await action({ workflow, step, params, reportProgress });
+      const outcome = await action({
+        workflow,
+        step,
+        params,
+        reportProgress,
+        reportPartial,
+      });
       step.status = "complete";
       step.result = outcome.result ?? null;
       const preview = outputCheckpoint(step, outcome);

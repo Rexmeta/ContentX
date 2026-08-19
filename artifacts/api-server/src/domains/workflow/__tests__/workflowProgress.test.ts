@@ -133,7 +133,21 @@ describe("workflow generation progress", () => {
         _title: string | undefined,
         _constraints: string | undefined,
         onProgress: (phase: string, label: string) => Promise<void>,
+        onPartial?: (preview: Record<string, unknown>) => Promise<void>,
       ) => {
+        await onPartial?.({ title: "연구소의 밤" });
+        await onPartial?.({
+          logline: "서로 다른 목적을 가진 연구원들이 충돌한다.",
+          characters: [
+            {
+              name: "한지수",
+              role: "연구소장",
+              motivation: "연구 결과를 안전하게 지키려 한다.",
+              reasoning: "hidden model reasoning",
+              systemPrompt: "hidden provider prompt",
+            },
+          ],
+        });
         await onProgress("character-conflict", "인물과 갈등 구성 확인");
         await onProgress("validating", "결과 형식 검증");
         return {
@@ -163,7 +177,7 @@ describe("workflow generation progress", () => {
     insertScenario.mockResolvedValue({ id: "scenario_progress" });
   });
 
-  it("persists safe phases in order and settles them on completion", async () => {
+  it("persists safe partial drafts in order and settles them on completion", async () => {
     const result = await runStep({
       workflowId: "workflow_progress",
       stepId: "draft",
@@ -173,6 +187,8 @@ describe("workflow generation progress", () => {
     expect(progress.events.map((event) => event.phase)).toEqual([
       "preparing",
       "story-outline",
+        "draft-partial",
+        "draft-partial",
       "character-conflict",
       "validating",
       "draft-preview",
@@ -187,10 +203,21 @@ describe("workflow generation progress", () => {
     expect(result.workflow.artifacts.scenarioId).toBe("scenario_progress");
     expect(progress.checkpoints?.map((checkpoint) => checkpoint.kind)).toEqual([
       "input",
+      "preview",
+      "preview",
       "validation",
       "preview",
       "handoff",
     ]);
+    expect(progress.checkpoints?.[1]).toMatchObject({
+      title: "연구소의 밤 — 현재까지의 초안",
+      details: [{ label: "제목", value: "연구소의 밤" }],
+    });
+    expect(progress.checkpoints?.[2]).toMatchObject({
+      details: expect.arrayContaining([
+        { label: "한 줄 소개", value: "서로 다른 목적을 가진 연구원들이 충돌한다." },
+      ]),
+    });
     expect(JSON.stringify(progress.checkpoints)).not.toMatch(
       /chain.?of.?thought|system.?prompt|reasoning/i,
     );
@@ -247,7 +274,21 @@ describe("workflow generation progress", () => {
     state.steps[2]!.result = { contentId: "content_stale" };
     state.artifacts.contentId = "content_stale";
     state.status = "complete";
-    amplifyIdeaWithLLM.mockRejectedValueOnce(new Error("provider failed"));
+    amplifyIdeaWithLLM.mockImplementationOnce(
+      async (
+        _idea: string,
+        _title: string | undefined,
+        _constraints: string | undefined,
+        _onProgress: (phase: string, label: string) => Promise<void>,
+        onPartial?: (preview: Record<string, unknown>) => Promise<void>,
+      ) => {
+        await onPartial?.({
+          title: "실패 전 초안",
+          providerTrace: "must never be stored",
+        });
+        throw new Error("provider failed");
+      },
+    );
 
     await expect(
       runStep({
@@ -261,6 +302,16 @@ describe("workflow generation progress", () => {
     expect(state.artifacts.contentId).toBeUndefined();
     expect(state.steps[1]!.status).toBe("failed");
     expect(state.steps[2]!.status).toBe("pending");
+    expect(state.steps[1]!.progress?.checkpoints).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          details: [{ label: "제목", value: "실패 전 초안" }],
+        }),
+      ]),
+    );
+    expect(JSON.stringify(state.steps[1]!.progress?.checkpoints)).not.toContain(
+      "providerTrace",
+    );
     expect(repo.claimWorkflowStep).toHaveBeenLastCalledWith(
       "workflow_progress",
       "draft",

@@ -18,7 +18,12 @@ export interface CompleteJSONInput {
   timeoutMs?: number;
 }
 
-function rejectAfter(ms: number): {
+export type JSONTextChunkHandler = (raw: string) => Promise<void> | void;
+
+function rejectAfter(
+  ms: number,
+  onTimeout?: () => void,
+): {
   promise: Promise<never>;
   cancel: () => void;
   controller: AbortController;
@@ -27,6 +32,7 @@ function rejectAfter(ms: number): {
   let timer: ReturnType<typeof setTimeout>;
   const promise = new Promise<never>((_resolve, reject) => {
     timer = setTimeout(() => {
+      onTimeout?.();
       const error = new LLMRequestError(
         `AI 응답 시간이 ${Math.round(ms / 1000)}초를 초과했습니다.`,
       );
@@ -76,5 +82,68 @@ export async function completeJSON(input: CompleteJSONInput): Promise<unknown> {
     return JSON.parse(raw);
   } catch {
     throw new LLMRequestError("AI response was not valid JSON.");
+  }
+}
+
+/**
+ * Run a JSON-mode chat completion as a stream. The callback receives the
+ * accumulated response text, never provider metadata. Callers that expose
+ * progress must parse and allowlist fields before persisting anything.
+ */
+export async function completeJSONStreaming(
+  input: CompleteJSONInput,
+  onTextChunk: JSONTextChunkHandler,
+): Promise<unknown> {
+  const messages: Array<{ role: "system" | "user"; content: string }> = [];
+  if (input.system) messages.push({ role: "system", content: input.system });
+  messages.push({ role: "user", content: input.user });
+
+  let terminal = false;
+  const timeout = rejectAfter(input.timeoutMs ?? LLM_TIMEOUT_MS, () => {
+    terminal = true;
+  });
+  let raw = "";
+  try {
+    const streamPromise = (async () => {
+      const response = await openai.chat.completions.create(
+        {
+          model: LLM_MODEL,
+          max_completion_tokens: input.maxCompletionTokens ?? 8192,
+          response_format: { type: "json_object" },
+          messages,
+          stream: true,
+        },
+        { signal: timeout.controller.signal },
+      );
+
+      for await (const chunk of response) {
+        // A provider can yield a buffered chunk after aborting. Never allow
+        // such a late chunk to invoke a progress callback or persist state.
+        if (terminal || timeout.controller.signal.aborted) break;
+        const content = chunk.choices[0]?.delta?.content;
+        if (typeof content !== "string" || content.length === 0) continue;
+        raw += content;
+        await onTextChunk(raw);
+        if (terminal || timeout.controller.signal.aborted) break;
+      }
+      return raw;
+    })();
+
+    const streamed = await Promise.race([streamPromise, timeout.promise]);
+    if (!streamed) throw new LLMRequestError("AI returned an empty response.");
+    try {
+      return JSON.parse(streamed);
+    } catch {
+      throw new LLMRequestError("AI response was not valid JSON.");
+    }
+  } catch (err) {
+    if (err instanceof LLMRequestError) throw err;
+    throw new LLMRequestError(
+      `AI provider request failed: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
+    );
+  } finally {
+    terminal = true;
+    timeout.cancel();
   }
 }

@@ -1,11 +1,213 @@
 import { DraftScenarioResponse } from "@workspace/api-zod";
-import { completeJSON, LLMRequestError, LLM_MODEL_ID } from "./llmClient";
-import type { DramaticScenario } from "../scenario/model";
+import {
+  completeJSON,
+  completeJSONStreaming,
+  LLMRequestError,
+  LLM_MODEL_ID,
+} from "./llmClient";
+import type {
+  DramaticScenario,
+  ScenarioAct,
+  ScenarioCharacter,
+} from "../scenario/model";
 
 export const AMPLIFIER_ID = LLM_MODEL_ID;
 
 /** Thrown when the LLM response cannot be parsed into a valid scenario. */
 export class AmplificationError extends Error {}
+
+const STREAMABLE_FIELDS = [
+  "title",
+  "logline",
+  "synopsis",
+  "theme",
+  "stakes",
+  "twist",
+  "acts",
+  "characters",
+] as const;
+type StreamableField = (typeof STREAMABLE_FIELDS)[number];
+export type DraftPreview = Partial<
+  Pick<
+    DramaticScenario,
+    "title" | "logline" | "synopsis" | "theme" | "stakes" | "twist" | "acts" | "characters"
+  >
+>;
+
+function readJSONString(
+  text: string,
+  start: number,
+): { value: string; end: number } | null {
+  if (text[start] !== '"') return null;
+  let escaped = false;
+  for (let index = start + 1; index < text.length; index += 1) {
+    const character = text[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (character === '"') {
+      const raw = text.slice(start, index + 1);
+      try {
+        const value = JSON.parse(raw);
+        return typeof value === "string" ? { value, end: index + 1 } : null;
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+}
+
+function readCompleteJSONValue(text: string, start: number): {
+  value: unknown;
+  end: number;
+} | null {
+  let index = start;
+  while (/\s/.test(text[index] ?? "")) index += 1;
+  if (index >= text.length) return null;
+
+  if (text[index] === '"') {
+    const stringValue = readJSONString(text, index);
+    if (!stringValue) return null;
+    return { value: stringValue.value, end: stringValue.end };
+  }
+
+  if (text[index] === "[" || text[index] === "{") {
+    const stack = [text[index] === "[" ? "]" : "}"];
+    let escaped = false;
+    let inString = false;
+    for (let cursor = index + 1; cursor < text.length; cursor += 1) {
+      const character = text[cursor];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (character === "\\") escaped = true;
+        else if (character === '"') inString = false;
+        continue;
+      }
+      if (character === '"') {
+        inString = true;
+        continue;
+      }
+      if (character === "[" || character === "{") {
+        stack.push(character === "[" ? "]" : "}");
+      } else if (character === "]" || character === "}") {
+        if (stack.at(-1) !== character) return null;
+        stack.pop();
+        if (stack.length === 0) {
+          const raw = text.slice(index, cursor + 1);
+          try {
+            return { value: JSON.parse(raw), end: cursor + 1 };
+          } catch {
+            return null;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  let end = index;
+  while (end < text.length && !",}".includes(text[end]!)) end += 1;
+  const raw = text.slice(index, end).trim();
+  if (!raw) return null;
+  try {
+    return { value: JSON.parse(raw), end: index + raw.length };
+  } catch {
+    return null;
+  }
+}
+
+function isScenarioAct(value: unknown): value is ScenarioAct {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.name === "string" &&
+    typeof candidate.summary === "string" &&
+    Array.isArray(candidate.beats) &&
+    candidate.beats.every((beat) => typeof beat === "string")
+  );
+}
+
+function isScenarioCharacter(value: unknown): value is ScenarioCharacter {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.name === "string" &&
+    typeof candidate.role === "string" &&
+    typeof candidate.motivation === "string"
+  );
+}
+
+function publicScenarioActs(value: unknown[]): ScenarioAct[] {
+  return value.map((item) => {
+    const act = item as ScenarioAct;
+    return {
+      name: act.name,
+      summary: act.summary,
+      beats: [...act.beats],
+    };
+  });
+}
+
+function publicScenarioCharacters(value: unknown[]): ScenarioCharacter[] {
+  return value.map((item) => {
+    const character = item as ScenarioCharacter;
+    return {
+      name: character.name,
+      role: character.role,
+      motivation: character.motivation,
+    };
+  });
+}
+
+/**
+ * Extract only complete, public top-level fields from the JSON prefix. This
+ * intentionally does not attempt to parse or expose arbitrary nested keys:
+ * prompt/reasoning/provider metadata can never enter a draft checkpoint.
+ */
+export function extractDraftPreview(raw: string): DraftPreview {
+  const preview: DraftPreview = {};
+  let index = raw.indexOf("{");
+  if (index < 0) return preview;
+  index += 1;
+
+  while (index < raw.length) {
+    while (/\s|,/.test(raw[index] ?? "")) index += 1;
+    if (raw[index] === "}") break;
+    const key = readJSONString(raw, index);
+    if (!key) break;
+    index = key.end;
+    while (/\s/.test(raw[index] ?? "")) index += 1;
+    if (raw[index] !== ":") break;
+    const parsed = readCompleteJSONValue(raw, index + 1);
+    if (!parsed) break;
+    index = parsed.end;
+
+    if (!STREAMABLE_FIELDS.includes(key.value as StreamableField)) continue;
+    const field = key.value as StreamableField;
+    if (typeof parsed.value === "string" && field !== "acts" && field !== "characters") {
+      preview[field] = parsed.value;
+    } else if (
+      field === "acts" &&
+      Array.isArray(parsed.value) &&
+      parsed.value.every(isScenarioAct)
+    ) {
+      preview.acts = publicScenarioActs(parsed.value);
+    } else if (
+      field === "characters" &&
+      Array.isArray(parsed.value) &&
+      parsed.value.every(isScenarioCharacter)
+    ) {
+      preview.characters = publicScenarioCharacters(parsed.value);
+    }
+  }
+  return preview;
+}
 
 const SYSTEM_PROMPT = `당신은 현실 기반 시나리오 작가다. 사용자의 짧은 아이디어를 현실에서 실제로 일어날 법한, 구체적이고 개연성 있는 드라마틱 시나리오로 증폭한다.
 
@@ -51,6 +253,7 @@ export async function amplifyIdeaWithLLM(
     phase: "character-conflict" | "validating",
     label: string,
   ) => Promise<void>,
+  onPartial?: (preview: DraftPreview) => Promise<void>,
 ): Promise<DramaticScenario> {
   let userPrompt = title?.trim()
     ? `아이디어: ${idea}\n(제목은 "${title.trim()}"을 유지하라)`
@@ -61,7 +264,34 @@ export async function amplifyIdeaWithLLM(
 
   let json: unknown;
   try {
-    json = await completeJSON({ system: SYSTEM_PROMPT, user: userPrompt });
+    const emitted = new Set<StreamableField>();
+    json = onPartial
+      ? await completeJSONStreaming(
+          { system: SYSTEM_PROMPT, user: userPrompt },
+          async (raw) => {
+            const preview = extractDraftPreview(raw);
+            const next: DraftPreview = {};
+            for (const field of STREAMABLE_FIELDS) {
+              if (emitted.has(field) || preview[field] === undefined) continue;
+              emitted.add(field);
+              if (field === "acts") next.acts = preview.acts;
+              else if (field === "characters") next.characters = preview.characters;
+              else if (field === "title") next.title = preview.title;
+              else if (field === "logline") next.logline = preview.logline;
+              else if (field === "synopsis") next.synopsis = preview.synopsis;
+              else if (field === "theme") next.theme = preview.theme;
+              else if (field === "stakes") next.stakes = preview.stakes;
+              else next.twist = preview.twist;
+            }
+            if (Object.keys(next).length > 0) {
+              if (title?.trim() && next.title !== undefined) {
+                next.title = title.trim();
+              }
+              await onPartial(next);
+            }
+          },
+        )
+      : await completeJSON({ system: SYSTEM_PROMPT, user: userPrompt });
   } catch (err) {
     // Upstream failures (timeout, rate limit, unavailable, empty or non-JSON
     // output) are part of the amplification failure contract → surfaced as

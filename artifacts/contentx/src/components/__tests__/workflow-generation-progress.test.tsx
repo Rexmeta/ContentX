@@ -90,4 +90,53 @@ describe("WorkflowGenerationProgress", () => {
     expect(screen.queryByText("nested hidden chain")).not.toBeInTheDocument();
     expect(screen.queryByText("nested hidden trace")).not.toBeInTheDocument();
   });
+
+  it("renders each persisted safe draft checkpoint while a step is running", () => {
+    render(
+      <WorkflowGenerationProgress
+        testId="partial-draft-progress"
+        progress={{
+          runId: "run-partial",
+          startedAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:02.000Z",
+          events: [
+            {
+              phase: "draft-partial",
+              label: "AI 초안 내용을 조금씩 만들고 있어요.",
+              status: "running",
+              at: "2026-01-01T00:00:02.000Z",
+            },
+          ],
+          checkpoints: [
+            {
+              kind: "preview",
+              title: "연구소의 밤 — 현재까지의 초안",
+              summary: "AI가 지금까지 완성한 안전한 초안 일부입니다.",
+              details: [{ label: "제목", value: "연구소의 밤" }],
+              at: "2026-01-01T00:00:01.000Z",
+            },
+            {
+              kind: "preview",
+              title: "연구소의 밤 — 현재까지의 초안",
+              summary: "서로 다른 목적을 가진 연구원들이 충돌한다.",
+              details: [
+                { label: "한 줄 소개", value: "서로 다른 목적을 가진 연구원들이 충돌한다." },
+                {
+                  label: "인물",
+                  value: '[\n  {\n    "name": "한지수",\n    "role": "연구소장",\n    "motivation": "연구 결과를 지킨다."\n  }\n]',
+                },
+              ],
+              at: "2026-01-01T00:00:02.000Z",
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText("연구소의 밤")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("서로 다른 목적을 가진 연구원들이 충돌한다."),
+    ).toHaveLength(2);
+    expect(screen.getByText(/"한지수"/)).toBeInTheDocument();
+  });
 });
