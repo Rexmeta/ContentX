@@ -5,6 +5,7 @@
  * produced artifact ids are recorded on the workflow so execution can be
  * resumed after leaving the page.
  */
+import { randomUUID } from "node:crypto";
 import { orchestrator } from "../ai/orchestrator";
 import { AmplificationError, amplifyIdeaWithLLM } from "../ai/llmAmplifier";
 import * as scenarioRepo from "../scenario/repository";
@@ -31,6 +32,7 @@ import type { Classification } from "../scenario/taxonomy";
 import type { Lineage } from "../../shared/lineage";
 import type { Distribution } from "../population/model";
 import { newId } from "../../shared/id";
+import { logger } from "../../lib/logger";
 import {
   InvalidWorkflowError,
   StepDependencyError,
@@ -38,6 +40,7 @@ import {
   StepNotFoundError,
   type StepAction,
   type Workflow,
+  type WorkflowProgressStatus,
   type WorkflowStep,
 } from "./model";
 import * as repo from "./repository";
@@ -63,6 +66,58 @@ interface ActionContext {
   workflow: Workflow;
   step: WorkflowStep;
   params: Params;
+  reportProgress: (phase: string, label: string) => Promise<void>;
+}
+
+function startProgress(step: WorkflowStep, runId: string): void {
+  const at = new Date().toISOString();
+  const isInput = step.binding?.action === "provide_input";
+  step.progress = {
+    runId,
+    startedAt: at,
+    updatedAt: at,
+    events: [
+      {
+        phase: isInput ? "input-confirmation" : "preparing",
+        label: isInput
+          ? "입력 내용을 확인하고 있어요."
+          : `${step.title} 작업을 준비하고 있어요.`,
+        status: "running",
+        at,
+      },
+    ],
+  };
+}
+
+function advanceProgress(
+  step: WorkflowStep,
+  phase: string,
+  label: string,
+): void {
+  if (!step.progress) return;
+  const at = new Date().toISOString();
+  const events = step.progress.events.map((event) =>
+    event.status === "running"
+      ? { ...event, status: "complete" as const, at }
+      : event,
+  );
+  events.push({ phase, label, status: "running", at });
+  step.progress = { ...step.progress, updatedAt: at, events };
+}
+
+function settleProgress(
+  step: WorkflowStep,
+  status: Exclude<WorkflowProgressStatus, "running">,
+): void {
+  if (!step.progress) return;
+  const at = new Date().toISOString();
+  step.progress = {
+    ...step.progress,
+    updatedAt: at,
+    events: step.progress.events.map((event) =>
+      event.status === "running" ? { ...event, status, at } : event,
+    ),
+  };
 }
 
 function requireArtifact(wf: Workflow, key: string, hint: string): string {
@@ -154,13 +209,23 @@ async function actDraftStory(ctx: ActionContext): Promise<ActionOutcome> {
 
   let scenario: DramaticScenario;
   try {
-    scenario = await amplifyIdeaWithLLM(idea, title, benchmarkConstraints);
+    await ctx.reportProgress(
+      "story-outline",
+      "아이디어를 바탕으로 이야기 구조를 설계하고 있어요.",
+    );
+    scenario = await amplifyIdeaWithLLM(
+      idea,
+      title,
+      benchmarkConstraints,
+      ctx.reportProgress,
+    );
   } catch (err) {
     if (err instanceof AmplificationError) {
       throw new StepExecutionError(err.message, { cause: err });
     }
     throw err;
   }
+  await ctx.reportProgress("saving", "검증된 이야기 초안을 저장하고 있어요.");
   const row = await scenarioRepo.insertScenario({
     id: newId("scenario"),
     title: scenario.title,
@@ -542,9 +607,7 @@ function overallStatus(steps: WorkflowStep[]): Workflow["status"] {
  * status is recomputed.
  */
 export const STALE_RUNNING_MS = 10 * 60 * 1000;
-/** How often a live action touches its workflow row (see runStep heartbeat). */
 export const HEARTBEAT_MS = 60 * 1000;
-
 export async function recoverStaleRun(row: {
   id: string;
   updatedAt: Date;
@@ -560,11 +623,12 @@ export async function recoverStaleRun(row: {
     step.status = "failed";
     step.error =
       "실행이 중단되었습니다(서버가 재시작되었거나 요청이 끊겼어요). 다시 실행해 주세요.";
+    settleProgress(step, "failed");
   }
   refreshReadiness(steps);
-  // Conditional on the observed updatedAt: a live action heartbeats the row
-  // every HEARTBEAT_MS, and completion/failure also touch it, so this write
-  // only lands when the run really is dead. A lost race is a no-op.
+  // Conditional on the observed updatedAt: progress/completion/failure writes
+  // all touch the row, so this only lands when the run really is abandoned.
+  // A lost race is a no-op.
   const updated = await repo.updateWorkflowIfUntouched(row.id, row.updatedAt, {
     steps,
     status: overallStatus(steps),
@@ -582,11 +646,20 @@ export async function runStep(input: {
   stepId: string;
   params?: Record<string, unknown> | undefined;
 }): Promise<{ workflow: Workflow; failed: boolean }> {
+  const startedAtMs = Date.now();
   const row = await repo.getWorkflow(input.workflowId);
   if (!row) return Promise.reject(new StepNotFoundError(input.workflowId));
   const workflow = repo.toWorkflow(row);
   const step = workflow.steps.find((s) => s.id === input.stepId);
   if (!step) throw new StepNotFoundError(input.stepId);
+  if (step.status === "running") {
+    throw new InvalidWorkflowError("이 단계는 이미 실행 중입니다.");
+  }
+  if (step.status !== "ready" && step.status !== "failed") {
+    throw new InvalidWorkflowError(
+      "이 단계는 현재 실행할 수 없습니다. 이전 단계를 확인해주세요.",
+    );
+  }
   if (!step.binding) {
     throw new InvalidWorkflowError("이 단계는 자동 실행을 지원하지 않습니다.");
   }
@@ -612,52 +685,162 @@ export async function runStep(input: {
     ...(input.params ?? {}),
   };
 
+  const observedSteps = structuredClone(workflow.steps);
+  const observedArtifacts = { ...workflow.artifacts };
+  const observedStatus = workflow.status;
+  const runId = randomUUID();
+  const expectedStatus = step.status;
   step.status = "running";
   step.error = null;
-  await repo.updateWorkflow(workflow.id, {
-    steps: workflow.steps,
-    status: "running",
-  });
-
-  // Heartbeat: touch the row while the action runs so stale-run recovery
-  // (STALE_RUNNING_MS since last touch) never mistakes a legitimately slow
-  // action for a dead one. updatedAt refreshes automatically on update.
+  startProgress(step, runId);
+  const claimed = await repo.claimWorkflowStep(
+    workflow.id,
+    step.id,
+    expectedStatus,
+    {
+      updatedAt: row.updatedAt,
+      steps: observedSteps,
+      artifacts: observedArtifacts,
+      status: observedStatus,
+    },
+    {
+      steps: workflow.steps,
+      status: "running",
+    },
+  );
+  if (!claimed) {
+    throw new InvalidWorkflowError(
+      "다른 요청이 이 워크플로를 먼저 변경했습니다. 새로고침 후 다시 시도해주세요.",
+    );
+  }
+  logger.info(
+    {
+      workflowId: workflow.id,
+      stepId: step.id,
+      action: step.binding.action,
+      runId,
+    },
+    "workflow step started",
+  );
   const heartbeat = setInterval(() => {
-    void repo.updateWorkflow(workflow.id, { status: "running" }).catch(() => {
-      /* best-effort; next beat or completion will touch the row */
-    });
+    void repo
+      .touchWorkflowRun(workflow.id, step.id, runId)
+      .then((owned) => {
+        if (!owned) clearInterval(heartbeat);
+      })
+      .catch((err) => {
+        logger.warn(
+          { workflowId: workflow.id, stepId: step.id, runId, err },
+          "workflow step heartbeat failed",
+        );
+      });
   }, HEARTBEAT_MS);
+
+  const reportProgress = async (phase: string, label: string): Promise<void> => {
+    advanceProgress(step, phase, label);
+    const updated = await repo.updateWorkflowIfRunOwned(
+      workflow.id,
+      step.id,
+      runId,
+      {
+        steps: workflow.steps,
+        status: "running",
+      },
+    );
+    if (!updated) {
+      throw new StepExecutionError(
+        "실행 중 워크플로 상태가 변경되어 작업을 안전하게 중단했습니다.",
+      );
+    }
+    logger.info(
+      {
+        workflowId: workflow.id,
+        stepId: step.id,
+        action: step.binding?.action,
+        runId,
+        phase,
+        elapsedMs: Date.now() - startedAtMs,
+      },
+      "workflow step progressed",
+    );
+  };
 
   let failed = false;
   try {
-    const outcome = await action({ workflow, step, params });
-    step.status = "complete";
-    step.result = outcome.result ?? null;
-    // Persist the (possibly edited) inputs onto the binding so re-opening
-    // the workflow shows what was actually used.
-    step.binding = { ...step.binding, params };
-    if (outcome.artifacts) {
-      workflow.artifacts = { ...workflow.artifacts, ...outcome.artifacts };
+    try {
+      const outcome = await action({ workflow, step, params, reportProgress });
+      step.status = "complete";
+      step.result = outcome.result ?? null;
+      settleProgress(step, "complete");
+      // Persist the (possibly edited) inputs onto the binding so re-opening
+      // the workflow shows what was actually used.
+      step.binding = { ...step.binding, params };
+      if (outcome.artifacts) {
+        workflow.artifacts = { ...workflow.artifacts, ...outcome.artifacts };
+      }
+    } catch (err) {
+      failed = true;
+      step.status = "failed";
+      step.error = err instanceof Error ? err.message : String(err);
+      settleProgress(step, "failed");
+      refreshReadiness(workflow.steps);
+      const updated = await repo.updateWorkflowIfRunOwned(
+        workflow.id,
+        step.id,
+        runId,
+        {
+          steps: workflow.steps,
+          status: overallStatus(workflow.steps),
+        },
+      );
+      if (!updated) {
+        throw new StepExecutionError(
+          "실행 상태가 다른 요청에 의해 변경되어 실패 결과를 덮어쓰지 않았습니다.",
+          { cause: err },
+        );
+      }
+      logger.warn(
+        {
+          workflowId: workflow.id,
+          stepId: step.id,
+          action: step.binding.action,
+          runId,
+          elapsedMs: Date.now() - startedAtMs,
+          err,
+        },
+        "workflow step failed",
+      );
+      throw err;
     }
-  } catch (err) {
-    clearInterval(heartbeat);
-    failed = true;
-    step.status = "failed";
-    step.error = err instanceof Error ? err.message : String(err);
-    refreshReadiness(workflow.steps);
-    await repo.updateWorkflow(workflow.id, {
-      steps: workflow.steps,
-      status: overallStatus(workflow.steps),
-    });
-    throw err;
-  }
-  clearInterval(heartbeat);
 
-  refreshReadiness(workflow.steps);
-  const updated = await repo.updateWorkflow(workflow.id, {
-    steps: workflow.steps,
-    artifacts: workflow.artifacts,
-    status: overallStatus(workflow.steps),
-  });
-  return { workflow: repo.toWorkflow(updated!), failed };
+    refreshReadiness(workflow.steps);
+    const updated = await repo.updateWorkflowIfRunOwned(
+      workflow.id,
+      step.id,
+      runId,
+      {
+        steps: workflow.steps,
+        artifacts: workflow.artifacts,
+        status: overallStatus(workflow.steps),
+      },
+    );
+    if (!updated) {
+      throw new StepExecutionError(
+        "완료 직전에 워크플로 상태가 변경되어 결과를 덮어쓰지 않았습니다.",
+      );
+    }
+    logger.info(
+      {
+        workflowId: workflow.id,
+        stepId: step.id,
+        action: step.binding.action,
+        runId,
+        elapsedMs: Date.now() - startedAtMs,
+      },
+      "workflow step completed",
+    );
+    return { workflow: repo.toWorkflow(updated), failed };
+  } finally {
+    clearInterval(heartbeat);
+  }
 }

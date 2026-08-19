@@ -47,6 +47,10 @@ export async function amplifyIdeaWithLLM(
   idea: string,
   title?: string,
   benchmarkConstraints?: string,
+  onProgress?: (
+    phase: "character-conflict" | "validating",
+    label: string,
+  ) => Promise<void>,
 ): Promise<DramaticScenario> {
   let userPrompt = title?.trim()
     ? `아이디어: ${idea}\n(제목은 "${title.trim()}"을 유지하라)`
@@ -68,6 +72,14 @@ export async function amplifyIdeaWithLLM(
     throw err;
   }
 
+  await onProgress?.(
+    "character-conflict",
+    "인물의 목표와 갈등 구성을 확인하고 있어요.",
+  );
+  await onProgress?.(
+    "validating",
+    "생성된 이야기의 형식과 필수 항목을 검증하고 있어요.",
+  );
   const parsed = DraftScenarioResponse.safeParse(json);
   if (!parsed.success) {
     throw new AmplificationError(

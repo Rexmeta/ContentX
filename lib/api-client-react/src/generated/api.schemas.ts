@@ -1481,6 +1481,33 @@ export interface WorkflowStepBinding {
   params?: WorkflowStepBindingParams;
 }
 
+export type WorkflowProgressEventStatus = typeof WorkflowProgressEventStatus[keyof typeof WorkflowProgressEventStatus];
+
+
+export const WorkflowProgressEventStatus = {
+  running: 'running',
+  complete: 'complete',
+  failed: 'failed',
+} as const;
+
+export interface WorkflowProgressEvent {
+  /** Stable machine-readable generation phase */
+  phase: string;
+  /** Safe user-facing description of the work in progress */
+  label: string;
+  status: WorkflowProgressEventStatus;
+  /** ISO-8601 timestamp when this phase changed */
+  at: string;
+}
+
+export interface WorkflowStepProgress {
+  /** Execution ownership token used to reject duplicate runs */
+  runId: string;
+  startedAt: string;
+  updatedAt: string;
+  events: WorkflowProgressEvent[];
+}
+
 export type WorkflowStepType = typeof WorkflowStepType[keyof typeof WorkflowStepType];
 
 
@@ -1548,6 +1575,8 @@ export interface WorkflowStep {
   result?: WorkflowStepResult;
   /** @nullable */
   error?: string | null;
+  /** Persisted, safe generation progress for the latest execution */
+  progress?: WorkflowStepProgress | null;
 }
 
 /**

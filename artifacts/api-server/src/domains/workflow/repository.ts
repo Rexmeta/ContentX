@@ -1,5 +1,5 @@
 import { db, workflowsTable, type WorkflowRow } from "@workspace/db";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type {
   OutputIntent,
   Workflow,
@@ -69,7 +69,16 @@ export async function updateWorkflow(
   const [row] = await db
     .update(workflowsTable)
     .set(patch)
-    .where(eq(workflowsTable.id, id))
+    .where(
+      and(
+        eq(workflowsTable.id, id),
+        sql`NOT EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(${workflowsTable.steps}) AS candidate
+          WHERE candidate->>'status' = 'running'
+        )`,
+      ),
+    )
     .returning();
   return row ?? null;
 }
@@ -83,7 +92,106 @@ export async function updateWorkflow(
 export async function updateWorkflowIfUntouched(
   id: string,
   observedUpdatedAt: Date,
+  patch: Partial<{
+    steps: WorkflowStep[];
+    artifacts: Record<string, string>;
+    status: WorkflowStatus;
+  }>,
+): Promise<WorkflowRow | null> {
+  const observedMillisecondEnd = new Date(observedUpdatedAt.getTime() + 1);
+  const [row] = await db
+    .update(workflowsTable)
+    .set(patch)
+    .where(
+      and(
+        eq(workflowsTable.id, id),
+        // PostgreSQL stores microseconds while JavaScript Date preserves only
+        // milliseconds. Match the exact millisecond observed by the caller.
+        sql`${workflowsTable.updatedAt} >= ${observedUpdatedAt}`,
+        sql`${workflowsTable.updatedAt} < ${observedMillisecondEnd}`,
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+/** Atomically transitions one ready/failed step into a run owned by runId. */
+export async function claimWorkflowStep(
+  id: string,
+  stepId: string,
+  expectedStatus: "ready" | "failed",
+  observed: {
+    updatedAt: Date;
+    steps: WorkflowStep[];
+    artifacts: Record<string, string>;
+    status: WorkflowStatus;
+  },
   patch: Partial<{ steps: WorkflowStep[]; status: WorkflowStatus }>,
+): Promise<WorkflowRow | null> {
+  const observedMillisecondEnd = new Date(observed.updatedAt.getTime() + 1);
+  const [row] = await db
+    .update(workflowsTable)
+    .set(patch)
+    .where(
+      and(
+        eq(workflowsTable.id, id),
+        sql`${workflowsTable.updatedAt} >= ${observed.updatedAt}`,
+        sql`${workflowsTable.updatedAt} < ${observedMillisecondEnd}`,
+        sql`${workflowsTable.steps} = ${JSON.stringify(observed.steps)}::jsonb`,
+        sql`${workflowsTable.artifacts} = ${JSON.stringify(observed.artifacts)}::jsonb`,
+        eq(workflowsTable.status, observed.status),
+        sql`EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(${workflowsTable.steps}) AS candidate
+          WHERE candidate->>'id' = ${stepId}
+            AND candidate->>'status' = ${expectedStatus}
+        )`,
+        sql`NOT EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(${workflowsTable.steps}) AS candidate
+          WHERE candidate->>'status' = 'running'
+        )`,
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
+/** Refreshes the durable liveness lease without replacing workflow JSON. */
+export async function touchWorkflowRun(
+  id: string,
+  stepId: string,
+  runId: string,
+): Promise<boolean> {
+  const rows = await db
+    .update(workflowsTable)
+    .set({ updatedAt: new Date() })
+    .where(
+      and(
+        eq(workflowsTable.id, id),
+        sql`EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(${workflowsTable.steps}) AS candidate
+          WHERE candidate->>'id' = ${stepId}
+            AND candidate->>'status' = 'running'
+            AND candidate->'progress'->>'runId' = ${runId}
+        )`,
+      ),
+    )
+    .returning({ id: workflowsTable.id });
+  return rows.length > 0;
+}
+
+/** Writes progress/outcome only while the same execution still owns the step. */
+export async function updateWorkflowIfRunOwned(
+  id: string,
+  stepId: string,
+  runId: string,
+  patch: Partial<{
+    steps: WorkflowStep[];
+    artifacts: Record<string, string>;
+    status: WorkflowStatus;
+  }>,
 ): Promise<WorkflowRow | null> {
   const [row] = await db
     .update(workflowsTable)
@@ -91,7 +199,13 @@ export async function updateWorkflowIfUntouched(
     .where(
       and(
         eq(workflowsTable.id, id),
-        eq(workflowsTable.updatedAt, observedUpdatedAt),
+        sql`EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(${workflowsTable.steps}) AS candidate
+          WHERE candidate->>'id' = ${stepId}
+            AND candidate->>'status' = 'running'
+            AND candidate->'progress'->>'runId' = ${runId}
+        )`,
       ),
     )
     .returning();
@@ -101,7 +215,16 @@ export async function updateWorkflowIfUntouched(
 export async function deleteWorkflow(id: string): Promise<boolean> {
   const rows = await db
     .delete(workflowsTable)
-    .where(eq(workflowsTable.id, id))
+    .where(
+      and(
+        eq(workflowsTable.id, id),
+        sql`NOT EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(${workflowsTable.steps}) AS candidate
+          WHERE candidate->>'status' = 'running'
+        )`,
+      ),
+    )
     .returning({ id: workflowsTable.id });
   return rows.length > 0;
 }

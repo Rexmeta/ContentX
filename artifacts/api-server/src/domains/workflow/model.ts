@@ -76,6 +76,24 @@ export interface StepBinding {
   params?: Record<string, unknown>;
 }
 
+export type WorkflowProgressStatus = "running" | "complete" | "failed";
+
+export interface WorkflowProgressEvent {
+  /** Stable machine-readable phase; the UI renders the safe label. */
+  phase: string;
+  label: string;
+  status: WorkflowProgressStatus;
+  at: string;
+}
+
+export interface WorkflowStepProgress {
+  /** Ownership token for the latest execution attempt. */
+  runId: string;
+  startedAt: string;
+  updatedAt: string;
+  events: WorkflowProgressEvent[];
+}
+
 export interface WorkflowStep {
   id: string;
   type: StepType;
@@ -89,6 +107,7 @@ export interface WorkflowStep {
   binding?: StepBinding | null;
   result?: Record<string, unknown> | null;
   error?: string | null;
+  progress?: WorkflowStepProgress | null;
 }
 
 export interface OutputIntent {

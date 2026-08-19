@@ -6,6 +6,7 @@ import { openai } from "@workspace/integrations-openai-ai-server";
  */
 export const LLM_MODEL = "gpt-5.6-terra";
 export const LLM_MODEL_ID = `openai/${LLM_MODEL}`;
+export const LLM_TIMEOUT_MS = 90_000;
 
 /** Thrown for provider failures or unusable (empty / non-JSON) output. */
 export class LLMRequestError extends Error {}
@@ -14,6 +15,26 @@ export interface CompleteJSONInput {
   system?: string;
   user: string;
   maxCompletionTokens?: number;
+  timeoutMs?: number;
+}
+
+function rejectAfter(ms: number): {
+  promise: Promise<never>;
+  cancel: () => void;
+  controller: AbortController;
+} {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout>;
+  const promise = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const error = new LLMRequestError(
+        `AI 응답 시간이 ${Math.round(ms / 1000)}초를 초과했습니다.`,
+      );
+      reject(error);
+      controller.abort(error);
+    }, ms);
+  });
+  return { promise, cancel: () => clearTimeout(timer!), controller };
 }
 
 /**
@@ -27,18 +48,25 @@ export async function completeJSON(input: CompleteJSONInput): Promise<unknown> {
   messages.push({ role: "user", content: input.user });
 
   let response;
+  const timeout = rejectAfter(input.timeoutMs ?? LLM_TIMEOUT_MS);
   try {
-    response = await openai.chat.completions.create({
-      model: LLM_MODEL,
-      max_completion_tokens: input.maxCompletionTokens ?? 8192,
-      response_format: { type: "json_object" },
-      messages,
-    });
+    response = await Promise.race([
+      openai.chat.completions.create({
+        model: LLM_MODEL,
+        max_completion_tokens: input.maxCompletionTokens ?? 8192,
+        response_format: { type: "json_object" },
+        messages,
+      }, { signal: timeout.controller.signal }),
+      timeout.promise,
+    ]);
   } catch (err) {
+    if (err instanceof LLMRequestError) throw err;
     throw new LLMRequestError(
       `AI provider request failed: ${err instanceof Error ? err.message : String(err)}`,
       { cause: err },
     );
+  } finally {
+    timeout.cancel();
   }
 
   const raw = response.choices[0]?.message?.content;

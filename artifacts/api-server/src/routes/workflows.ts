@@ -135,6 +135,16 @@ router.patch("/v1/workflows/:id", async (req, res): Promise<void> => {
   }
   const row = await repo.updateWorkflow(pathParam(req.params.id), patch);
   if (!row) {
+    const existing = await repo.getWorkflow(pathParam(req.params.id));
+    if (
+      existing &&
+      repo.toWorkflow(existing).steps.some((step) => step.status === "running")
+    ) {
+      res.status(409).json({
+        error: "실행 중인 단계가 끝난 뒤 워크플로를 수정해주세요.",
+      });
+      return;
+    }
     res.status(404).json({ error: "Workflow not found" });
     return;
   }
@@ -142,8 +152,19 @@ router.patch("/v1/workflows/:id", async (req, res): Promise<void> => {
 });
 
 router.delete("/v1/workflows/:id", async (req, res): Promise<void> => {
-  const deleted = await repo.deleteWorkflow(pathParam(req.params.id));
+  const id = pathParam(req.params.id);
+  const deleted = await repo.deleteWorkflow(id);
   if (!deleted) {
+    const existing = await repo.getWorkflow(id);
+    if (
+      existing &&
+      repo.toWorkflow(existing).steps.some((step) => step.status === "running")
+    ) {
+      res.status(409).json({
+        error: "실행 중인 단계가 끝난 뒤 워크플로를 삭제해주세요.",
+      });
+      return;
+    }
     res.status(404).json({ error: "Workflow not found" });
     return;
   }

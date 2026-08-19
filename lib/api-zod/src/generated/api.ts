@@ -3245,7 +3245,18 @@ export const ListWorkflowsResponseItem = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
   "status": zod.enum(['draft', 'running', 'complete', 'failed']),
@@ -3284,7 +3295,18 @@ export const CreateWorkflowBody = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 }))
 })
 
@@ -3312,7 +3334,18 @@ export const CreateWorkflowResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
   "status": zod.enum(['draft', 'running', 'complete', 'failed']),
@@ -3354,7 +3387,18 @@ export const PlanWorkflowResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
   "status": zod.enum(['draft', 'running', 'complete', 'failed']),
@@ -3394,7 +3438,18 @@ export const GetWorkflowResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
   "status": zod.enum(['draft', 'running', 'complete', 'failed']),
@@ -3431,7 +3486,18 @@ export const UpdateWorkflowBody = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })).optional(),
   "artifacts": zod.record(zod.string(), zod.string()).optional(),
   "status": zod.enum(['draft', 'running', 'complete', 'failed']).optional()
@@ -3461,7 +3527,18 @@ export const UpdateWorkflowResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
   "status": zod.enum(['draft', 'running', 'complete', 'failed']),
@@ -3516,7 +3593,18 @@ export const RunWorkflowStepResponse = zod.object({
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
-  "error": zod.string().nullish()
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+}))
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
   "status": zod.enum(['draft', 'running', 'complete', 'failed']),

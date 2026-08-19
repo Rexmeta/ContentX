@@ -1723,6 +1723,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+        "409":
+          description: Workflow cannot be edited while a step is running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
     delete:
       operationId: deleteWorkflow
       tags: [workflows]
@@ -1737,6 +1743,12 @@ paths:
           description: Deleted
         "404":
           description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "409":
+          description: Workflow cannot be deleted while a step is running
           content:
             application/json:
               schema:
@@ -3320,6 +3332,35 @@ components:
         params:
           type: object
           additionalProperties: true
+    WorkflowProgressEvent:
+      type: object
+      required: [phase, label, status, at]
+      properties:
+        phase:
+          type: string
+          description: "Stable machine-readable generation phase"
+        label:
+          type: string
+          description: "Safe user-facing description of the work in progress"
+        status:
+          type: string
+          enum: [running, complete, failed]
+        at:
+          type: string
+          description: "ISO-8601 timestamp when this phase changed"
+    WorkflowStepProgress:
+      type: object
+      required: [runId, startedAt, updatedAt, events]
+      properties:
+        runId:
+          type: string
+          description: "Execution ownership token used to reject duplicate runs"
+        startedAt: { type: string }
+        updatedAt: { type: string }
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowProgressEvent"
     WorkflowStep:
       type: object
       required: [id, type, title, importance, status, input, output, dependencies]
@@ -3357,6 +3398,11 @@ components:
           additionalProperties: true
           description: "Step outcome summary recorded by the executor"
         error: { type: ["string", "null"] }
+        progress:
+          oneOf:
+            - $ref: "#/components/schemas/WorkflowStepProgress"
+            - type: "null"
+          description: "Persisted, safe generation progress for the latest execution"
     WorkflowRecord:
       type: object
       required: [id, title, intent, steps, artifacts, status, createdAt, updatedAt]

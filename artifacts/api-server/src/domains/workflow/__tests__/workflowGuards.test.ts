@@ -18,6 +18,10 @@ import { applyExistingArtifacts } from "../planner";
 vi.mock("../repository", () => ({
   getWorkflow: vi.fn(),
   updateWorkflow: vi.fn(),
+  updateWorkflowIfUntouched: vi.fn(),
+  claimWorkflowStep: vi.fn(),
+  updateWorkflowIfRunOwned: vi.fn(),
+  touchWorkflowRun: vi.fn(),
   insertWorkflow: vi.fn(),
   listWorkflows: vi.fn(),
   deleteWorkflow: vi.fn(),
@@ -110,6 +114,20 @@ describe("input step execution guard", () => {
   }
 
   beforeEach(() => {
+    const update = async (...args: any[]) => {
+      const patch = args.at(-1);
+      return ({
+        ...inputWorkflow({}),
+        ...patch,
+        updatedAt: new Date(),
+      }) as any;
+    };
+    vi.mocked(repo.claimWorkflowStep).mockImplementation(
+      update,
+    );
+    vi.mocked(repo.updateWorkflowIfRunOwned).mockImplementation(
+      update,
+    );
     vi.mocked(repo.updateWorkflow).mockImplementation(
       async (_id: string, patch: any) =>
         ({ ...inputWorkflow({}), ...patch }) as any,
@@ -133,7 +151,22 @@ describe("input step execution guard", () => {
     expect(failed).toBe(false);
     const step = workflow.steps.find((s) => s.id === "step_input")!;
     expect(step.status).toBe("complete");
+    expect(step.progress?.events.map((event) => event.phase)).toEqual([
+      "input-confirmation",
+    ]);
+    expect(step.progress?.events[0]?.status).toBe("complete");
     expect(workflow.artifacts["idea"]).toBe("우주 정거장 미스터리");
+  });
+
+  it("does not start when another request wins the atomic claim", async () => {
+    vi.mocked(repo.getWorkflow).mockResolvedValue(
+      inputWorkflow({ idea: "동시 실행" }) as any,
+    );
+    vi.mocked(repo.claimWorkflowStep).mockResolvedValueOnce(null);
+
+    await expect(
+      runStep({ workflowId: "workflow_test", stepId: "step_input" }),
+    ).rejects.toThrow(/다른 요청|새로고침/);
   });
 
   it("treats a dangling dependency as unmet", async () => {

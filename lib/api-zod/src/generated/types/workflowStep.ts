@@ -7,6 +7,7 @@
  */
 import type { WorkflowStepBinding } from './workflowStepBinding';
 import type { WorkflowStepImportance } from './workflowStepImportance';
+import type { WorkflowStepProgress } from './workflowStepProgress';
 import type { WorkflowStepResult } from './workflowStepResult';
 import type { WorkflowStepStatus } from './workflowStepStatus';
 import type { WorkflowStepType } from './workflowStepType';
@@ -33,4 +34,6 @@ export interface WorkflowStep {
   result?: WorkflowStepResult;
   /** @nullable */
   error?: string | null;
+  /** Persisted, safe generation progress for the latest execution */
+  progress?: WorkflowStepProgress | null;
 }

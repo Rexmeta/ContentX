@@ -54,6 +54,7 @@ import {
 import { HelpCircle } from "lucide-react";
 import { getNarrativeResult } from "./result-model";
 import { ReuseSection } from "@/components/reuse-section";
+import { WorkflowGenerationProgress } from "@/components/workflow-generation-progress";
 
 // Catalog of executable step types the engine supports. Mirrors the server's
 // STEP_ACTIONS; adding one of these creates a runnable step with a binding.
@@ -113,7 +114,15 @@ const ACTION_HELP: Record<string, string> = {
 export default function WorkflowDetail() {
   const [, params] = useRoute("/workflows/:id");
   const id = params?.id || "";
-  const { data: workflow, isLoading } = useGetWorkflow(id);
+
+  // Keep server-owned progress fresh while the page is open. This also
+  // restores the latest generation phase after a reload or in another tab.
+  const { data: workflow, isLoading } = useGetWorkflow(id, {
+    query: {
+      queryKey: getGetWorkflowQueryKey(id),
+      refetchInterval: 1500,
+    },
+  });
   const updateWorkflow = useUpdateWorkflow();
   const runStep = useRunWorkflowStep();
   const queryClient = useQueryClient();
@@ -127,12 +136,18 @@ export default function WorkflowDetail() {
   // when it started, to show a live elapsed timer instead of a frozen screen.
   const [activeStep, setActiveStep] = useState<{ id: string; startedAt: number } | null>(null);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const serverRunningStep = workflow?.steps.find((step) => step.status === "running");
+  const activeStartedAt = serverRunningStep?.progress?.startedAt
+    ? new Date(serverRunningStep.progress.startedAt).getTime()
+    : activeStep?.startedAt;
   useEffect(() => {
-    if (!activeStep) return;
+    if (!activeStep && !serverRunningStep) return;
     const t = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [activeStep]);
-  const activeElapsedSec = activeStep ? Math.max(0, Math.round((nowTick - activeStep.startedAt) / 1000)) : 0;
+  }, [activeStep, serverRunningStep?.id]);
+  const activeElapsedSec = activeStartedAt
+    ? Math.max(0, Math.round((nowTick - activeStartedAt) / 1000))
+    : 0;
 
   // Deletion Dialog State
   const [deleteContext, setDeleteContext] = useState<{ stepId: string; dependentCount: number } | null>(null);
@@ -315,13 +330,17 @@ export default function WorkflowDetail() {
   const isComplete = workflow.status === 'complete';
   const hasReadySteps = workflow.steps.some(s => s.status === 'ready');
   const isSupportedType = ["novel", "roleplay", "product-reaction"].includes(workflow.intent.outputType);
-  const isRunning = workflow.status === 'running' || runningToTheEnd || !!activeStep;
+  // Workflow status remains "running" between completed steps. Only an
+  // actually-running step (or the local run-to-end loop) should lock the UI.
+  const isRunning = workflow.steps.some(s => s.status === 'running') || runningToTheEnd || !!activeStep;
 
   // Progress figures for the live banner: counts only steps that participate
   // in execution (skipped ones are excluded from the denominator).
   const countableSteps = workflow.steps.filter(s => s.status !== 'skipped');
   const doneCount = countableSteps.filter(s => s.status === 'complete').length;
-  const activeStepRecord = activeStep ? workflow.steps.find(s => s.id === activeStep.id) : undefined;
+  const activeStepRecord = activeStep
+    ? workflow.steps.find(s => s.id === activeStep.id) ?? serverRunningStep
+    : serverRunningStep;
   const activeStepNumber = activeStepRecord ? workflow.steps.indexOf(activeStepRecord) + 1 : null;
 
   return (
@@ -401,6 +420,10 @@ export default function WorkflowDetail() {
             <p className="text-xs text-muted-foreground">
               전체 {countableSteps.length}단계 중 {doneCount}단계 완료 — AI가 실제로 내용을 생성하는 단계는 수십 초가 걸릴 수 있어요. 각 단계가 끝나면 아래 목록에 결과가 바로 표시됩니다.
             </p>
+            <WorkflowGenerationProgress
+              progress={activeStepRecord.progress}
+              testId="list-generation-progress"
+            />
           </div>
         )}
 
@@ -962,8 +985,14 @@ function StepCard({
               {isStepRunning && (
                 <div className="mt-2 inline-flex items-center gap-2 text-xs font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1" data-testid={`text-step-elapsed-${step.id}`}>
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  AI 작업 진행 중{isActive && activeElapsedSec > 0 ? ` — ${activeElapsedSec}초 경과` : "…"}
+                  AI 작업 진행 중{activeElapsedSec > 0 ? ` — ${activeElapsedSec}초 경과` : "…"}
                 </div>
+              )}
+              {!!step.progress?.events.length && (
+                <WorkflowGenerationProgress
+                  progress={step.progress}
+                  testId={`list-step-progress-${step.id}`}
+                />
               )}
               {!step.binding && (
                 <div className="mt-2 text-xs font-mono text-muted-foreground inline-flex items-center bg-muted px-2 py-0.5 rounded-full">
