@@ -10,4 +10,6 @@ import type { WorkflowStepRunInputParams } from './workflowStepRunInputParams';
 export interface WorkflowStepRunInput {
   /** User-provided inputs for this step (e.g. idea text, sample size) */
   params?: WorkflowStepRunInputParams;
+  /** Re-run a completed step and invalidate its dependent outputs */
+  rerun?: boolean;
 }

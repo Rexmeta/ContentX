@@ -93,6 +93,7 @@ export async function updateWorkflowIfUntouched(
   id: string,
   observedUpdatedAt: Date,
   patch: Partial<{
+    title: string;
     steps: WorkflowStep[];
     artifacts: Record<string, string>;
     status: WorkflowStatus;
@@ -115,18 +116,60 @@ export async function updateWorkflowIfUntouched(
   return row ?? null;
 }
 
+/**
+ * Applies a user review decision only when the complete workflow snapshot the
+ * reviewer saw is still current. Exact JSONB predicates prevent an older tab
+ * from approving over newer step output, even within one timestamp millisecond.
+ */
+export async function updateWorkflowIfSnapshotMatches(
+  id: string,
+  observed: {
+    steps: WorkflowStep[];
+    artifacts: Record<string, string>;
+    status: WorkflowStatus;
+  },
+  patch: Partial<{
+    steps: WorkflowStep[];
+    artifacts: Record<string, string>;
+    status: WorkflowStatus;
+  }>,
+): Promise<WorkflowRow | null> {
+  const [row] = await db
+    .update(workflowsTable)
+    .set(patch)
+    .where(
+      and(
+        eq(workflowsTable.id, id),
+        sql`${workflowsTable.steps} = ${JSON.stringify(observed.steps)}::jsonb`,
+        sql`${workflowsTable.artifacts} = ${JSON.stringify(observed.artifacts)}::jsonb`,
+        eq(workflowsTable.status, observed.status),
+        sql`NOT EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(${workflowsTable.steps}) AS candidate
+          WHERE candidate->>'status' = 'running'
+        )`,
+      ),
+    )
+    .returning();
+  return row ?? null;
+}
+
 /** Atomically transitions one ready/failed step into a run owned by runId. */
 export async function claimWorkflowStep(
   id: string,
   stepId: string,
-  expectedStatus: "ready" | "failed",
+  expectedStatus: "ready" | "failed" | "complete",
   observed: {
     updatedAt: Date;
     steps: WorkflowStep[];
     artifacts: Record<string, string>;
     status: WorkflowStatus;
   },
-  patch: Partial<{ steps: WorkflowStep[]; status: WorkflowStatus }>,
+  patch: Partial<{
+    steps: WorkflowStep[];
+    artifacts: Record<string, string>;
+    status: WorkflowStatus;
+  }>,
 ): Promise<WorkflowRow | null> {
   const observedMillisecondEnd = new Date(observed.updatedAt.getTime() + 1);
   const [row] = await db

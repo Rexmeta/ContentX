@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Layout } from "@/components/layout";
 import { 
   useGetWorkflow, 
   useUpdateWorkflow, 
   useRunWorkflowStep, 
+  useReviewWorkflowStep,
   getGetWorkflowQueryKey,
   WorkflowStep,
   WorkflowRecord,
@@ -17,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Play, FastForward, Plus, Check, Loader2, AlertCircle, X,
-  Settings, Trash2, FileText, BarChart, Sparkles, MessageSquare
+  Settings, Trash2, FileText, BarChart, Sparkles, MessageSquare,
+  RotateCcw, ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +50,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -84,6 +87,44 @@ const STEP_CATALOG: {
 
 function newStepId(): string {
   return `step_${Math.random().toString(16).slice(2, 10)}${Date.now().toString(16).slice(-6)}`;
+}
+
+function workflowExpectation(workflow: WorkflowRecord) {
+  return {
+    steps: workflow.steps,
+    artifacts: workflow.artifacts,
+    status: workflow.status,
+  };
+}
+
+function pausedRunStorageKey(workflowId: string) {
+  return `contentx:workflow:${workflowId}:paused-run-step`;
+}
+
+interface PausedRunIntent {
+  stepId: string;
+  token: string;
+}
+
+function parsePausedRunIntent(raw: string | null): PausedRunIntent | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<PausedRunIntent>;
+    if (typeof parsed.stepId === "string" && typeof parsed.token === "string") {
+      return { stepId: parsed.stepId, token: parsed.token };
+    }
+  } catch {
+    // Backwards-compatible with the short-lived plain step-id format.
+    return { stepId: raw, token: `legacy:${raw}` };
+  }
+  return null;
+}
+
+function readPausedRunIntent(workflowId: string): PausedRunIntent | null {
+  if (typeof window === "undefined" || !workflowId) return null;
+  return parsePausedRunIntent(
+    window.localStorage.getItem(pausedRunStorageKey(workflowId)),
+  );
 }
 
 // badges — help text explains the importance levels inline (P2 inline help)
@@ -125,11 +166,65 @@ export default function WorkflowDetail() {
   });
   const updateWorkflow = useUpdateWorkflow();
   const runStep = useRunWorkflowStep();
+  const reviewStep = useReviewWorkflowStep();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   const [runningToTheEnd, setRunningToTheEnd] = useState(false);
+  const [reviewEachStep, setReviewEachStep] = useState(true);
+  const [pausedRunIntent, setPausedRunIntent] = useState<PausedRunIntent | null>(
+    () => readPausedRunIntent(id),
+  );
+  const pausedReviewStepId = pausedRunIntent?.stepId ?? null;
+  const resumeInFlightRef = useRef(false);
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
+
+  const persistPausedReviewStep = (stepId: string): PausedRunIntent => {
+    const intent = {
+      stepId,
+      token:
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random()}`,
+    };
+    setPausedRunIntent(intent);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        pausedRunStorageKey(id),
+        JSON.stringify(intent),
+      );
+    }
+    return intent;
+  };
+
+  const clearPausedRunIntent = (expectedToken?: string): boolean => {
+    if (typeof window === "undefined") {
+      setPausedRunIntent((current) =>
+        !expectedToken || current?.token === expectedToken ? null : current,
+      );
+      return true;
+    }
+    const key = pausedRunStorageKey(id);
+    const current = readPausedRunIntent(id);
+    if (expectedToken && current?.token !== expectedToken) return false;
+    window.localStorage.removeItem(key);
+    setPausedRunIntent((local) =>
+      !expectedToken || local?.token === expectedToken ? null : local,
+    );
+    return true;
+  };
+
+  useEffect(() => {
+    setPausedRunIntent(readPausedRunIntent(id));
+    const key = pausedRunStorageKey(id);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === key) {
+        setPausedRunIntent(parsePausedRunIntent(event.newValue));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [id]);
 
   // Which step's run request is currently in flight (the server only flips the
   // stored status while it processes, so the client tracks it explicitly) and
@@ -207,7 +302,13 @@ export default function WorkflowDetail() {
       };
     }
     updateWorkflow.mutate(
-      { id: workflow.id, data: { steps: [...workflow.steps, newStep] } },
+      {
+        id: workflow.id,
+        data: {
+          steps: [...workflow.steps, newStep],
+          expected: workflowExpectation(workflow),
+        },
+      },
       {
         onSuccess: (data) => {
           queryClient.setQueryData(getGetWorkflowQueryKey(workflow.id), data);
@@ -223,16 +324,58 @@ export default function WorkflowDetail() {
     );
   };
 
-  const handleRunStep = async (step: WorkflowStep, params?: Record<string, unknown>) => {
+  const handleRunStep = async (
+    step: WorkflowStep,
+    params?: Record<string, unknown>,
+    rerun = false,
+  ) => {
+    if (rerun && pausedReviewStepId) {
+      persistPausedReviewStep(step.id);
+    }
     setActiveStep({ id: step.id, startedAt: Date.now() });
     try {
-      await runStep.mutateAsync({ id, stepId: step.id, data: params ? { params } : {} });
+      await runStep.mutateAsync({
+        id,
+        stepId: step.id,
+        data: {
+          ...(params ? { params } : {}),
+          ...(rerun ? { rerun: true } : {}),
+        },
+      });
       queryClient.invalidateQueries({ queryKey: getGetWorkflowQueryKey(id) });
     } catch (e: any) {
       toast({ title: "실행 실패", description: e?.message || "단계를 실행하는 중 오류가 발생했습니다.", variant: "destructive" });
       setRunningToTheEnd(false);
     } finally {
       setActiveStep(null);
+    }
+  };
+
+  const handleApproveStep = async (step: WorkflowStep) => {
+    try {
+      const updated = await reviewStep.mutateAsync({
+        id,
+        stepId: step.id,
+        data: { decision: "approve" },
+      });
+      queryClient.setQueryData(getGetWorkflowQueryKey(id), updated);
+      const intent = pausedRunIntent;
+      const shouldResume = intent?.stepId === step.id;
+      toast({
+        title: "검토를 완료했습니다.",
+        description: shouldResume
+          ? "다음 단계를 이어서 실행합니다."
+          : "다음 단계를 실행할 수 있어요.",
+      });
+      if (shouldResume && intent) {
+        void resumePausedRun(updated as WorkflowRecord, intent);
+      }
+    } catch (e: any) {
+      toast({
+        title: "검토 처리 실패",
+        description: e?.message || "새로고침 후 다시 시도해주세요.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -243,10 +386,15 @@ export default function WorkflowDetail() {
       (v) => typeof v === "string" && v.trim(),
     );
 
-  const handleRunToEnd = async () => {
-    if (!workflow) return;
+  const handleRunToEnd = async (
+    initialWorkflow?: WorkflowRecord,
+    isResume = false,
+  ) => {
+    const startWorkflow = initialWorkflow ?? workflow;
+    if (!startWorkflow) return;
+    if (!isResume) clearPausedRunIntent();
     setRunningToTheEnd(true);
-    let currentWorkflow = workflow;
+    let currentWorkflow = startWorkflow;
 
     try {
       while (true) {
@@ -262,6 +410,27 @@ export default function WorkflowDetail() {
         setActiveStep(null);
         currentWorkflow = updated as WorkflowRecord;
         queryClient.setQueryData(getGetWorkflowQueryKey(id), updated);
+
+        const completedStep = currentWorkflow.steps.find(
+          (step) => step.id === nextReady.id,
+        );
+        if (completedStep?.progress?.review?.status === "pending") {
+          if (reviewEachStep) {
+            persistPausedReviewStep(completedStep.id);
+            toast({
+              title: "단계 결과를 확인해주세요.",
+              description: `"${completedStep.title}"의 내용을 확인하고 승인하면 다음 단계로 이어집니다.`,
+            });
+            break;
+          }
+          const approved = await reviewStep.mutateAsync({
+            id,
+            stepId: completedStep.id,
+            data: { decision: "approve" },
+          });
+          currentWorkflow = approved as WorkflowRecord;
+          queryClient.setQueryData(getGetWorkflowQueryKey(id), approved);
+        }
         
         // Brief pause for visual feedback
         await new Promise(r => setTimeout(r, 500));
@@ -275,6 +444,84 @@ export default function WorkflowDetail() {
       setRunningToTheEnd(false);
     }
   };
+
+  async function resumePausedRun(
+    currentWorkflow: WorkflowRecord,
+    intent: PausedRunIntent,
+  ): Promise<void> {
+    if (resumeInFlightRef.current) return;
+    const runIfCurrent = async () => {
+      const current = readPausedRunIntent(id);
+      if (current?.token !== intent.token) return;
+      if (!clearPausedRunIntent(intent.token)) return;
+      resumeInFlightRef.current = true;
+      try {
+        await handleRunToEnd(currentWorkflow, true);
+      } finally {
+        resumeInFlightRef.current = false;
+      }
+    };
+    const lockManager =
+      typeof navigator !== "undefined" ? (navigator as any).locks : undefined;
+    if (lockManager?.request) {
+      await lockManager.request(
+        `contentx-workflow-resume:${id}`,
+        { ifAvailable: true },
+        async (lock: unknown) => {
+          if (lock) await runIfCurrent();
+        },
+      );
+      return;
+    }
+    await runIfCurrent();
+  }
+
+  useEffect(() => {
+    if (
+      !workflow ||
+      !pausedRunIntent ||
+      runningToTheEnd ||
+      activeStep ||
+      reviewStep.isPending ||
+      resumeInFlightRef.current
+    ) {
+      return;
+    }
+    if (workflow.status === "complete") {
+      clearPausedRunIntent(pausedRunIntent.token);
+      return;
+    }
+
+    const pausedStep = workflow.steps.find(
+      (step) => step.id === pausedReviewStepId,
+    );
+    const currentPendingReview = workflow.steps.find(
+      (step) => step.progress?.review?.status === "pending",
+    );
+    if (
+      currentPendingReview &&
+      pausedStep?.progress?.review?.status !== "pending"
+    ) {
+      persistPausedReviewStep(currentPendingReview.id);
+      return;
+    }
+    if (!pausedStep || pausedStep.status === "failed" || pausedStep.status === "skipped") {
+      clearPausedRunIntent(pausedRunIntent.token);
+      return;
+    }
+    if (
+      pausedStep.status === "complete" &&
+      pausedStep.progress?.review?.status !== "pending"
+    ) {
+      void resumePausedRun(workflow, pausedRunIntent);
+    }
+  }, [
+    workflow?.updatedAt,
+    pausedRunIntent?.token,
+    runningToTheEnd,
+    activeStep?.id,
+    reviewStep.isPending,
+  ]);
 
   const attemptDeleteStep = (stepId: string) => {
     if (!workflow) return;
@@ -301,7 +548,13 @@ export default function WorkflowDetail() {
         dependencies: s.dependencies.filter(d => d !== stepId)
       }));
 
-    updateWorkflow.mutate({ id, data: { steps: updatedSteps } }, {
+    updateWorkflow.mutate({
+      id,
+      data: {
+        steps: updatedSteps,
+        expected: workflowExpectation(workflow),
+      },
+    }, {
       onSuccess: (data) => {
         queryClient.setQueryData(getGetWorkflowQueryKey(id), data);
         toast({ title: "단계 삭제됨" });
@@ -314,7 +567,13 @@ export default function WorkflowDetail() {
     const updatedSteps = workflow.steps.map(s => 
       s.id === stepId ? { ...s, status: 'skipped' as const } : s
     );
-    updateWorkflow.mutate({ id, data: { steps: updatedSteps } }, {
+    updateWorkflow.mutate({
+      id,
+      data: {
+        steps: updatedSteps,
+        expected: workflowExpectation(workflow),
+      },
+    }, {
       onSuccess: (data) => queryClient.setQueryData(getGetWorkflowQueryKey(id), data)
     });
   };
@@ -329,10 +588,17 @@ export default function WorkflowDetail() {
 
   const isComplete = workflow.status === 'complete';
   const hasReadySteps = workflow.steps.some(s => s.status === 'ready');
+  const pendingReviewStep = workflow.steps.find(
+    (step) => step.progress?.review?.status === "pending",
+  );
   const isSupportedType = ["novel", "roleplay", "product-reaction"].includes(workflow.intent.outputType);
   // Workflow status remains "running" between completed steps. Only an
   // actually-running step (or the local run-to-end loop) should lock the UI.
-  const isRunning = workflow.steps.some(s => s.status === 'running') || runningToTheEnd || !!activeStep;
+  const isRunning =
+    workflow.steps.some(s => s.status === 'running') ||
+    runningToTheEnd ||
+    !!activeStep ||
+    reviewStep.isPending;
 
   // Progress figures for the live banner: counts only steps that participate
   // in execution (skipped ones are excluded from the denominator).
@@ -358,6 +624,15 @@ export default function WorkflowDetail() {
           <div className="flex flex-wrap gap-2">
             {!isComplete && isSupportedType && (
               <>
+                <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 text-xs text-muted-foreground">
+                  <Switch
+                    checked={reviewEachStep}
+                    onCheckedChange={setReviewEachStep}
+                    disabled={isRunning}
+                    data-testid="switch-review-each-step"
+                  />
+                  단계마다 검토
+                </label>
                 <Button 
                   variant="outline" 
                   disabled={isRunning || !hasReadySteps}
@@ -375,10 +650,14 @@ export default function WorkflowDetail() {
                 </Button>
                 <Button 
                   disabled={isRunning || !hasReadySteps}
-                  onClick={handleRunToEnd}
+                  onClick={() => handleRunToEnd()}
                 >
                   {isRunning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FastForward className="h-4 w-4 mr-2" />}
-                  {isRunning ? `실행 중 (${doneCount}/${countableSteps.length})` : "끝까지 실행"}
+                  {isRunning
+                    ? `실행 중 (${doneCount}/${countableSteps.length})`
+                    : reviewEachStep
+                      ? "검토하며 실행"
+                      : "끝까지 실행"}
                 </Button>
               </>
             )}
@@ -418,12 +697,42 @@ export default function WorkflowDetail() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              전체 {countableSteps.length}단계 중 {doneCount}단계 완료 — AI가 실제로 내용을 생성하는 단계는 수십 초가 걸릴 수 있어요. 각 단계가 끝나면 아래 목록에 결과가 바로 표시됩니다.
+              전체 {countableSteps.length}단계 중 {doneCount}단계 완료 — 아래 내용은 입력·산출물·검증 결과만 보여주며 모델의 비공개 내부 추론은 포함하지 않습니다.
             </p>
             <WorkflowGenerationProgress
               progress={activeStepRecord.progress}
+              result={activeStepRecord.result as Record<string, unknown> | null}
+              inputParams={activeStepRecord.binding?.params ?? null}
               testId="list-generation-progress"
             />
+          </div>
+        )}
+
+        {!isRunning && pendingReviewStep && (
+          <div
+            className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4"
+            data-testid="banner-review-pending"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="mb-1 flex items-center gap-2 font-semibold">
+                  <ShieldCheck className="h-4 w-4 text-amber-600" />
+                  "{pendingReviewStep.title}" 결과를 확인해주세요
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  아래 단계 카드에서 입력과 결과를 확인하고 승인하거나, 내용을 수정해 이 단계부터 다시 실행할 수 있습니다.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => handleApproveStep(pendingReviewStep)}
+                disabled={reviewStep.isPending}
+                data-testid="button-approve-pending-review"
+              >
+                {reviewStep.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                확인 완료
+              </Button>
+            </div>
           </div>
         )}
 
@@ -442,12 +751,15 @@ export default function WorkflowDetail() {
                 isEditing={editingStepId === step.id}
                 onEdit={() => setEditingStepId(step.id)}
                 onCancelEdit={() => setEditingStepId(null)}
-                onRun={(params?: Record<string, unknown>) => handleRunStep(step, params)}
+                onRun={(params?: Record<string, unknown>, rerun?: boolean) =>
+                  handleRunStep(step, params, rerun)
+                }
+                onApprove={() => handleApproveStep(step)}
                 onDelete={() => attemptDeleteStep(step.id)}
                 onSkip={() => handleSkipStep(step.id)}
                 isRunning={isRunning}
                 isActive={activeStep?.id === step.id}
-                activeElapsedSec={activeStep?.id === step.id ? activeElapsedSec : 0}
+                activeElapsedSec={activeStepRecord?.id === step.id ? activeElapsedSec : 0}
               />
             ))}
             
@@ -848,7 +1160,7 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
 }
 
 function StepCard({ 
-  step, index, workflow, isEditing, onEdit, onCancelEdit, onRun, onDelete, onSkip, isRunning, isActive, activeElapsedSec
+  step, index, workflow, isEditing, onEdit, onCancelEdit, onRun, onApprove, onDelete, onSkip, isRunning, isActive, activeElapsedSec
 }: { 
   step: WorkflowStep; 
   index: number; 
@@ -856,7 +1168,8 @@ function StepCard({
   isEditing: boolean;
   onEdit: () => void;
   onCancelEdit: () => void;
-  onRun: (params?: Record<string, unknown>) => void;
+  onRun: (params?: Record<string, unknown>, rerun?: boolean) => void;
+  onApprove: () => void;
   onDelete: () => void;
   onSkip: () => void;
   isRunning: boolean;
@@ -872,6 +1185,7 @@ function StepCard({
   const isStepRunning = step.status === 'running' || isActive;
   const isReady = step.status === 'ready' && !isActive;
   const isProvideInput = step.binding?.action === 'provide_input' && step.output.length > 0;
+  const isReviewPending = step.progress?.review?.status === "pending";
 
   // Form values for input steps (idea / product+audience), prefilled from the
   // planner-extracted params so users can review and adjust before running.
@@ -881,17 +1195,22 @@ function StepCard({
   const [audienceValue, setAudienceValue] = useState(typeof initialParams.audience === 'string' ? initialParams.audience : '');
   const isStoryInput = step.output.includes('idea');
 
-  const submitInput = () => {
+  const currentInputParams = (): Record<string, unknown> | null => {
     if (isStoryInput) {
-      if (!ideaValue.trim()) return;
-      onRun({ idea: ideaValue.trim() });
-    } else {
-      if (!productValue.trim()) return;
-      onRun({
-        product: productValue.trim(),
-        ...(audienceValue.trim() ? { audience: audienceValue.trim() } : {}),
-      });
+      if (!ideaValue.trim()) return null;
+      return { idea: ideaValue.trim() };
     }
+    if (!productValue.trim()) return null;
+    return {
+      product: productValue.trim(),
+      ...(audienceValue.trim() ? { audience: audienceValue.trim() } : {}),
+    };
+  };
+
+  const submitInput = () => {
+    const nextParams = currentInputParams();
+    if (!nextParams) return;
+    onRun(nextParams, isComplete);
   };
   const inputFilled = isStoryInput ? !!ideaValue.trim() : !!productValue.trim();
 
@@ -903,21 +1222,39 @@ function StepCard({
   const [importance, setImportance] = useState(step.importance);
   const [params, setParams] = useState(step.binding?.params ? JSON.stringify(step.binding.params, null, 2) : "{}");
 
+  const parseEditedParams = (): Record<string, unknown> | undefined => {
+    if (isProvideInput) {
+      const input = currentInputParams();
+      if (!input) throw new Error("입력 내용이 비어 있습니다.");
+      return input;
+    }
+    return params.trim() ? JSON.parse(params) : undefined;
+  };
+
+  const updatedStepsWith = (parsed: Record<string, unknown> | undefined) =>
+    workflow.steps.map(s => {
+      if (s.id === step.id) {
+        return {
+          ...s,
+          title,
+          importance: importance as any,
+          binding: s.binding ? { ...s.binding, params: parsed } : null
+        };
+      }
+      return s;
+    });
+
   const handleSave = () => {
     try {
-      const parsed = params.trim() ? JSON.parse(params) : undefined;
-      const updatedSteps = workflow.steps.map(s => {
-        if (s.id === step.id) {
-          return {
-            ...s,
-            title,
-            importance: importance as any,
-            binding: s.binding ? { ...s.binding, params: parsed } : null
-          };
-        }
-        return s;
-      });
-      updateWorkflow.mutate({ id: workflow.id, data: { steps: updatedSteps } }, {
+      const parsed = parseEditedParams();
+      const updatedSteps = updatedStepsWith(parsed);
+      updateWorkflow.mutate({
+        id: workflow.id,
+        data: {
+          steps: updatedSteps,
+          expected: workflowExpectation(workflow),
+        },
+      }, {
         onSuccess: (data) => {
           queryClient.setQueryData(getGetWorkflowQueryKey(workflow.id), data);
           onCancelEdit();
@@ -925,7 +1262,33 @@ function StepCard({
         }
       });
     } catch (e) {
-      toast({ title: "오류", description: "올바른 JSON 형식이 아닙니다.", variant: "destructive" });
+      toast({
+        title: "오류",
+        description: e instanceof Error ? e.message : "올바른 입력 형식이 아닙니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveAndRerun = async () => {
+    try {
+      const parsed = parseEditedParams();
+      const updated = await updateWorkflow.mutateAsync({
+        id: workflow.id,
+        data: {
+          steps: updatedStepsWith(parsed),
+          expected: workflowExpectation(workflow),
+        },
+      });
+      queryClient.setQueryData(getGetWorkflowQueryKey(workflow.id), updated);
+      onCancelEdit();
+      onRun(parsed, true);
+    } catch (e) {
+      toast({
+        title: "다시 실행할 수 없습니다.",
+        description: e instanceof Error ? e.message : "입력 내용을 확인해주세요.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -970,6 +1333,11 @@ function StepCard({
                   <TooltipContent className="max-w-xs">{badge.help}</TooltipContent>
                 </Tooltip>
                 <h3 className="font-bold">{step.title}</h3>
+                {isReviewPending && (
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono text-amber-700 dark:text-amber-400">
+                    검토 대기
+                  </span>
+                )}
                 {step.binding?.action && ACTION_HELP[step.binding.action] && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -991,6 +1359,8 @@ function StepCard({
               {!!step.progress?.events.length && (
                 <WorkflowGenerationProgress
                   progress={step.progress}
+                  result={step.result as Record<string, unknown> | null}
+                  inputParams={step.binding?.params ?? null}
                   testId={`list-step-progress-${step.id}`}
                 />
               )}
@@ -1001,9 +1371,20 @@ function StepCard({
               )}
             </div>
             <div className="flex items-center gap-2">
-              {!isComplete && !isStepRunning && (
+              {!isStepRunning && step.binding && (
                 <Button variant="ghost" size="sm" onClick={onEdit}>
-                  <Settings className="h-4 w-4 mr-2" /> 편집
+                  <Settings className="h-4 w-4 mr-2" />
+                  {isComplete ? "입력 수정" : "편집"}
+                </Button>
+              )}
+              {isReviewPending && !isRunning && (
+                <Button size="sm" onClick={onApprove} data-testid={`button-approve-step-${step.id}`}>
+                  <ShieldCheck className="h-4 w-4 mr-2" /> 확인 완료
+                </Button>
+              )}
+              {isComplete && !isReviewPending && !isRunning && !isProvideInput && (
+                <Button size="sm" variant="outline" onClick={() => onRun(undefined, true)}>
+                  <RotateCcw className="h-4 w-4 mr-2" /> 다시 실행
                 </Button>
               )}
               {isReady && !isRunning && !isProvideInput && (
@@ -1040,7 +1421,44 @@ function StepCard({
               </div>
             </div>
             
-            {step.binding && (
+            {step.binding && isProvideInput && (
+              <div className="space-y-3">
+                {isStoryInput ? (
+                  <div className="space-y-1.5">
+                    <Label>아이디어</Label>
+                    <Textarea
+                      value={ideaValue}
+                      onChange={(e) => setIdeaValue(e.target.value)}
+                      rows={4}
+                      className="bg-background"
+                      data-testid="input-edit-step-idea"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label>제품/서비스 설명</Label>
+                      <Textarea
+                        value={productValue}
+                        onChange={(e) => setProductValue(e.target.value)}
+                        rows={4}
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>타겟 고객 (선택)</Label>
+                      <Input
+                        value={audienceValue}
+                        onChange={(e) => setAudienceValue(e.target.value)}
+                        className="bg-background"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {step.binding && !isProvideInput && (
               <div className="space-y-1">
                 <label className="tech-label text-muted-foreground">파라미터 (JSON)</label>
                 <Textarea 
@@ -1069,7 +1487,23 @@ function StepCard({
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="ghost" onClick={onCancelEdit}>취소</Button>
-                <Button size="sm" onClick={handleSave}>저장</Button>
+                {isComplete ? (
+                  <Button
+                    size="sm"
+                    onClick={handleSaveAndRerun}
+                    disabled={updateWorkflow.isPending || isRunning}
+                    data-testid={`button-save-rerun-${step.id}`}
+                  >
+                    {updateWorkflow.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                    )}
+                    저장하고 다시 실행
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={handleSave}>저장</Button>
+                )}
               </div>
             </div>
           </div>

@@ -17,6 +17,7 @@ vi.mock("../repository", () => ({
   getWorkflow: vi.fn(),
   updateWorkflow: vi.fn(),
   updateWorkflowIfUntouched: vi.fn(),
+  updateWorkflowIfSnapshotMatches: vi.fn(),
   claimWorkflowStep: vi.fn(),
   updateWorkflowIfRunOwned: vi.fn(),
   touchWorkflowRun: vi.fn(),
@@ -24,7 +25,7 @@ vi.mock("../repository", () => ({
 }));
 
 import * as repo from "../repository";
-import { HEARTBEAT_MS, runStep } from "../executor";
+import { approveStepReview, HEARTBEAT_MS, runStep } from "../executor";
 
 function workflow(): Workflow {
   return {
@@ -66,18 +67,33 @@ function workflow(): Workflow {
         result: null,
         error: null,
       },
+      {
+        id: "world",
+        type: "compose",
+        title: "이야기 구조 만들기",
+        importance: "required",
+        status: "pending",
+        input: ["scenarioId"],
+        output: ["contentId"],
+        dependencies: ["draft"],
+        binding: { action: "build_world", api: "POST /v1/content" },
+        result: null,
+        error: null,
+      },
     ],
   };
 }
 
 describe("workflow generation progress", () => {
+  let state: Workflow;
+
   afterEach(() => {
     vi.useRealTimers();
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    let state = workflow();
+    state = workflow();
     let revision = 0;
 
     vi.mocked(repo.getWorkflow).mockImplementation(async () => ({
@@ -109,6 +125,7 @@ describe("workflow generation progress", () => {
     };
     vi.mocked(repo.claimWorkflowStep).mockImplementation(persist);
     vi.mocked(repo.updateWorkflowIfRunOwned).mockImplementation(persist);
+    vi.mocked(repo.updateWorkflowIfSnapshotMatches).mockImplementation(persist);
 
     amplifyIdeaWithLLM.mockImplementation(
       async (
@@ -127,7 +144,17 @@ describe("workflow generation progress", () => {
           stakes: "연구소의 생존",
           twist: "통제 시스템의 진짜 목적",
           acts: [],
-          characters: [],
+          characters: [
+            {
+              name: "한지수",
+              role: "연구소장",
+              motivation: {
+                summary: "연구 결과를 안전하게 지키려 한다.",
+                reasoning: "hidden model reasoning",
+                systemPrompt: "hidden provider prompt",
+              },
+            },
+          ],
           sourceIdea: "폐쇄된 연구소의 갈등",
           amplifiedBy: "test",
         };
@@ -148,13 +175,101 @@ describe("workflow generation progress", () => {
       "story-outline",
       "character-conflict",
       "validating",
+      "draft-preview",
       "saving",
     ]);
     expect(progress.events.every((event) => event.status === "complete")).toBe(
       true,
     );
     expect(result.workflow.steps[1]!.status).toBe("complete");
+    expect(result.workflow.steps[1]!.progress?.review?.status).toBe("pending");
+    expect(result.workflow.steps[2]!.status).toBe("pending");
     expect(result.workflow.artifacts.scenarioId).toBe("scenario_progress");
+    expect(progress.checkpoints?.map((checkpoint) => checkpoint.kind)).toEqual([
+      "input",
+      "validation",
+      "preview",
+      "handoff",
+    ]);
+    expect(JSON.stringify(progress.checkpoints)).not.toMatch(
+      /chain.?of.?thought|system.?prompt|reasoning/i,
+    );
+    expect(JSON.stringify(progress.checkpoints)).toContain(
+      "연구 결과를 안전하게 지키려 한다.",
+    );
+  });
+
+  it("restores readiness only after the user approves the checkpoint", async () => {
+    await runStep({ workflowId: "workflow_progress", stepId: "draft" });
+
+    const reviewed = await approveStepReview({
+      workflowId: "workflow_progress",
+      stepId: "draft",
+    });
+
+    expect(reviewed.steps[1]!.progress?.review).toMatchObject({
+      status: "approved",
+    });
+    expect(reviewed.steps[2]!.status).toBe("ready");
+  });
+
+  it("re-running a completed step invalidates dependant results and artifacts", async () => {
+    await runStep({ workflowId: "workflow_progress", stepId: "draft" });
+    await approveStepReview({
+      workflowId: "workflow_progress",
+      stepId: "draft",
+    });
+    state.steps[2]!.status = "complete";
+    state.steps[2]!.result = { contentId: "content_old" };
+    state.artifacts.contentId = "content_old";
+    state.status = "complete";
+
+    const rerun = await runStep({
+      workflowId: "workflow_progress",
+      stepId: "draft",
+      rerun: true,
+      params: { idea: "수정된 연구소 갈등" },
+    });
+
+    expect(rerun.workflow.steps[2]!.status).toBe("pending");
+    expect(rerun.workflow.steps[2]!.result).toBeNull();
+    expect(rerun.workflow.artifacts.contentId).toBeUndefined();
+    expect(rerun.workflow.steps[1]!.progress?.review?.status).toBe("pending");
+  });
+
+  it("keeps invalidated artifacts removed when a completed-step rerun fails", async () => {
+    await runStep({ workflowId: "workflow_progress", stepId: "draft" });
+    await approveStepReview({
+      workflowId: "workflow_progress",
+      stepId: "draft",
+    });
+    state.steps[2]!.status = "complete";
+    state.steps[2]!.result = { contentId: "content_stale" };
+    state.artifacts.contentId = "content_stale";
+    state.status = "complete";
+    amplifyIdeaWithLLM.mockRejectedValueOnce(new Error("provider failed"));
+
+    await expect(
+      runStep({
+        workflowId: "workflow_progress",
+        stepId: "draft",
+        rerun: true,
+        params: { idea: "실패하는 수정안" },
+      }),
+    ).rejects.toThrow();
+
+    expect(state.artifacts.contentId).toBeUndefined();
+    expect(state.steps[1]!.status).toBe("failed");
+    expect(state.steps[2]!.status).toBe("pending");
+    expect(repo.claimWorkflowStep).toHaveBeenLastCalledWith(
+      "workflow_progress",
+      "draft",
+      "complete",
+      expect.any(Object),
+      expect.objectContaining({
+        artifacts: expect.not.objectContaining({ contentId: "content_stale" }),
+      }),
+    );
   });
 
   it("refreshes the durable run lease during a long action", async () => {

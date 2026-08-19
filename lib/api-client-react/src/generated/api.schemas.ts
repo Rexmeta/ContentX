@@ -1500,12 +1500,54 @@ export interface WorkflowProgressEvent {
   at: string;
 }
 
+export interface WorkflowCheckpointDetail {
+  label: string;
+  value: string;
+}
+
+export type WorkflowCheckpointKind = typeof WorkflowCheckpointKind[keyof typeof WorkflowCheckpointKind];
+
+
+export const WorkflowCheckpointKind = {
+  input: 'input',
+  preview: 'preview',
+  validation: 'validation',
+  handoff: 'handoff',
+} as const;
+
+export interface WorkflowCheckpoint {
+  kind: WorkflowCheckpointKind;
+  /** Safe user-facing checkpoint title */
+  title: string;
+  /** Safe summary derived from explicit inputs or domain output */
+  summary: string;
+  details: WorkflowCheckpointDetail[];
+  at: string;
+}
+
+export type WorkflowStepReviewStatus = typeof WorkflowStepReviewStatus[keyof typeof WorkflowStepReviewStatus];
+
+
+export const WorkflowStepReviewStatus = {
+  pending: 'pending',
+  approved: 'approved',
+} as const;
+
+export interface WorkflowStepReview {
+  status: WorkflowStepReviewStatus;
+  requestedAt: string;
+  /** @nullable */
+  reviewedAt?: string | null;
+}
+
 export interface WorkflowStepProgress {
   /** Execution ownership token used to reject duplicate runs */
   runId: string;
   startedAt: string;
   updatedAt: string;
   events: WorkflowProgressEvent[];
+  checkpoints?: WorkflowCheckpoint[];
+  review?: WorkflowStepReview | null;
 }
 
 export type WorkflowStepType = typeof WorkflowStepType[keyof typeof WorkflowStepType];
@@ -1625,12 +1667,32 @@ export const WorkflowUpdateStatus = {
   failed: 'failed',
 } as const;
 
+export type WorkflowUpdateExpectationStatus = typeof WorkflowUpdateExpectationStatus[keyof typeof WorkflowUpdateExpectationStatus];
+
+
+export const WorkflowUpdateExpectationStatus = {
+  draft: 'draft',
+  running: 'running',
+  complete: 'complete',
+  failed: 'failed',
+} as const;
+
+export type WorkflowUpdateExpectationArtifacts = {[key: string]: string};
+
+export interface WorkflowUpdateExpectation {
+  steps: WorkflowStep[];
+  artifacts: WorkflowUpdateExpectationArtifacts;
+  status: WorkflowUpdateExpectationStatus;
+}
+
 export interface WorkflowUpdate {
   /** @minLength 1 */
   title?: string;
   steps?: WorkflowStep[];
   artifacts?: WorkflowUpdateArtifacts;
   status?: WorkflowUpdateStatus;
+  /** Required when changing steps, artifacts, or status; exact snapshot used to reject stale tabs */
+  expected?: WorkflowUpdateExpectation;
 }
 
 export type WorkflowPlanInputOutputType = typeof WorkflowPlanInputOutputType[keyof typeof WorkflowPlanInputOutputType];
@@ -1670,6 +1732,19 @@ export type WorkflowStepRunInputParams = { [key: string]: unknown };
 export interface WorkflowStepRunInput {
   /** User-provided inputs for this step (e.g. idea text, sample size) */
   params?: WorkflowStepRunInputParams;
+  /** Re-run a completed step and invalidate its dependent outputs */
+  rerun?: boolean;
+}
+
+export type WorkflowStepReviewInputDecision = typeof WorkflowStepReviewInputDecision[keyof typeof WorkflowStepReviewInputDecision];
+
+
+export const WorkflowStepReviewInputDecision = {
+  approve: 'approve',
+} as const;
+
+export interface WorkflowStepReviewInput {
+  decision: WorkflowStepReviewInputDecision;
 }
 
 export type GetPopulationDefinitionParams = {

@@ -7,6 +7,7 @@
  */
 import type { WorkflowStep } from './workflowStep';
 import type { WorkflowUpdateArtifacts } from './workflowUpdateArtifacts';
+import type { WorkflowUpdateExpectation } from './workflowUpdateExpectation';
 import type { WorkflowUpdateStatus } from './workflowUpdateStatus';
 
 export interface WorkflowUpdate {
@@ -15,4 +16,6 @@ export interface WorkflowUpdate {
   steps?: WorkflowStep[];
   artifacts?: WorkflowUpdateArtifacts;
   status?: WorkflowUpdateStatus;
+  /** Required when changing steps, artifacts, or status; exact snapshot used to reject stale tabs */
+  expected?: WorkflowUpdateExpectation;
 }

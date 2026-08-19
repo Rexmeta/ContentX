@@ -5,7 +5,9 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { WorkflowCheckpoint } from './workflowCheckpoint';
 import type { WorkflowProgressEvent } from './workflowProgressEvent';
+import type { WorkflowStepReview } from './workflowStepReview';
 
 export interface WorkflowStepProgress {
   /** Execution ownership token used to reject duplicate runs */
@@ -13,4 +15,6 @@ export interface WorkflowStepProgress {
   startedAt: string;
   updatedAt: string;
   events: WorkflowProgressEvent[];
+  checkpoints?: WorkflowCheckpoint[];
+  review?: WorkflowStepReview | null;
 }

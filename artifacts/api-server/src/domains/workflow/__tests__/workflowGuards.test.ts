@@ -19,6 +19,7 @@ vi.mock("../repository", () => ({
   getWorkflow: vi.fn(),
   updateWorkflow: vi.fn(),
   updateWorkflowIfUntouched: vi.fn(),
+  updateWorkflowIfSnapshotMatches: vi.fn(),
   claimWorkflowStep: vi.fn(),
   updateWorkflowIfRunOwned: vi.fn(),
   touchWorkflowRun: vi.fn(),
@@ -155,6 +156,8 @@ describe("input step execution guard", () => {
       "input-confirmation",
     ]);
     expect(step.progress?.events[0]?.status).toBe("complete");
+    expect(step.progress?.review?.status).toBe("pending");
+    expect(workflow.status).toBe("running");
     expect(workflow.artifacts["idea"]).toBe("우주 정거장 미스터리");
   });
 

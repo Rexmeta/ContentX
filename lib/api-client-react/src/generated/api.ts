@@ -83,6 +83,7 @@ import type {
   WorkflowInput,
   WorkflowPlanInput,
   WorkflowRecord,
+  WorkflowStepReviewInput,
   WorkflowStepRunInput,
   WorkflowUpdate
 } from './api.schemas';
@@ -5454,6 +5455,80 @@ export const useRunWorkflowStep = <TError = ErrorType<ApiMessage>,
         TContext
       > => {
       return useMutation(getRunWorkflowStepMutationOptions(options));
+    }
+
+export const getReviewWorkflowStepUrl = (id: string,
+    stepId: string,) => {
+
+
+
+
+  return `/api/v1/workflows/${id}/steps/${stepId}/review`
+}
+
+/**
+ * @summary Approve a completed step checkpoint and unblock its dependants
+ */
+export const reviewWorkflowStep = async (id: string,
+    stepId: string,
+    workflowStepReviewInput: WorkflowStepReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<WorkflowRecord> => {
+
+  return customFetch<WorkflowRecord>(getReviewWorkflowStepUrl(id,stepId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(workflowStepReviewInput)
+  }
+);}
+
+
+
+
+
+export const getReviewWorkflowStepMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewWorkflowStep>>, TError,{id: string;stepId: string;data: BodyType<WorkflowStepReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewWorkflowStep>>, TError,{id: string;stepId: string;data: BodyType<WorkflowStepReviewInput>}, TContext> => {
+
+const mutationKey = ['reviewWorkflowStep'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewWorkflowStep>>, {id: string;stepId: string;data: BodyType<WorkflowStepReviewInput>}> = (props) => {
+          const {id,stepId,data} = props ?? {};
+
+          return  reviewWorkflowStep(id,stepId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewWorkflowStepMutationResult = NonNullable<Awaited<ReturnType<typeof reviewWorkflowStep>>>
+    export type ReviewWorkflowStepMutationBody = BodyType<WorkflowStepReviewInput>
+    export type ReviewWorkflowStepMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Approve a completed step checkpoint and unblock its dependants
+ */
+export const useReviewWorkflowStep = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewWorkflowStep>>, TError,{id: string;stepId: string;data: BodyType<WorkflowStepReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewWorkflowStep>>,
+        TError,
+        {id: string;stepId: string;data: BodyType<WorkflowStepReviewInput>},
+        TContext
+      > => {
+      return useMutation(getReviewWorkflowStepMutationOptions(options));
     }
 
 export const getGetDashboardSummaryUrl = () => {

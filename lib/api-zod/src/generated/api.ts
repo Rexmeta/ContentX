@@ -3255,7 +3255,22 @@ export const ListWorkflowsResponseItem = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
@@ -3305,7 +3320,22 @@ export const CreateWorkflowBody = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 }))
 })
@@ -3344,7 +3374,22 @@ export const CreateWorkflowResponse = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
@@ -3397,7 +3442,22 @@ export const PlanWorkflowResponse = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
@@ -3448,7 +3508,22 @@ export const GetWorkflowResponse = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
@@ -3496,11 +3571,74 @@ export const UpdateWorkflowBody = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })).optional(),
   "artifacts": zod.record(zod.string(), zod.string()).optional(),
-  "status": zod.enum(['draft', 'running', 'complete', 'failed']).optional()
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']).optional(),
+  "expected": zod.object({
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
+})),
+  "artifacts": zod.record(zod.string(), zod.string()),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed'])
+}).optional().describe('Required when changing steps, artifacts, or status; exact snapshot used to reject stale tabs')
 })
 
 export const UpdateWorkflowResponse = zod.object({
@@ -3537,7 +3675,22 @@ export const UpdateWorkflowResponse = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
@@ -3565,8 +3718,11 @@ export const RunWorkflowStepParams = zod.object({
   "stepId": zod.coerce.string()
 })
 
+export const runWorkflowStepBodyRerunDefault = false;
+
 export const RunWorkflowStepBody = zod.object({
-  "params": zod.record(zod.string(), zod.unknown()).optional().describe('User-provided inputs for this step (e.g. idea text, sample size)')
+  "params": zod.record(zod.string(), zod.unknown()).optional().describe('User-provided inputs for this step (e.g. idea text, sample size)'),
+  "rerun": zod.boolean().default(runWorkflowStepBodyRerunDefault).describe('Re-run a completed step and invalidate its dependent outputs')
 })
 
 export const RunWorkflowStepResponse = zod.object({
@@ -3603,7 +3759,93 @@ export const RunWorkflowStepResponse = zod.object({
   "label": zod.string().describe('Safe user-facing description of the work in progress'),
   "status": zod.enum(['running', 'complete', 'failed']),
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
-}))
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
+})),
+  "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Approve a completed step checkpoint and unblock its dependants
+ */
+export const ReviewWorkflowStepParams = zod.object({
+  "id": zod.coerce.string(),
+  "stepId": zod.coerce.string()
+})
+
+export const ReviewWorkflowStepBody = zod.object({
+  "decision": zod.enum(['approve'])
+})
+
+export const ReviewWorkflowStepResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "intent": zod.object({
+  "outputType": zod.enum(['movie', 'novel', 'roleplay', 'product-reaction', 'game', 'advertisement', 'remix', 'external-transform']),
+  "description": zod.string().describe('User\'s original wording (empty when a choice was used without a description)'),
+  "extractedInputs": zod.record(zod.string(), zod.string()).describe('AI-extracted inputs, e.g. { idea: ..., product: ..., audience: ... }')
+}),
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish()
+}),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
   "artifacts": zod.record(zod.string(), zod.string()).describe('Artifact key → resource id (scenarioId, contentId, simulationId, …)'),

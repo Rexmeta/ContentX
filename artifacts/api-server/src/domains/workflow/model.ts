@@ -86,12 +86,44 @@ export interface WorkflowProgressEvent {
   at: string;
 }
 
+export type WorkflowCheckpointKind =
+  | "input"
+  | "preview"
+  | "validation"
+  | "handoff";
+
+export interface WorkflowCheckpointDetail {
+  label: string;
+  value: string;
+}
+
+/**
+ * Persisted user-facing evidence about a run. Checkpoints may only contain
+ * explicit inputs, domain outputs, and validation summaries — never prompts,
+ * hidden reasoning, or provider traces.
+ */
+export interface WorkflowCheckpoint {
+  kind: WorkflowCheckpointKind;
+  title: string;
+  summary: string;
+  details: WorkflowCheckpointDetail[];
+  at: string;
+}
+
+export interface WorkflowStepReview {
+  status: "pending" | "approved";
+  requestedAt: string;
+  reviewedAt?: string | null;
+}
+
 export interface WorkflowStepProgress {
   /** Ownership token for the latest execution attempt. */
   runId: string;
   startedAt: string;
   updatedAt: string;
   events: WorkflowProgressEvent[];
+  checkpoints?: WorkflowCheckpoint[];
+  review?: WorkflowStepReview | null;
 }
 
 export interface WorkflowStep {

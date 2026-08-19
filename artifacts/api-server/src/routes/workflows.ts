@@ -10,10 +10,16 @@ import {
   UpdateWorkflowResponse,
   RunWorkflowStepBody,
   RunWorkflowStepResponse,
+  ReviewWorkflowStepBody,
+  ReviewWorkflowStepResponse,
 } from "@workspace/api-zod";
 import * as repo from "../domains/workflow/repository";
 import { planWorkflow, IntentInterpretationError } from "../domains/workflow/planner";
-import { runStep, recoverStaleRun } from "../domains/workflow/executor";
+import {
+  approveStepReview,
+  runStep,
+  recoverStaleRun,
+} from "../domains/workflow/executor";
 import {
   InvalidWorkflowError,
   StepDependencyError,
@@ -133,15 +139,44 @@ router.patch("/v1/workflows/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: "빈 업데이트입니다." });
     return;
   }
-  const row = await repo.updateWorkflow(pathParam(req.params.id), patch);
+  const changesRuntimeState =
+    parsed.data.steps !== undefined ||
+    parsed.data.artifacts !== undefined ||
+    parsed.data.status !== undefined;
+  if (changesRuntimeState && !parsed.data.expected) {
+    res.status(400).json({
+      error: "단계 상태를 수정하려면 최신 워크플로 스냅샷이 필요합니다.",
+    });
+    return;
+  }
+  const id = pathParam(req.params.id);
+  const row =
+    changesRuntimeState && parsed.data.expected
+      ? await repo.updateWorkflowIfSnapshotMatches(
+          id,
+          {
+            steps: parsed.data.expected.steps as WorkflowStep[],
+            artifacts: parsed.data.expected.artifacts,
+            status: parsed.data.expected.status,
+          },
+          patch,
+        )
+      : await repo.updateWorkflow(id, patch);
   if (!row) {
-    const existing = await repo.getWorkflow(pathParam(req.params.id));
+    const existing = await repo.getWorkflow(id);
     if (
       existing &&
       repo.toWorkflow(existing).steps.some((step) => step.status === "running")
     ) {
       res.status(409).json({
         error: "실행 중인 단계가 끝난 뒤 워크플로를 수정해주세요.",
+      });
+      return;
+    }
+    if (existing) {
+      res.status(409).json({
+        error:
+          "다른 요청이 워크플로를 먼저 변경했습니다. 새로고침 후 다시 시도해주세요.",
       });
       return;
     }
@@ -184,6 +219,7 @@ router.post(
         workflowId: pathParam(req.params.id),
         stepId: pathParam(req.params.stepId),
         params: parsed.data.params,
+        rerun: parsed.data.rerun,
       });
       res.json(RunWorkflowStepResponse.parse(workflow));
     } catch (err) {
@@ -207,6 +243,40 @@ router.post(
         error: err instanceof Error ? err.message : "step execution failed",
       });
       return;
+    }
+  },
+);
+
+router.post(
+  "/v1/workflows/:id/steps/:stepId/review",
+  async (req, res): Promise<void> => {
+    const parsed = ReviewWorkflowStepBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    try {
+      const workflow = await approveStepReview({
+        workflowId: pathParam(req.params.id),
+        stepId: pathParam(req.params.stepId),
+      });
+      res.json(ReviewWorkflowStepResponse.parse(workflow));
+    } catch (err) {
+      if (err instanceof StepNotFoundError) {
+        res.status(404).json({ error: err.message });
+        return;
+      }
+      if (
+        err instanceof InvalidWorkflowError ||
+        err instanceof StepDependencyError
+      ) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      req.log.error({ err }, "workflow step review failed");
+      res.status(502).json({
+        error: err instanceof Error ? err.message : "step review failed",
+      });
     }
   },
 );

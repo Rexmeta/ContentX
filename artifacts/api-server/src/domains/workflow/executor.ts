@@ -40,6 +40,8 @@ import {
   StepNotFoundError,
   type StepAction,
   type Workflow,
+  type WorkflowCheckpoint,
+  type WorkflowCheckpointDetail,
   type WorkflowProgressStatus,
   type WorkflowStep,
 } from "./model";
@@ -66,10 +68,181 @@ interface ActionContext {
   workflow: Workflow;
   step: WorkflowStep;
   params: Params;
-  reportProgress: (phase: string, label: string) => Promise<void>;
+  reportProgress: (
+    phase: string,
+    label: string,
+    checkpoint?: Omit<WorkflowCheckpoint, "at">,
+  ) => Promise<void>;
 }
 
-function startProgress(step: WorkflowStep, runId: string): void {
+const SENSITIVE_CHECKPOINT_KEY =
+  /(?:chain.?of.?thought|reasoning|thinking|prompt|internal|provider.?trace)/i;
+
+const CHECKPOINT_LABELS: Record<string, string> = {
+  idea: "아이디어",
+  product: "제품·서비스",
+  audience: "타겟 고객",
+  title: "제목",
+  logline: "한 줄 소개",
+  synopsis: "줄거리",
+  theme: "주제",
+  stakes: "핵심 이해관계",
+  twist: "반전",
+  classification: "장르·분위기",
+  report: "검증 결과",
+  entityCount: "구성 요소 수",
+  relationshipCount: "관계 수",
+  dimensions: "고객 특성",
+  sampleSize: "가상 고객 수",
+  turnsExecuted: "진행된 대화 수",
+  outcome: "결과 요약",
+  payload: "생성된 내용",
+};
+
+function sanitizeCheckpointValue(value: unknown, depth = 0): unknown {
+  if (depth > 6) return "[깊은 내용 생략]";
+  if (Array.isArray(value)) {
+    return value
+      .slice(0, 20)
+      .map((item) => sanitizeCheckpointValue(item, depth + 1));
+  }
+  if (value && typeof value === "object") {
+    if (value instanceof Date) return value.toISOString();
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !SENSITIVE_CHECKPOINT_KEY.test(key))
+        .slice(0, 20)
+        .map(([key, item]) => [
+          key,
+          sanitizeCheckpointValue(item, depth + 1),
+        ]),
+    );
+  }
+  return value;
+}
+
+function safeCheckpointValue(value: unknown): string {
+  if (typeof value === "string") return value.slice(0, 1_200);
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (value === null) return "없음";
+  try {
+    const json = JSON.stringify(sanitizeCheckpointValue(value), null, 2);
+    return (json ?? String(value)).slice(0, 1_200);
+  } catch {
+    return String(value).slice(0, 1_200);
+  }
+}
+
+function safeCheckpointDetails(
+  value: Record<string, unknown>,
+  limit = 8,
+): WorkflowCheckpointDetail[] {
+  return Object.entries(value)
+    .filter(
+      ([key, item]) =>
+        !SENSITIVE_CHECKPOINT_KEY.test(key) && item !== undefined,
+    )
+    .slice(0, limit)
+    .map(([key, item]) => ({
+      label: CHECKPOINT_LABELS[key] ?? key,
+      value: safeCheckpointValue(item),
+    }));
+}
+
+function appendCheckpoint(
+  step: WorkflowStep,
+  checkpoint: Omit<WorkflowCheckpoint, "at">,
+): void {
+  if (!step.progress) return;
+  const at = new Date().toISOString();
+  step.progress = {
+    ...step.progress,
+    updatedAt: at,
+    checkpoints: [
+      ...(step.progress.checkpoints ?? []),
+      { ...checkpoint, at },
+    ],
+  };
+}
+
+function inputCheckpoint(
+  workflow: Workflow,
+  step: WorkflowStep,
+  params: Params,
+): Omit<WorkflowCheckpoint, "at"> {
+  const inputValues: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(params)) {
+    inputValues[key] = value;
+  }
+  for (const key of step.input) {
+    if (inputValues[key] !== undefined) continue;
+    if (workflow.artifacts[key] !== undefined) {
+      inputValues[key] = workflow.artifacts[key];
+      continue;
+    }
+    if (key === "productBrief" && workflow.artifacts.product) {
+      inputValues.product = workflow.artifacts.product;
+      if (workflow.artifacts.audience) {
+        inputValues.audience = workflow.artifacts.audience;
+      }
+    }
+  }
+  for (const dependencyId of step.dependencies) {
+    const dependency = workflow.steps.find((item) => item.id === dependencyId);
+    if (dependency?.result) {
+      for (const [key, value] of Object.entries(dependency.result)) {
+        inputValues[`${dependency.title} · ${CHECKPOINT_LABELS[key] ?? key}`] =
+          value;
+      }
+    }
+  }
+  return {
+    kind: "input",
+    title: "이번 단계에 사용한 내용",
+    summary:
+      Object.keys(inputValues).length > 0
+        ? "아래 내용을 바탕으로 작업을 시작했습니다."
+        : "이전 단계에서 확정된 결과를 바탕으로 작업을 시작했습니다.",
+    details: safeCheckpointDetails(inputValues),
+  };
+}
+
+function outputCheckpoint(
+  step: WorkflowStep,
+  outcome: ActionOutcome,
+): Omit<WorkflowCheckpoint, "at"> | null {
+  const result = outcome.result ?? {};
+  const details = safeCheckpointDetails(result);
+  if (details.length === 0 && !outcome.artifacts) return null;
+  const summary =
+    (typeof result.logline === "string" && result.logline) ||
+    (typeof result.synopsis === "string" && result.synopsis) ||
+    (typeof result.title === "string" && `${result.title} 결과를 만들었습니다.`) ||
+    "이 단계에서 만들어진 내용을 확인해보세요.";
+  return {
+    kind:
+      step.binding?.action === "validate_world" ||
+      step.binding?.action === "classify_story"
+        ? "validation"
+        : "preview",
+    title:
+      step.binding?.action === "validate_world" ||
+      step.binding?.action === "classify_story"
+        ? "검증·분석 결과"
+        : "현재까지 만들어진 결과",
+    summary: summary.slice(0, 1_200),
+    details,
+  };
+}
+
+function startProgress(
+  workflow: Workflow,
+  step: WorkflowStep,
+  runId: string,
+  params: Params,
+): void {
   const at = new Date().toISOString();
   const isInput = step.binding?.action === "provide_input";
   step.progress = {
@@ -86,6 +259,8 @@ function startProgress(step: WorkflowStep, runId: string): void {
         at,
       },
     ],
+    checkpoints: [{ ...inputCheckpoint(workflow, step, params), at }],
+    review: null,
   };
 }
 
@@ -93,6 +268,7 @@ function advanceProgress(
   step: WorkflowStep,
   phase: string,
   label: string,
+  checkpoint?: Omit<WorkflowCheckpoint, "at">,
 ): void {
   if (!step.progress) return;
   const at = new Date().toISOString();
@@ -102,7 +278,14 @@ function advanceProgress(
       : event,
   );
   events.push({ phase, label, status: "running", at });
-  step.progress = { ...step.progress, updatedAt: at, events };
+  step.progress = {
+    ...step.progress,
+    updatedAt: at,
+    events,
+    checkpoints: checkpoint
+      ? [...(step.progress.checkpoints ?? []), { ...checkpoint, at }]
+      : step.progress.checkpoints,
+  };
 }
 
 function settleProgress(
@@ -218,6 +401,26 @@ async function actDraftStory(ctx: ActionContext): Promise<ActionOutcome> {
       title,
       benchmarkConstraints,
       ctx.reportProgress,
+    );
+    await ctx.reportProgress(
+      "draft-preview",
+      "완성된 초안의 핵심 내용을 확인할 수 있어요.",
+      {
+        kind: "validation",
+        title: "초안 구성 확인 결과",
+        summary: "필수 이야기 요소가 모두 포함된 초안을 받았습니다.",
+        details: safeCheckpointDetails({
+          title: scenario.title,
+          logline: scenario.logline,
+          theme: scenario.theme,
+          stakes: scenario.stakes,
+          characters: scenario.characters.map((character) => ({
+            name: character.name,
+            role: character.role,
+            motivation: character.motivation,
+          })),
+        }),
+      },
     );
   } catch (err) {
     if (err instanceof AmplificationError) {
@@ -570,6 +773,12 @@ function isDone(step: WorkflowStep): boolean {
   return step.status === "complete" || step.status === "skipped";
 }
 
+function isApprovedDependency(step: WorkflowStep): boolean {
+  if (step.status === "skipped") return true;
+  if (step.status !== "complete") return false;
+  return step.progress?.review?.status !== "pending";
+}
+
 /** Recompute pending/ready flags after a status change. */
 function refreshReadiness(steps: WorkflowStep[]): void {
   const byId = new Map(steps.map((s) => [s.id, s]));
@@ -579,16 +788,77 @@ function refreshReadiness(steps: WorkflowStep[]): void {
     // write-path validation should make this unreachable.
     const ready = step.dependencies.every((depId) => {
       const dep = byId.get(depId);
-      return dep ? isDone(dep) : false;
+      return dep ? isApprovedDependency(dep) : false;
     });
     step.status = ready ? "ready" : "pending";
+  }
+}
+
+const ACTION_ARTIFACT_KEYS: Partial<Record<StepAction, string[]>> = {
+  benchmark_reference: ["benchmarkConstraints"],
+  draft_story: ["scenarioId"],
+  build_world: ["contentId"],
+  define_audience: ["populationId"],
+  generate_personas: ["samplingRunId"],
+  prepare_actors: ["agentIds"],
+  run_simulation: ["simulationId"],
+  analyze_results: ["evaluationIds"],
+};
+
+function artifactKeysForStep(step: WorkflowStep): string[] {
+  if (step.binding?.action === "provide_input") {
+    return [
+      ...(step.output.includes("idea") ? ["idea"] : []),
+      ...(step.output.includes("productBrief") ? ["product", "audience"] : []),
+    ];
+  }
+  return step.binding ? (ACTION_ARTIFACT_KEYS[step.binding.action] ?? []) : [];
+}
+
+function invalidateStepAndDependants(
+  workflow: Workflow,
+  target: WorkflowStep,
+): void {
+  const affected = new Set([target.id]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const step of workflow.steps) {
+      if (
+        !affected.has(step.id) &&
+        step.dependencies.some((dependencyId) => affected.has(dependencyId))
+      ) {
+        affected.add(step.id);
+        changed = true;
+      }
+    }
+  }
+
+  for (const step of workflow.steps) {
+    if (!affected.has(step.id) || (step.id !== target.id && step.status === "skipped")) {
+      continue;
+    }
+    for (const artifactKey of artifactKeysForStep(step)) {
+      delete workflow.artifacts[artifactKey];
+    }
+    step.status = step.id === target.id ? "ready" : "pending";
+    step.result = null;
+    step.error = null;
+    step.progress = null;
   }
 }
 
 function overallStatus(steps: WorkflowStep[]): Workflow["status"] {
   const relevant = steps.filter((s) => s.status !== "skipped");
   if (relevant.some((s) => s.status === "failed")) return "failed";
-  if (relevant.length > 0 && relevant.every((s) => s.status === "complete")) {
+  if (
+    relevant.length > 0 &&
+    relevant.every(
+      (s) =>
+        s.status === "complete" &&
+        s.progress?.review?.status !== "pending",
+    )
+  ) {
     return "complete";
   }
   if (steps.some((s) => s.status === "complete" || s.status === "running")) {
@@ -645,6 +915,7 @@ export async function runStep(input: {
   workflowId: string;
   stepId: string;
   params?: Record<string, unknown> | undefined;
+  rerun?: boolean | undefined;
 }): Promise<{ workflow: Workflow; failed: boolean }> {
   const startedAtMs = Date.now();
   const row = await repo.getWorkflow(input.workflowId);
@@ -655,9 +926,16 @@ export async function runStep(input: {
   if (step.status === "running") {
     throw new InvalidWorkflowError("이 단계는 이미 실행 중입니다.");
   }
-  if (step.status !== "ready" && step.status !== "failed") {
+  const isCompletedRerun = step.status === "complete" && input.rerun === true;
+  if (
+    step.status !== "ready" &&
+    step.status !== "failed" &&
+    !isCompletedRerun
+  ) {
     throw new InvalidWorkflowError(
-      "이 단계는 현재 실행할 수 없습니다. 이전 단계를 확인해주세요.",
+      step.status === "complete"
+        ? "완료된 단계를 다시 실행하려면 재실행을 선택해주세요."
+        : "이 단계는 현재 실행할 수 없습니다. 이전 단계를 확인해주세요.",
     );
   }
   if (!step.binding) {
@@ -671,7 +949,7 @@ export async function runStep(input: {
   }
   const unmet = step.dependencies.filter((depId) => {
     const dep = workflow.steps.find((s) => s.id === depId);
-    return !dep || !isDone(dep);
+    return !dep || !isApprovedDependency(dep);
   });
   if (unmet.length > 0) {
     const titles = unmet
@@ -689,10 +967,13 @@ export async function runStep(input: {
   const observedArtifacts = { ...workflow.artifacts };
   const observedStatus = workflow.status;
   const runId = randomUUID();
-  const expectedStatus = step.status;
+  const expectedStatus = step.status as "ready" | "failed" | "complete";
+  if (isCompletedRerun) {
+    invalidateStepAndDependants(workflow, step);
+  }
   step.status = "running";
   step.error = null;
-  startProgress(step, runId);
+  startProgress(workflow, step, runId, params);
   const claimed = await repo.claimWorkflowStep(
     workflow.id,
     step.id,
@@ -705,6 +986,7 @@ export async function runStep(input: {
     },
     {
       steps: workflow.steps,
+      artifacts: workflow.artifacts,
       status: "running",
     },
   );
@@ -736,8 +1018,12 @@ export async function runStep(input: {
       });
   }, HEARTBEAT_MS);
 
-  const reportProgress = async (phase: string, label: string): Promise<void> => {
-    advanceProgress(step, phase, label);
+  const reportProgress = async (
+    phase: string,
+    label: string,
+    checkpoint?: Omit<WorkflowCheckpoint, "at">,
+  ): Promise<void> => {
+    advanceProgress(step, phase, label, checkpoint);
     const updated = await repo.updateWorkflowIfRunOwned(
       workflow.id,
       step.id,
@@ -771,12 +1057,48 @@ export async function runStep(input: {
       const outcome = await action({ workflow, step, params, reportProgress });
       step.status = "complete";
       step.result = outcome.result ?? null;
+      const preview = outputCheckpoint(step, outcome);
+      if (preview) appendCheckpoint(step, preview);
       settleProgress(step, "complete");
       // Persist the (possibly edited) inputs onto the binding so re-opening
       // the workflow shows what was actually used.
       step.binding = { ...step.binding, params };
       if (outcome.artifacts) {
         workflow.artifacts = { ...workflow.artifacts, ...outcome.artifacts };
+      }
+      const dependants = workflow.steps.filter(
+        (candidate) =>
+          candidate.status !== "skipped" &&
+          candidate.dependencies.includes(step.id),
+      );
+      if (dependants.length > 0 && step.progress) {
+        appendCheckpoint(step, {
+          kind: "handoff",
+          title: "다음 단계에 전달될 내용",
+          summary:
+            "내용을 확인하고 승인하면 다음 단계가 이 결과를 이어서 사용합니다.",
+          details: [
+            {
+              label: "다음 단계",
+              value: dependants.map((candidate) => candidate.title).join(", "),
+            },
+            {
+              label: "전달되는 결과",
+              value:
+                step.output.length > 0
+                  ? step.output.join(", ")
+                  : "이 단계의 검증·분석 결과",
+            },
+          ],
+        });
+      }
+      if (step.progress) {
+        const requestedAt = new Date().toISOString();
+        step.progress = {
+          ...step.progress,
+          updatedAt: requestedAt,
+          review: { status: "pending", requestedAt },
+        };
       }
     } catch (err) {
       failed = true;
@@ -790,6 +1112,7 @@ export async function runStep(input: {
         runId,
         {
           steps: workflow.steps,
+          artifacts: workflow.artifacts,
           status: overallStatus(workflow.steps),
         },
       );
@@ -843,4 +1166,57 @@ export async function runStep(input: {
   } finally {
     clearInterval(heartbeat);
   }
+}
+
+export async function approveStepReview(input: {
+  workflowId: string;
+  stepId: string;
+}): Promise<Workflow> {
+  const row = await repo.getWorkflow(input.workflowId);
+  if (!row) throw new StepNotFoundError(input.workflowId);
+  const workflow = repo.toWorkflow(row);
+  const step = workflow.steps.find((candidate) => candidate.id === input.stepId);
+  if (!step) throw new StepNotFoundError(input.stepId);
+  if (step.status !== "complete") {
+    throw new InvalidWorkflowError(
+      "완료된 단계의 결과만 검토할 수 있습니다.",
+    );
+  }
+  if (step.progress?.review?.status === "approved") return workflow;
+  if (step.progress?.review?.status !== "pending") {
+    throw new InvalidWorkflowError(
+      "이 단계는 현재 검토를 기다리고 있지 않습니다.",
+    );
+  }
+
+  const observed = {
+    steps: structuredClone(workflow.steps),
+    artifacts: { ...workflow.artifacts },
+    status: workflow.status,
+  };
+  const reviewedAt = new Date().toISOString();
+  step.progress = {
+    ...step.progress,
+    updatedAt: reviewedAt,
+    review: {
+      ...step.progress.review,
+      status: "approved",
+      reviewedAt,
+    },
+  };
+  refreshReadiness(workflow.steps);
+  const updated = await repo.updateWorkflowIfSnapshotMatches(
+    workflow.id,
+    observed,
+    {
+      steps: workflow.steps,
+      status: overallStatus(workflow.steps),
+    },
+  );
+  if (!updated) {
+    throw new InvalidWorkflowError(
+      "다른 요청이 이 결과를 먼저 변경했습니다. 새로고침 후 다시 확인해주세요.",
+    );
+  }
+  return repo.toWorkflow(updated);
 }

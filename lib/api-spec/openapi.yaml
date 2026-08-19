@@ -1798,6 +1798,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/workflows/{id}/steps/{stepId}/review:
+    post:
+      operationId: reviewWorkflowStep
+      tags: [workflows]
+      summary: Approve a completed step checkpoint and unblock its dependants
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: stepId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowStepReviewInput"
+      responses:
+        "200":
+          description: Workflow after the review was approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowRecord"
+        "400":
+          description: Step is not waiting for review or workflow changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
+        "404":
+          description: Workflow or step not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -3348,6 +3387,39 @@ components:
         at:
           type: string
           description: "ISO-8601 timestamp when this phase changed"
+    WorkflowCheckpointDetail:
+      type: object
+      required: [label, value]
+      properties:
+        label: { type: string }
+        value: { type: string }
+    WorkflowCheckpoint:
+      type: object
+      required: [kind, title, summary, details, at]
+      properties:
+        kind:
+          type: string
+          enum: [input, preview, validation, handoff]
+        title:
+          type: string
+          description: "Safe user-facing checkpoint title"
+        summary:
+          type: string
+          description: "Safe summary derived from explicit inputs or domain output"
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowCheckpointDetail"
+        at: { type: string }
+    WorkflowStepReview:
+      type: object
+      required: [status, requestedAt]
+      properties:
+        status:
+          type: string
+          enum: [pending, approved]
+        requestedAt: { type: string }
+        reviewedAt: { type: ["string", "null"] }
     WorkflowStepProgress:
       type: object
       required: [runId, startedAt, updatedAt, events]
@@ -3361,6 +3433,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/WorkflowProgressEvent"
+        checkpoints:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowCheckpoint"
+        review:
+          oneOf:
+            - $ref: "#/components/schemas/WorkflowStepReview"
+            - type: "null"
     WorkflowStep:
       type: object
       required: [id, type, title, importance, status, input, output, dependencies]
@@ -3449,6 +3529,23 @@ components:
         status:
           type: string
           enum: [draft, running, complete, failed]
+        expected:
+          $ref: "#/components/schemas/WorkflowUpdateExpectation"
+          description: "Required when changing steps, artifacts, or status; exact snapshot used to reject stale tabs"
+    WorkflowUpdateExpectation:
+      type: object
+      required: [steps, artifacts, status]
+      properties:
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowStep"
+        artifacts:
+          type: object
+          additionalProperties: { type: string }
+        status:
+          type: string
+          enum: [draft, running, complete, failed]
     WorkflowPlanInput:
       type: object
       description: "Either outputType (choice) or description (natural language) is required; both may be given."
@@ -3468,3 +3565,14 @@ components:
           type: object
           additionalProperties: true
           description: "User-provided inputs for this step (e.g. idea text, sample size)"
+        rerun:
+          type: boolean
+          default: false
+          description: "Re-run a completed step and invalidate its dependent outputs"
+    WorkflowStepReviewInput:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve]
