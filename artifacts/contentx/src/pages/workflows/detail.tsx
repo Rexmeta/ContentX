@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout";
 import { 
   useGetWorkflow, 
@@ -122,6 +122,18 @@ export default function WorkflowDetail() {
   const [runningToTheEnd, setRunningToTheEnd] = useState(false);
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
 
+  // Which step's run request is currently in flight (the server only flips the
+  // stored status while it processes, so the client tracks it explicitly) and
+  // when it started, to show a live elapsed timer instead of a frozen screen.
+  const [activeStep, setActiveStep] = useState<{ id: string; startedAt: number } | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (!activeStep) return;
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [activeStep]);
+  const activeElapsedSec = activeStep ? Math.max(0, Math.round((nowTick - activeStep.startedAt) / 1000)) : 0;
+
   // Deletion Dialog State
   const [deleteContext, setDeleteContext] = useState<{ stepId: string; dependentCount: number } | null>(null);
 
@@ -197,12 +209,15 @@ export default function WorkflowDetail() {
   };
 
   const handleRunStep = async (step: WorkflowStep, params?: Record<string, unknown>) => {
+    setActiveStep({ id: step.id, startedAt: Date.now() });
     try {
       await runStep.mutateAsync({ id, stepId: step.id, data: params ? { params } : {} });
       queryClient.invalidateQueries({ queryKey: getGetWorkflowQueryKey(id) });
     } catch (e: any) {
       toast({ title: "실행 실패", description: e?.message || "단계를 실행하는 중 오류가 발생했습니다.", variant: "destructive" });
       setRunningToTheEnd(false);
+    } finally {
+      setActiveStep(null);
     }
   };
 
@@ -226,8 +241,10 @@ export default function WorkflowDetail() {
           toast({ title: "입력이 필요해요", description: `"${nextReady.title}" 단계의 내용을 먼저 채워주세요.` });
           break;
         }
-        
+
+        setActiveStep({ id: nextReady.id, startedAt: Date.now() });
         const updated = await runStep.mutateAsync({ id, stepId: nextReady.id, data: {} });
+        setActiveStep(null);
         currentWorkflow = updated as WorkflowRecord;
         queryClient.setQueryData(getGetWorkflowQueryKey(id), updated);
         
@@ -239,6 +256,7 @@ export default function WorkflowDetail() {
     } catch (e) {
       toast({ title: "실행 중단", description: "오류로 인해 자동 실행이 중단되었습니다.", variant: "destructive" });
     } finally {
+      setActiveStep(null);
       setRunningToTheEnd(false);
     }
   };
@@ -297,7 +315,14 @@ export default function WorkflowDetail() {
   const isComplete = workflow.status === 'complete';
   const hasReadySteps = workflow.steps.some(s => s.status === 'ready');
   const isSupportedType = ["novel", "roleplay", "product-reaction"].includes(workflow.intent.outputType);
-  const isRunning = workflow.status === 'running' || runningToTheEnd;
+  const isRunning = workflow.status === 'running' || runningToTheEnd || !!activeStep;
+
+  // Progress figures for the live banner: counts only steps that participate
+  // in execution (skipped ones are excluded from the denominator).
+  const countableSteps = workflow.steps.filter(s => s.status !== 'skipped');
+  const doneCount = countableSteps.filter(s => s.status === 'complete').length;
+  const activeStepRecord = activeStep ? workflow.steps.find(s => s.id === activeStep.id) : undefined;
+  const activeStepNumber = activeStepRecord ? workflow.steps.indexOf(activeStepRecord) + 1 : null;
 
   return (
     <Layout 
@@ -334,7 +359,7 @@ export default function WorkflowDetail() {
                   onClick={handleRunToEnd}
                 >
                   {isRunning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FastForward className="h-4 w-4 mr-2" />}
-                  끝까지 실행
+                  {isRunning ? `실행 중 (${doneCount}/${countableSteps.length})` : "끝까지 실행"}
                 </Button>
               </>
             )}
@@ -349,6 +374,32 @@ export default function WorkflowDetail() {
             <h2 className="font-bold mb-1">이 결과물은 아직 준비 중이에요</h2>
             <p className="text-sm text-muted-foreground">
               곧 지원될 예정이에요. 지금은 소설, 롤플레이, 제품 반응 시뮬레이션을 만들어볼 수 있어요.
+            </p>
+          </div>
+        )}
+
+        {isRunning && activeStepRecord && (
+          <div className="border border-primary/40 bg-primary/5 p-4 rounded-sm" data-testid="banner-run-progress">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span>
+                  {activeStepNumber != null && `${activeStepNumber}단계 `}
+                  "{activeStepRecord.title}" 진행 중…
+                </span>
+              </div>
+              <div className="text-xs font-mono text-muted-foreground" data-testid="text-run-elapsed">
+                {activeElapsedSec}초 경과
+              </div>
+            </div>
+            <div className="h-1.5 bg-border rounded-full overflow-hidden mb-2">
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${countableSteps.length ? Math.round((doneCount / countableSteps.length) * 100) : 0}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              전체 {countableSteps.length}단계 중 {doneCount}단계 완료 — AI가 실제로 내용을 생성하는 단계는 수십 초가 걸릴 수 있어요. 각 단계가 끝나면 아래 목록에 결과가 바로 표시됩니다.
             </p>
           </div>
         )}
@@ -372,6 +423,8 @@ export default function WorkflowDetail() {
                 onDelete={() => attemptDeleteStep(step.id)}
                 onSkip={() => handleSkipStep(step.id)}
                 isRunning={isRunning}
+                isActive={activeStep?.id === step.id}
+                activeElapsedSec={activeStep?.id === step.id ? activeElapsedSec : 0}
               />
             ))}
             
@@ -772,7 +825,7 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
 }
 
 function StepCard({ 
-  step, index, workflow, isEditing, onEdit, onCancelEdit, onRun, onDelete, onSkip, isRunning
+  step, index, workflow, isEditing, onEdit, onCancelEdit, onRun, onDelete, onSkip, isRunning, isActive, activeElapsedSec
 }: { 
   step: WorkflowStep; 
   index: number; 
@@ -784,13 +837,17 @@ function StepCard({
   onDelete: () => void;
   onSkip: () => void;
   isRunning: boolean;
+  isActive: boolean;
+  activeElapsedSec: number;
 }) {
   const badge = BADGE_MAP[step.importance as keyof typeof BADGE_MAP] || BADGE_MAP.optional;
-  const isReady = step.status === 'ready';
   const isComplete = step.status === 'complete';
   const isFailed = step.status === 'failed';
   const isSkipped = step.status === 'skipped';
-  const isStepRunning = step.status === 'running';
+  // While a run request is in flight the client-side record still says
+  // 'ready', so treat the actively executing step as running too.
+  const isStepRunning = step.status === 'running' || isActive;
+  const isReady = step.status === 'ready' && !isActive;
   const isProvideInput = step.binding?.action === 'provide_input' && step.output.length > 0;
 
   // Form values for input steps (idea / product+audience), prefilled from the
@@ -902,6 +959,12 @@ function StepCard({
                 )}
               </div>
               {step.description && <p className="text-sm text-muted-foreground">{step.description}</p>}
+              {isStepRunning && (
+                <div className="mt-2 inline-flex items-center gap-2 text-xs font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1" data-testid={`text-step-elapsed-${step.id}`}>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  AI 작업 진행 중{isActive && activeElapsedSec > 0 ? ` — ${activeElapsedSec}초 경과` : "…"}
+                </div>
+              )}
               {!step.binding && (
                 <div className="mt-2 text-xs font-mono text-muted-foreground inline-flex items-center bg-muted px-2 py-0.5 rounded-sm">
                   자동 실행 없음
