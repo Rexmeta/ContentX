@@ -916,6 +916,48 @@ export const ClassifyScenarioResponse = zod.object({
 
 
 /**
+ * Aggregates classifications (domain/conflictType/tone/tags) across the selected scenario set and returns a group-characteristic profile. The draftConstraints field is ready to inject into a draft_story step as a benchmark constraint. Requires at least 2 scenarios — N=1 is rejected with 400 (invariant: group characteristics, not single-source reproduction).
+ * @summary Build a group pattern report from a reference set of scenarios
+ */
+export const benchmarkScenariosBodyScenarioIdsMin = 2;
+
+
+
+export const BenchmarkScenariosBody = zod.object({
+  "scenarioIds": zod.array(zod.string()).min(benchmarkScenariosBodyScenarioIdsMin).describe('IDs of reference scenarios (minimum 2; N=1 is rejected)')
+})
+
+export const BenchmarkScenariosResponse = zod.object({
+  "scenarioCount": zod.int(),
+  "classifiedCount": zod.int(),
+  "profile": zod.object({
+  "domain": zod.array(zod.object({
+  "value": zod.string(),
+  "count": zod.int(),
+  "ratio": zod.number().describe('Fraction of classified scenarios carrying this value (0–1)')
+})),
+  "conflictType": zod.array(zod.object({
+  "value": zod.string(),
+  "count": zod.int(),
+  "ratio": zod.number().describe('Fraction of classified scenarios carrying this value (0–1)')
+})),
+  "tone": zod.array(zod.object({
+  "value": zod.string(),
+  "count": zod.int(),
+  "ratio": zod.number().describe('Fraction of classified scenarios carrying this value (0–1)')
+})),
+  "tags": zod.array(zod.object({
+  "value": zod.string(),
+  "count": zod.int(),
+  "ratio": zod.number().describe('Fraction of classified scenarios carrying this value (0–1)')
+}))
+}),
+  "draftConstraints": zod.string().describe('Constraint text derived from the group profile, ready to inject into draft_story as a benchmark constraint. Empty string when classifiedCount is 0.\n'),
+  "warning": zod.string().nullish().describe('Non-fatal advisory (e.g. some scenarios were unclassified)')
+})
+
+
+/**
  * @summary Scenarios sharing category axes with the given scenario
  */
 export const ListSimilarScenariosParams = zod.object({

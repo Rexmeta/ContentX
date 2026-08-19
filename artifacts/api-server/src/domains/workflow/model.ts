@@ -54,6 +54,7 @@ export type StepStatus =
 /** Executor action keys. Every runnable step names exactly one. */
 export const STEP_ACTIONS = [
   "provide_input",
+  "benchmark_reference",
   "draft_story",
   "classify_story",
   "build_world",

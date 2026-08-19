@@ -344,6 +344,41 @@ export interface Category {
   origin: CategoryOrigin;
 }
 
+export interface BenchmarkInput {
+  /**
+     * IDs of reference scenarios (minimum 2; N=1 is rejected)
+     * @minItems 2
+     */
+  scenarioIds: string[];
+}
+
+export interface CategoryFrequency {
+  value: string;
+  count: number;
+  /** Fraction of classified scenarios carrying this value (0–1) */
+  ratio: number;
+}
+
+export interface BenchmarkProfile {
+  domain: CategoryFrequency[];
+  conflictType: CategoryFrequency[];
+  tone: CategoryFrequency[];
+  tags: CategoryFrequency[];
+}
+
+export interface BenchmarkReport {
+  scenarioCount: number;
+  classifiedCount: number;
+  profile: BenchmarkProfile;
+  /** Constraint text derived from the group profile, ready to inject into draft_story as a benchmark constraint. Empty string when classifiedCount is 0. */
+  draftConstraints: string;
+  /**
+     * Non-fatal advisory (e.g. some scenarios were unclassified)
+     * @nullable
+     */
+  warning?: string | null;
+}
+
 export interface ReclassifyResult {
   classified: number;
   failed: number;

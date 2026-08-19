@@ -6,11 +6,16 @@
  * resumed after leaving the page.
  */
 import { orchestrator } from "../ai/orchestrator";
-import { AmplificationError } from "../ai/llmAmplifier";
+import { AmplificationError, amplifyIdeaWithLLM } from "../ai/llmAmplifier";
 import * as scenarioRepo from "../scenario/repository";
 import {
   classifyScenario,
 } from "../scenario/classificationService";
+import {
+  buildBenchmarkReport,
+  BenchmarkError,
+  type BenchmarkReport,
+} from "../scenario/benchmarkService";
 import { ClassificationError } from "../scenario/classifier";
 import * as contentService from "../content/service";
 import * as populationService from "../population/service";
@@ -89,6 +94,46 @@ async function actProvideInput(ctx: ActionContext): Promise<ActionOutcome> {
   return { artifacts, result: stored };
 }
 
+async function actBenchmarkReference(
+  ctx: ActionContext,
+): Promise<ActionOutcome> {
+  // scenarioIds param: array or comma-separated string
+  const raw = ctx.params["scenarioIds"] ?? ctx.params["benchmarkScenarioIds"];
+  let scenarioIds: string[];
+  if (Array.isArray(raw)) {
+    scenarioIds = raw.filter((v): v is string => typeof v === "string" && !!v.trim());
+  } else if (typeof raw === "string" && raw.trim()) {
+    scenarioIds = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  } else {
+    throw new InvalidWorkflowError(
+      "참고 시나리오 ID 목록을 scenarioIds 파라미터로 지정해주세요. " +
+        "예: ['id1','id2'] 또는 'id1,id2'",
+    );
+  }
+
+  let report: BenchmarkReport;
+  try {
+    report = await buildBenchmarkReport(scenarioIds);
+  } catch (err) {
+    if (err instanceof BenchmarkError) {
+      throw new InvalidWorkflowError(err.message);
+    }
+    throw err;
+  }
+
+  return {
+    artifacts: {
+      benchmarkConstraints: report.draftConstraints,
+    },
+    result: {
+      scenarioCount: report.scenarioCount,
+      classifiedCount: report.classifiedCount,
+      profile: report.profile,
+      warning: report.warning ?? null,
+    },
+  };
+}
+
 async function actDraftStory(ctx: ActionContext): Promise<ActionOutcome> {
   const idea =
     str(ctx.params, "idea") ??
@@ -101,9 +146,15 @@ async function actDraftStory(ctx: ActionContext): Promise<ActionOutcome> {
     );
   }
   const title = str(ctx.params, "title");
+
+  // Inject benchmark constraints when a benchmark_reference step ran before this.
+  const benchmarkConstraints =
+    str(ctx.params, "benchmarkConstraints") ??
+    (ctx.workflow.artifacts["benchmarkConstraints"] || undefined);
+
   let scenario: DramaticScenario;
   try {
-    scenario = await orchestrator.amplify(idea, title);
+    scenario = await amplifyIdeaWithLLM(idea, title, benchmarkConstraints);
   } catch (err) {
     if (err instanceof AmplificationError) {
       throw new StepExecutionError(err.message, { cause: err });
@@ -436,6 +487,7 @@ const ACTIONS: Record<
   (ctx: ActionContext) => Promise<ActionOutcome>
 > = {
   provide_input: actProvideInput,
+  benchmark_reference: actBenchmarkReference,
   draft_story: actDraftStory,
   classify_story: actClassifyStory,
   build_world: actBuildWorld,

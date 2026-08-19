@@ -37,14 +37,23 @@ const SYSTEM_PROMPT = `당신은 현실 기반 시나리오 작가다. 사용자
  * Amplify a raw idea into a realistic dramatic scenario using the LLM.
  * The response is schema-validated; invalid output raises AmplificationError
  * (no silent fallback).
+ *
+ * @param benchmarkConstraints - Optional group-pattern constraint text from a
+ *   benchmark report (architecture-v2.md §I). When provided it is appended to
+ *   the user prompt so the LLM shapes the draft toward the group profile while
+ *   still producing an original story.
  */
 export async function amplifyIdeaWithLLM(
   idea: string,
   title?: string,
+  benchmarkConstraints?: string,
 ): Promise<DramaticScenario> {
-  const userPrompt = title?.trim()
+  let userPrompt = title?.trim()
     ? `아이디어: ${idea}\n(제목은 "${title.trim()}"을 유지하라)`
     : `아이디어: ${idea}`;
+  if (benchmarkConstraints?.trim()) {
+    userPrompt += `\n\n${benchmarkConstraints.trim()}`;
+  }
 
   let json: unknown;
   try {

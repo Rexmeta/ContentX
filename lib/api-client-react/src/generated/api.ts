@@ -26,6 +26,8 @@ import type {
   AgentStateUpdate,
   AgentWithState,
   ApiMessage,
+  BenchmarkInput,
+  BenchmarkReport,
   BridgeAnalysis,
   BridgeAnalyzeInput,
   BridgeGenerateInput,
@@ -1279,6 +1281,78 @@ export const useClassifyScenario = <TError = ErrorType<ApiMessage>,
         TContext
       > => {
       return useMutation(getClassifyScenarioMutationOptions(options));
+    }
+
+export const getBenchmarkScenariosUrl = () => {
+
+
+
+
+  return `/api/v1/scenarios/benchmark`
+}
+
+/**
+ * Aggregates classifications (domain/conflictType/tone/tags) across the selected scenario set and returns a group-characteristic profile. The draftConstraints field is ready to inject into a draft_story step as a benchmark constraint. Requires at least 2 scenarios — N=1 is rejected with 400 (invariant: group characteristics, not single-source reproduction).
+ * @summary Build a group pattern report from a reference set of scenarios
+ */
+export const benchmarkScenarios = async (benchmarkInput: BenchmarkInput, options?: Parameters<typeof customFetch>[1]): Promise<BenchmarkReport> => {
+
+  return customFetch<BenchmarkReport>(getBenchmarkScenariosUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(benchmarkInput)
+  }
+);}
+
+
+
+
+
+export const getBenchmarkScenariosMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof benchmarkScenarios>>, TError,{data: BodyType<BenchmarkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof benchmarkScenarios>>, TError,{data: BodyType<BenchmarkInput>}, TContext> => {
+
+const mutationKey = ['benchmarkScenarios'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof benchmarkScenarios>>, {data: BodyType<BenchmarkInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  benchmarkScenarios(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BenchmarkScenariosMutationResult = NonNullable<Awaited<ReturnType<typeof benchmarkScenarios>>>
+    export type BenchmarkScenariosMutationBody = BodyType<BenchmarkInput>
+    export type BenchmarkScenariosMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Build a group pattern report from a reference set of scenarios
+ */
+export const useBenchmarkScenarios = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof benchmarkScenarios>>, TError,{data: BodyType<BenchmarkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof benchmarkScenarios>>,
+        TError,
+        {data: BodyType<BenchmarkInput>},
+        TContext
+      > => {
+      return useMutation(getBenchmarkScenariosMutationOptions(options));
     }
 
 export const getListSimilarScenariosUrl = (id: string,) => {

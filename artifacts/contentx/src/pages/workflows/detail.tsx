@@ -67,6 +67,7 @@ const STEP_CATALOG: {
   output: string[];
   defaultParams?: Record<string, unknown>;
 }[] = [
+  { action: "benchmark_reference", api: "POST /v1/scenarios/benchmark", type: "analyze", title: "참고 작품 패턴 분석", desc: "여러 참고 시나리오의 공통 특성을 집계해 그룹 프로파일을 만듭니다. 이후 이야기 초안 단계에 자동으로 제약으로 전달됩니다.", input: ["scenarioIds"], output: ["benchmarkConstraints"], defaultParams: { scenarioIds: [] } },
   { action: "draft_story", api: "POST /v1/scenarios/draft", type: "generate", title: "이야기 초안 만들기", desc: "아이디어를 구체적인 이야기 초안으로 발전시킵니다.", input: ["idea"], output: ["scenarioId"] },
   { action: "classify_story", api: "POST /v1/scenarios/:id/classify", type: "analyze", title: "장르·분위기 정리", desc: "이야기의 장르와 분위기를 자동으로 정리합니다.", input: ["scenarioId"], output: ["classification"] },
   { action: "build_world", api: "POST /v1/content", type: "compose", title: "이야기 구조 만들기", desc: "등장인물·장소·사건을 연결한 이야기 구조를 만듭니다.", input: ["scenarioId"], output: ["contentId"] },
@@ -95,6 +96,7 @@ const BADGE_MAP = {
 // when the step runs, without internal API vocabulary.
 const ACTION_HELP: Record<string, string> = {
   provide_input: "여기에 적은 내용이 다음 단계들의 재료가 돼요. 언제든 다시 수정할 수 있어요.",
+  benchmark_reference: "선택한 여러 시나리오에서 공통 배경·갈등·분위기 패턴을 뽑아내요. 결과는 이야기 초안 단계에 자동으로 전달돼요.",
   draft_story: "AI가 아이디어를 읽고 제목·로그라인·줄거리가 있는 초안을 만들어요.",
   classify_story: "초안의 장르와 분위기를 자동으로 태그해서 나중에 찾기 쉽게 해줘요.",
   build_world: "등장인물·장소·사건과 그 관계를 정리한 '이야기 구조'를 만들어요. 고급 도구에서 그래프로 볼 수 있어요.",

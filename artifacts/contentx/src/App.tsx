@@ -22,6 +22,7 @@ import EvaluationsList from '@/pages/evaluations/list';
 import EvaluationDetail from '@/pages/evaluations/detail';
 import Explorer from '@/pages/explorer';
 import Examples from '@/pages/examples';
+import Benchmark from '@/pages/benchmark';
 import {
   Route,
   Switch,
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/evaluations/:id" component={EvaluationDetail} />
       
       <Route path="/explorer" component={Explorer} />
+      <Route path="/benchmark" component={Benchmark} />
       
       <Route component={NotFound} />
     </Switch>

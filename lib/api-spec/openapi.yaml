@@ -387,6 +387,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiMessage"
+  /v1/scenarios/benchmark:
+    post:
+      operationId: benchmarkScenarios
+      tags: [content]
+      summary: Build a group pattern report from a reference set of scenarios
+      description: >
+        Aggregates classifications (domain/conflictType/tone/tags) across the
+        selected scenario set and returns a group-characteristic profile.
+        The draftConstraints field is ready to inject into a draft_story step
+        as a benchmark constraint. Requires at least 2 scenarios — N=1 is
+        rejected with 400 (invariant: group characteristics, not single-source
+        reproduction).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BenchmarkInput"
+      responses:
+        "200":
+          description: Group pattern report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenchmarkReport"
+        "400":
+          description: Fewer than 2 distinct scenario IDs, or unknown scenario IDs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMessage"
   /v1/scenarios/{id}/similar:
     get:
       operationId: listSimilarScenarios
@@ -2099,6 +2130,57 @@ components:
         origin:
           type: string
           enum: [seed, auto]
+    BenchmarkInput:
+      type: object
+      required: [scenarioIds]
+      properties:
+        scenarioIds:
+          type: array
+          minItems: 2
+          items: { type: string }
+          description: IDs of reference scenarios (minimum 2; N=1 is rejected)
+    CategoryFrequency:
+      type: object
+      required: [value, count, ratio]
+      properties:
+        value: { type: string }
+        count: { type: integer }
+        ratio:
+          type: number
+          description: Fraction of classified scenarios carrying this value (0–1)
+    BenchmarkProfile:
+      type: object
+      required: [domain, conflictType, tone, tags]
+      properties:
+        domain:
+          type: array
+          items: { $ref: "#/components/schemas/CategoryFrequency" }
+        conflictType:
+          type: array
+          items: { $ref: "#/components/schemas/CategoryFrequency" }
+        tone:
+          type: array
+          items: { $ref: "#/components/schemas/CategoryFrequency" }
+        tags:
+          type: array
+          items: { $ref: "#/components/schemas/CategoryFrequency" }
+    BenchmarkReport:
+      type: object
+      required: [scenarioCount, classifiedCount, profile, draftConstraints]
+      properties:
+        scenarioCount: { type: integer }
+        classifiedCount: { type: integer }
+        profile:
+          $ref: "#/components/schemas/BenchmarkProfile"
+        draftConstraints:
+          type: string
+          description: >
+            Constraint text derived from the group profile, ready to inject
+            into draft_story as a benchmark constraint. Empty string when
+            classifiedCount is 0.
+        warning:
+          type: ["string", "null"]
+          description: Non-fatal advisory (e.g. some scenarios were unclassified)
     ReclassifyResult:
       type: object
       required: [classified, failed]

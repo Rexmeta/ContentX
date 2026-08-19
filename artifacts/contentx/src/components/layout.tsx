@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { 
   Terminal, Users, UserCircle, PlayCircle, BarChart, Network, 
   ChevronRight, Box, ListTodo, Settings2,
-  ChevronDown, Lightbulb, PlusCircle, Library
+  ChevronDown, Lightbulb, PlusCircle, Library, Layers
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const primaryItems = [
 ];
 
 const advancedItems = [
+  { href: "/benchmark", label: "벤치마크", icon: Layers },
   { href: "/populations", label: "가상 인구", icon: Users },
   { href: "/characters", label: "캐릭터", icon: UserCircle },
   { href: "/agents", label: "에이전트", icon: Terminal },

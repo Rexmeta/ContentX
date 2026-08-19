@@ -46,6 +46,10 @@ import type { StoredBridgeAnalysis } from "../shared/lineage";
 import * as repo from "../domains/scenario/repository";
 import { listCategories } from "../domains/scenario/categoryService";
 import {
+  buildBenchmarkReport,
+  BenchmarkError,
+} from "../domains/scenario/benchmarkService";
+import {
   classifyScenario,
   acceptManualClassification,
   InvalidClassificationError,
@@ -328,6 +332,35 @@ router.post("/v1/scenarios/bridge", async (req, res): Promise<void> => {
   } catch (err) {
     if (err instanceof BridgeError) {
       res.status(502).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
+router.post("/v1/scenarios/benchmark", async (req, res): Promise<void> => {
+  const body = req.body as unknown;
+  if (
+    typeof body !== "object" ||
+    body === null ||
+    !Array.isArray((body as Record<string, unknown>)["scenarioIds"])
+  ) {
+    res.status(400).json({ error: "scenarioIds must be a non-empty array." });
+    return;
+  }
+  const scenarioIds = (body as Record<string, unknown>)[
+    "scenarioIds"
+  ] as unknown[];
+  if (!scenarioIds.every((id) => typeof id === "string")) {
+    res.status(400).json({ error: "Every scenarioId must be a string." });
+    return;
+  }
+  try {
+    const report = await buildBenchmarkReport(scenarioIds as string[]);
+    res.json(report);
+  } catch (err) {
+    if (err instanceof BenchmarkError) {
+      res.status(400).json({ error: err.message });
       return;
     }
     throw err;
