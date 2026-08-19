@@ -25,6 +25,7 @@ import Benchmark from '@/pages/benchmark';
 import {
   Route,
   Switch,
+  Redirect,
   Router as WouterRouter,
 } from 'wouter';
 
@@ -41,7 +42,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/create" component={Home} />
+      {/* Keep old bookmarks working without maintaining a second create screen. */}
+      <Route path="/create" component={LegacyCreateRedirect} />
       <Route path="/workflows" component={WorkflowsList} />
       <Route path="/workflows/:id" component={WorkflowDetail} />
       <Route path="/examples" component={Examples} />
@@ -71,6 +73,10 @@ function Router() {
       <Route component={NotFound} />
     </Switch>
   );
+}
+
+function LegacyCreateRedirect() {
+  return <Redirect to="/" />;
 }
 
 function App() {

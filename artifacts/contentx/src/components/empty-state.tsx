@@ -33,7 +33,7 @@ export function EmptyState({
           </Link>
         </Button>
         <Button asChild size="sm" variant="outline" data-testid="button-empty-create">
-          <Link href="/create">
+          <Link href="/">
             <PlusSquare className="h-4 w-4 mr-2" /> 새로 만들기
           </Link>
         </Button>

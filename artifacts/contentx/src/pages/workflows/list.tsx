@@ -72,7 +72,7 @@ export default function WorkflowsList() {
     <Layout 
       breadcrumbs={[{ label: "내 작업" }]}
       title={
-        <Button onClick={() => setLocation('/create')} size="sm">
+        <Button onClick={() => setLocation('/')} size="sm">
           <Plus className="h-4 w-4 mr-2" />
           새 워크플로
         </Button>
@@ -114,7 +114,7 @@ export default function WorkflowsList() {
                         <Link href="/examples">예시로 시작하기</Link>
                       </Button>
                       <Button asChild size="sm" variant="outline" data-testid="button-empty-create">
-                        <Link href="/create">새로 만들기</Link>
+                        <Link href="/">새로 만들기</Link>
                       </Button>
                     </div>
                   </TableCell>

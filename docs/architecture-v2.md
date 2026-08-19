@@ -268,7 +268,7 @@ Output Type → Goal → References → Workflow → Generate / Remix → Review
 ```
 
 Much of this already exists: `home.tsx` asks the intent question,
-`workflows/create.tsx` + `workflows/detail.tsx` plan and run output-first
+`home.tsx` + `workflows/detail.tsx` plan and run output-first
 workflows. Required changes (identified only, not built here):
 
 1. Make the Creative Workspace (intent → workflow) the primary navigation

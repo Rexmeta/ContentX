@@ -15,7 +15,7 @@
 |---|---|
 | Intent → output type → workflow plan | `domains/workflow/model.ts` (`OutputIntent`, `WorkflowStep`), `domains/workflow/planner.ts`, `domains/workflow/templates.ts` |
 | Workflow execution & persistence | `domains/workflow/executor.ts`, `repository.ts`, `validation.ts`; `routes/workflows.ts` |
-| UI | `artifacts/contentx/src/pages/home.tsx`, `workflows/create.tsx`, `workflows/detail.tsx`, `workflows/list.tsx` |
+| UI | `artifacts/contentx/src/pages/home.tsx` (create entry point), `workflows/detail.tsx`, `workflows/list.tsx` |
 | Design source | `docs/ux/output-workflow-map.md` |
 
 Missing: benchmark/evaluation steps in templates; some output types are
