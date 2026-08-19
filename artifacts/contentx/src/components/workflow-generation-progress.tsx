@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Eye,
   Loader2,
+  MessageSquare,
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -60,6 +61,7 @@ const CHECKPOINT_META = {
   preview: { label: "중간 결과", icon: Eye },
   validation: { label: "검증 결과", icon: ShieldCheck },
   handoff: { label: "다음 단계 전달", icon: ArrowRight },
+  review: { label: "검토 수정", icon: MessageSquare },
 } as const;
 
 export function WorkflowGenerationProgress({

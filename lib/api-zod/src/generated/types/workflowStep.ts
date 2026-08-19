@@ -27,6 +27,8 @@ export interface WorkflowStep {
   /** Ids of steps that must complete first */
   dependencies: string[];
   binding?: WorkflowStepBinding | null;
+  /** Server-declared generated-result fields that may be changed during review */
+  editableResultFields?: string[];
   /**
      * Step outcome summary recorded by the executor
      * @nullable

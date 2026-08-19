@@ -14,4 +14,5 @@ export const WorkflowCheckpointKind = {
   preview: 'preview',
   validation: 'validation',
   handoff: 'handoff',
+  review: 'review',
 } as const;

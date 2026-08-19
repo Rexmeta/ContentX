@@ -47,7 +47,9 @@ import {
   type WorkflowCheckpoint,
   type WorkflowCheckpointDetail,
   type WorkflowProgressStatus,
+  type WorkflowStepReviewEdit,
   type WorkflowStep,
+  editableResultFieldsForStep,
 } from "./model";
 import * as repo from "./repository";
 
@@ -170,6 +172,31 @@ function appendCheckpoint(
       { ...checkpoint, at },
     ],
   };
+}
+
+export function applyReviewedDraftResult(
+  workflow: Workflow,
+  scenario: DramaticScenario,
+): DramaticScenario {
+  const draft = workflow.steps.find(
+    (candidate) => candidate.binding?.action === "draft_story",
+  );
+  if (!draft?.result) return scenario;
+
+  const reviewedFields = editableResultFieldsForStep(draft);
+  const patch: Partial<Pick<DramaticScenario, "title" | "logline" | "synopsis">> =
+    {};
+  for (const field of reviewedFields) {
+    const value = draft.result[field];
+    if (
+      (field === "title" || field === "logline" || field === "synopsis") &&
+      typeof value === "string" &&
+      value.trim()
+    ) {
+      patch[field] = value;
+    }
+  }
+  return Object.keys(patch).length > 0 ? { ...scenario, ...patch } : scenario;
 }
 
 function inputCheckpoint(
@@ -464,7 +491,9 @@ async function actClassifyStory(ctx: ActionContext): Promise<ActionOutcome> {
   if (!row) throw new InvalidWorkflowError("저장된 이야기를 찾을 수 없습니다.");
   let classification: Classification;
   try {
-    classification = await classifyScenario(row.scenario as DramaticScenario);
+    classification = await classifyScenario(
+      applyReviewedDraftResult(ctx.workflow, row.scenario as DramaticScenario),
+    );
   } catch (err) {
     if (err instanceof ClassificationError) {
       throw new StepExecutionError(err.message, { cause: err });
@@ -483,7 +512,10 @@ async function actBuildWorld(ctx: ActionContext): Promise<ActionOutcome> {
   );
   const row = await scenarioRepo.getScenario(scenarioId);
   if (!row) throw new InvalidWorkflowError("저장된 이야기를 찾을 수 없습니다.");
-  const scenario = row.scenario as DramaticScenario;
+  const scenario = applyReviewedDraftResult(
+    ctx.workflow,
+    row.scenario as DramaticScenario,
+  );
   const payload = orchestrator.generateFromScenario(row.idea, scenario);
   const lineage = row.lineage as Lineage | null;
   if (lineage && payload.provenance) {
@@ -1089,6 +1121,7 @@ export async function runStep(input: {
       });
       step.status = "complete";
       step.result = outcome.result ?? null;
+      step.editableResultFields = editableResultFieldsForStep(step);
       const preview = outputCheckpoint(step, outcome);
       if (preview) appendCheckpoint(step, preview);
       settleProgress(step, "complete");
@@ -1203,6 +1236,12 @@ export async function runStep(input: {
 export async function approveStepReview(input: {
   workflowId: string;
   stepId: string;
+  edits?: Record<string, unknown> | undefined;
+  expected?: {
+    steps: WorkflowStep[];
+    artifacts: Record<string, string>;
+    status: Workflow["status"];
+  } | undefined;
 }): Promise<Workflow> {
   const row = await repo.getWorkflow(input.workflowId);
   if (!row) throw new StepNotFoundError(input.workflowId);
@@ -1221,12 +1260,76 @@ export async function approveStepReview(input: {
     );
   }
 
-  const observed = {
+  const observed = input.expected ?? {
     steps: structuredClone(workflow.steps),
     artifacts: { ...workflow.artifacts },
     status: workflow.status,
   };
+  const editableFields = editableResultFieldsForStep(step);
+  step.editableResultFields = editableFields;
+  const rawEdits = input.edits ?? {};
+  const suppliedFields = Object.keys(rawEdits);
+  if (
+    suppliedFields.some((field) => !editableFields.includes(field))
+  ) {
+    throw new InvalidWorkflowError(
+      "이 단계에서 수정할 수 없는 결과 항목이 포함되어 있습니다.",
+    );
+  }
+  if (suppliedFields.length > 0 && !step.result) {
+    throw new InvalidWorkflowError("수정할 생성 결과를 찾을 수 없습니다.");
+  }
+
+  const reviewEdits: WorkflowStepReviewEdit[] = [];
+  for (const field of suppliedFields) {
+    const rawValue = rawEdits[field];
+    if (typeof rawValue !== "string") {
+      throw new InvalidWorkflowError("수정한 결과 항목은 텍스트여야 합니다.");
+    }
+    const editedValue = rawValue.trim();
+    if (!editedValue) {
+      throw new InvalidWorkflowError("수정한 결과 항목은 비워둘 수 없습니다.");
+    }
+    if (editedValue.length > 5_000) {
+      throw new InvalidWorkflowError("수정한 결과 항목이 너무 깁니다.");
+    }
+    const originalValue = step.result?.[field];
+    if (typeof originalValue !== "string") {
+      throw new InvalidWorkflowError(
+        "수정할 수 없는 생성 결과 항목이 포함되어 있습니다.",
+      );
+    }
+    if (originalValue !== editedValue) {
+      reviewEdits.push({ field, originalValue, editedValue });
+    }
+  }
+
+  if (reviewEdits.length > 0 && step.result) {
+    step.result = {
+      ...step.result,
+      ...Object.fromEntries(
+        reviewEdits.map((edit) => [edit.field, edit.editedValue]),
+      ),
+    };
+  }
   const reviewedAt = new Date().toISOString();
+  if (reviewEdits.length > 0) {
+    appendCheckpoint(step, {
+      kind: "review",
+      title: "검토에서 수정한 내용",
+      summary: "AI가 만든 원본을 검토에서 다듬어 다음 단계에 전달합니다.",
+      details: reviewEdits.flatMap((edit) => [
+        {
+          label: `${CHECKPOINT_LABELS[edit.field] ?? edit.field} · 원본 AI 결과`,
+          value: safeCheckpointValue(edit.originalValue),
+        },
+        {
+          label: `${CHECKPOINT_LABELS[edit.field] ?? edit.field} · 검토 후`,
+          value: safeCheckpointValue(edit.editedValue),
+        },
+      ]),
+    });
+  }
   step.progress = {
     ...step.progress,
     updatedAt: reviewedAt,
@@ -1234,6 +1337,7 @@ export async function approveStepReview(input: {
       ...step.progress.review,
       status: "approved",
       reviewedAt,
+      ...(reviewEdits.length > 0 ? { edits: reviewEdits } : {}),
     },
   };
   refreshReadiness(workflow.steps);

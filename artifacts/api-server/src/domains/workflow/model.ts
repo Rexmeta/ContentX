@@ -69,6 +69,25 @@ export const STEP_ACTIONS = [
 ] as const;
 export type StepAction = (typeof STEP_ACTIONS)[number];
 
+/**
+ * The only generated-result fields a reviewer may change before approval.
+ * This is deliberately action-scoped rather than client-defined: prompts,
+ * hidden reasoning, provider traces, identifiers, and arbitrary payloads
+ * never become editable through the workflow review contract.
+ */
+export const EDITABLE_RESULT_FIELDS: Readonly<
+  Partial<Record<StepAction, readonly string[]>>
+> = {
+  draft_story: ["title", "logline", "synopsis"],
+};
+
+export function editableResultFieldsForStep(step: {
+  binding?: StepBinding | null;
+}): string[] {
+  const action = step.binding?.action;
+  return action ? [...(EDITABLE_RESULT_FIELDS[action] ?? [])] : [];
+}
+
 export interface StepBinding {
   action: StepAction;
   /** Human-readable existing API the step reuses (display only). */
@@ -90,7 +109,8 @@ export type WorkflowCheckpointKind =
   | "input"
   | "preview"
   | "validation"
-  | "handoff";
+  | "handoff"
+  | "review";
 
 export interface WorkflowCheckpointDetail {
   label: string;
@@ -114,6 +134,17 @@ export interface WorkflowStepReview {
   status: "pending" | "approved";
   requestedAt: string;
   reviewedAt?: string | null;
+  /**
+   * Reviewer overrides are preserved separately from the original AI result.
+   * Each entry is an audit record, not a user-editable provider payload.
+   */
+  edits?: WorkflowStepReviewEdit[];
+}
+
+export interface WorkflowStepReviewEdit {
+  field: string;
+  originalValue: string;
+  editedValue: string;
 }
 
 export interface WorkflowStepProgress {
@@ -137,6 +168,8 @@ export interface WorkflowStep {
   output: string[];
   dependencies: string[];
   binding?: StepBinding | null;
+  /** Server-declared generated-result fields allowed during review. */
+  editableResultFields?: string[];
   result?: Record<string, unknown> | null;
   error?: string | null;
   progress?: WorkflowStepProgress | null;

@@ -1513,6 +1513,7 @@ export const WorkflowCheckpointKind = {
   preview: 'preview',
   validation: 'validation',
   handoff: 'handoff',
+  review: 'review',
 } as const;
 
 export interface WorkflowCheckpoint {
@@ -1533,11 +1534,19 @@ export const WorkflowStepReviewStatus = {
   approved: 'approved',
 } as const;
 
+export interface WorkflowStepReviewEdit {
+  field: string;
+  originalValue: string;
+  editedValue: string;
+}
+
 export interface WorkflowStepReview {
   status: WorkflowStepReviewStatus;
   requestedAt: string;
   /** @nullable */
   reviewedAt?: string | null;
+  /** Reviewer changes, retained separately from the original AI output */
+  edits?: WorkflowStepReviewEdit[];
 }
 
 export interface WorkflowStepProgress {
@@ -1610,6 +1619,8 @@ export interface WorkflowStep {
   /** Ids of steps that must complete first */
   dependencies: string[];
   binding?: WorkflowStepBinding | null;
+  /** Server-declared generated-result fields that may be changed during review */
+  editableResultFields?: string[];
   /**
      * Step outcome summary recorded by the executor
      * @nullable
@@ -1743,8 +1754,17 @@ export const WorkflowStepReviewInputDecision = {
   approve: 'approve',
 } as const;
 
+/**
+ * Replacement text for server-declared editable result fields only
+ */
+export type WorkflowStepReviewInputEdits = {[key: string]: string};
+
 export interface WorkflowStepReviewInput {
   decision: WorkflowStepReviewInputDecision;
+  /** Replacement text for server-declared editable result fields only */
+  edits?: WorkflowStepReviewInputEdits;
+  /** Exact review snapshot used to reject stale tabs and concurrent edits */
+  expected: WorkflowUpdateExpectation;
 }
 
 export type GetPopulationDefinitionParams = {

@@ -25,7 +25,12 @@ vi.mock("../repository", () => ({
 }));
 
 import * as repo from "../repository";
-import { approveStepReview, HEARTBEAT_MS, runStep } from "../executor";
+import {
+  applyReviewedDraftResult,
+  approveStepReview,
+  HEARTBEAT_MS,
+  runStep,
+} from "../executor";
 
 function workflow(): Workflow {
   return {
@@ -238,6 +243,93 @@ describe("workflow generation progress", () => {
       status: "approved",
     });
     expect(reviewed.steps[2]!.status).toBe("ready");
+  });
+
+  it("records allowed review edits separately and hands the revised draft to later actions", async () => {
+    await runStep({ workflowId: "workflow_progress", stepId: "draft" });
+    const expected = {
+      steps: structuredClone(state.steps),
+      artifacts: { ...state.artifacts },
+      status: state.status,
+    };
+
+    const reviewed = await approveStepReview({
+      workflowId: "workflow_progress",
+      stepId: "draft",
+      edits: {
+        title: "검토된 연구소의 밤",
+        logline: "검토자가 다듬은 한 줄 소개",
+      },
+      expected,
+    });
+    const draft = reviewed.steps[1]!;
+
+    expect(draft.result).toMatchObject({
+      title: "검토된 연구소의 밤",
+      logline: "검토자가 다듬은 한 줄 소개",
+      synopsis: "시놉시스",
+    });
+    expect(draft.progress?.review?.edits).toEqual([
+      {
+        field: "title",
+        originalValue: "연구소의 밤",
+        editedValue: "검토된 연구소의 밤",
+      },
+      {
+        field: "logline",
+        originalValue: "서로 다른 목적을 가진 연구원들이 충돌한다.",
+        editedValue: "검토자가 다듬은 한 줄 소개",
+      },
+    ]);
+    expect(draft.progress?.checkpoints?.at(-1)).toMatchObject({
+      kind: "review",
+      title: "검토에서 수정한 내용",
+    });
+    expect(reviewed.steps[2]!.status).toBe("ready");
+
+    const downstreamScenario = applyReviewedDraftResult(reviewed, {
+      title: "AI 원본 제목",
+      logline: "AI 원본 로그라인",
+      synopsis: "AI 원본 시놉시스",
+      theme: "책임",
+      stakes: "생존",
+      twist: "반전",
+      acts: [],
+      characters: [],
+    });
+    expect(downstreamScenario).toMatchObject({
+      title: "검토된 연구소의 밤",
+      logline: "검토자가 다듬은 한 줄 소개",
+      synopsis: "시놉시스",
+    });
+  });
+
+  it("rejects fields outside the review contract and stale review snapshots", async () => {
+    await runStep({ workflowId: "workflow_progress", stepId: "draft" });
+    const expected = {
+      steps: structuredClone(state.steps),
+      artifacts: { ...state.artifacts },
+      status: state.status,
+    };
+
+    await expect(
+      approveStepReview({
+        workflowId: "workflow_progress",
+        stepId: "draft",
+        edits: { providerTrace: "do not expose" },
+        expected,
+      }),
+    ).rejects.toThrow(/수정할 수 없는/);
+
+    vi.mocked(repo.updateWorkflowIfSnapshotMatches).mockResolvedValueOnce(null);
+    await expect(
+      approveStepReview({
+        workflowId: "workflow_progress",
+        stepId: "draft",
+        edits: { title: "경쟁 탭의 수정" },
+        expected,
+      }),
+    ).rejects.toThrow(/다른 요청|새로고침/);
   });
 
   it("re-running a completed step invalidates dependant results and artifacts", async () => {

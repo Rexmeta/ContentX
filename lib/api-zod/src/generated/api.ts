@@ -3244,6 +3244,7 @@ export const ListWorkflowsResponseItem = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3257,7 +3258,7 @@ export const ListWorkflowsResponseItem = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3269,7 +3270,12 @@ export const ListWorkflowsResponseItem = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
@@ -3309,6 +3315,7 @@ export const CreateWorkflowBody = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3322,7 +3329,7 @@ export const CreateWorkflowBody = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3334,7 +3341,12 @@ export const CreateWorkflowBody = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 }))
@@ -3363,6 +3375,7 @@ export const CreateWorkflowResponse = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3376,7 +3389,7 @@ export const CreateWorkflowResponse = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3388,7 +3401,12 @@ export const CreateWorkflowResponse = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
@@ -3431,6 +3449,7 @@ export const PlanWorkflowResponse = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3444,7 +3463,7 @@ export const PlanWorkflowResponse = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3456,7 +3475,12 @@ export const PlanWorkflowResponse = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
@@ -3497,6 +3521,7 @@ export const GetWorkflowResponse = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3510,7 +3535,7 @@ export const GetWorkflowResponse = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3522,7 +3547,12 @@ export const GetWorkflowResponse = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
@@ -3560,6 +3590,7 @@ export const UpdateWorkflowBody = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3573,7 +3604,7 @@ export const UpdateWorkflowBody = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3585,7 +3616,12 @@ export const UpdateWorkflowBody = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })).optional(),
@@ -3607,6 +3643,7 @@ export const UpdateWorkflowBody = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3620,7 +3657,7 @@ export const UpdateWorkflowBody = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3632,7 +3669,12 @@ export const UpdateWorkflowBody = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
@@ -3664,6 +3706,7 @@ export const UpdateWorkflowResponse = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3677,7 +3720,7 @@ export const UpdateWorkflowResponse = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3689,7 +3732,12 @@ export const UpdateWorkflowResponse = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
@@ -3748,6 +3796,7 @@ export const RunWorkflowStepResponse = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3761,7 +3810,7 @@ export const RunWorkflowStepResponse = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3773,7 +3822,12 @@ export const RunWorkflowStepResponse = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),
@@ -3793,7 +3847,62 @@ export const ReviewWorkflowStepParams = zod.object({
 })
 
 export const ReviewWorkflowStepBody = zod.object({
-  "decision": zod.enum(['approve'])
+  "decision": zod.enum(['approve']),
+  "edits": zod.record(zod.string(), zod.string()).optional().describe('Replacement text for server-declared editable result fields only'),
+  "expected": zod.object({
+  "steps": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['input', 'generate', 'extract', 'analyze', 'transform', 'compose', 'remix', 'simulate', 'validate', 'compare', 'export', 'project']),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "importance": zod.enum(['required', 'recommended', 'optional']),
+  "status": zod.enum(['pending', 'ready', 'running', 'complete', 'failed', 'skipped']),
+  "input": zod.array(zod.string()).describe('Artifact keys this step consumes'),
+  "output": zod.array(zod.string()).describe('Artifact keys this step produces'),
+  "dependencies": zod.array(zod.string()).describe('Ids of steps that must complete first'),
+  "binding": zod.union([zod.object({
+  "action": zod.string().describe('Executor action key (e.g. draft_story, generate_personas, run_simulation)'),
+  "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
+  "params": zod.record(zod.string(), zod.unknown()).optional()
+}),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
+  "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
+  "error": zod.string().nullish(),
+  "progress": zod.union([zod.object({
+  "runId": zod.string().describe('Execution ownership token used to reject duplicate runs'),
+  "startedAt": zod.string(),
+  "updatedAt": zod.string(),
+  "events": zod.array(zod.object({
+  "phase": zod.string().describe('Stable machine-readable generation phase'),
+  "label": zod.string().describe('Safe user-facing description of the work in progress'),
+  "status": zod.enum(['running', 'complete', 'failed']),
+  "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
+})),
+  "checkpoints": zod.array(zod.object({
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
+  "title": zod.string().describe('Safe user-facing checkpoint title'),
+  "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
+  "details": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "at": zod.string()
+})).optional(),
+  "review": zod.union([zod.object({
+  "status": zod.enum(['pending', 'approved']),
+  "requestedAt": zod.string(),
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
+}),zod.null()]).optional()
+}),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
+})),
+  "artifacts": zod.record(zod.string(), zod.string()),
+  "status": zod.enum(['draft', 'running', 'complete', 'failed'])
+}).describe('Exact review snapshot used to reject stale tabs and concurrent edits')
 })
 
 export const ReviewWorkflowStepResponse = zod.object({
@@ -3819,6 +3928,7 @@ export const ReviewWorkflowStepResponse = zod.object({
   "api": zod.string().describe('Human-readable existing API the step reuses (e.g. POST \/v1\/sampling)'),
   "params": zod.record(zod.string(), zod.unknown()).optional()
 }),zod.null()]).optional(),
+  "editableResultFields": zod.array(zod.string()).optional().describe('Server-declared generated-result fields that may be changed during review'),
   "result": zod.record(zod.string(), zod.unknown()).nullish().describe('Step outcome summary recorded by the executor'),
   "error": zod.string().nullish(),
   "progress": zod.union([zod.object({
@@ -3832,7 +3942,7 @@ export const ReviewWorkflowStepResponse = zod.object({
   "at": zod.string().describe('ISO-8601 timestamp when this phase changed')
 })),
   "checkpoints": zod.array(zod.object({
-  "kind": zod.enum(['input', 'preview', 'validation', 'handoff']),
+  "kind": zod.enum(['input', 'preview', 'validation', 'handoff', 'review']),
   "title": zod.string().describe('Safe user-facing checkpoint title'),
   "summary": zod.string().describe('Safe summary derived from explicit inputs or domain output'),
   "details": zod.array(zod.object({
@@ -3844,7 +3954,12 @@ export const ReviewWorkflowStepResponse = zod.object({
   "review": zod.union([zod.object({
   "status": zod.enum(['pending', 'approved']),
   "requestedAt": zod.string(),
-  "reviewedAt": zod.string().nullish()
+  "reviewedAt": zod.string().nullish(),
+  "edits": zod.array(zod.object({
+  "field": zod.string(),
+  "originalValue": zod.string(),
+  "editedValue": zod.string()
+})).optional().describe('Reviewer changes, retained separately from the original AI output')
 }),zod.null()]).optional()
 }),zod.null()]).optional().describe('Persisted, safe generation progress for the latest execution')
 })),

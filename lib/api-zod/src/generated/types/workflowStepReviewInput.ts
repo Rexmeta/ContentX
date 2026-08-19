@@ -6,7 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { WorkflowStepReviewInputDecision } from './workflowStepReviewInputDecision';
+import type { WorkflowStepReviewInputEdits } from './workflowStepReviewInputEdits';
+import type { WorkflowUpdateExpectation } from './workflowUpdateExpectation';
 
 export interface WorkflowStepReviewInput {
   decision: WorkflowStepReviewInputDecision;
+  /** Replacement text for server-declared editable result fields only */
+  edits?: WorkflowStepReviewInputEdits;
+  /** Exact review snapshot used to reject stale tabs and concurrent edits */
+  expected: WorkflowUpdateExpectation;
 }

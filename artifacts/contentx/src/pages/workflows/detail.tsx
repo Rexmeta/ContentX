@@ -97,6 +97,26 @@ function workflowExpectation(workflow: WorkflowRecord) {
   };
 }
 
+const EDITABLE_RESULT_FIELD_LABELS: Record<string, string> = {
+  title: "제목",
+  logline: "한 줄 소개",
+  synopsis: "줄거리",
+};
+
+// Kept only for workflows completed before editableResultFields began being
+// persisted. New responses receive this allowlist from the server.
+const LEGACY_EDITABLE_RESULT_FIELDS: Record<string, string[]> = {
+  draft_story: ["title", "logline", "synopsis"],
+};
+
+function editableResultFieldsForStep(step: WorkflowStep): string[] {
+  return (
+    step.editableResultFields ??
+    LEGACY_EDITABLE_RESULT_FIELDS[step.binding?.action ?? ""] ??
+    []
+  );
+}
+
 function pausedRunStorageKey(workflowId: string) {
   return `contentx:workflow:${workflowId}:paused-run-step`;
 }
@@ -351,12 +371,20 @@ export default function WorkflowDetail() {
     }
   };
 
-  const handleApproveStep = async (step: WorkflowStep) => {
+  const handleApproveStep = async (
+    step: WorkflowStep,
+    edits?: Record<string, string>,
+  ): Promise<WorkflowRecord | undefined> => {
+    if (!workflow) return undefined;
     try {
       const updated = await reviewStep.mutateAsync({
         id,
         stepId: step.id,
-        data: { decision: "approve" },
+        data: {
+          decision: "approve",
+          ...(edits && Object.keys(edits).length > 0 ? { edits } : {}),
+          expected: workflowExpectation(workflow),
+        },
       });
       queryClient.setQueryData(getGetWorkflowQueryKey(id), updated);
       const intent = pausedRunIntent;
@@ -370,12 +398,14 @@ export default function WorkflowDetail() {
       if (shouldResume && intent) {
         void resumePausedRun(updated as WorkflowRecord, intent);
       }
+      return updated as WorkflowRecord;
     } catch (e: any) {
       toast({
         title: "검토 처리 실패",
         description: e?.message || "새로고침 후 다시 시도해주세요.",
         variant: "destructive",
       });
+      return undefined;
     }
   };
 
@@ -426,7 +456,10 @@ export default function WorkflowDetail() {
           const approved = await reviewStep.mutateAsync({
             id,
             stepId: completedStep.id,
-            data: { decision: "approve" },
+            data: {
+              decision: "approve",
+              expected: workflowExpectation(currentWorkflow),
+            },
           });
           currentWorkflow = approved as WorkflowRecord;
           queryClient.setQueryData(getGetWorkflowQueryKey(id), approved);
@@ -720,7 +753,7 @@ export default function WorkflowDetail() {
                   "{pendingReviewStep.title}" 결과를 확인해주세요
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  아래 단계 카드에서 입력과 결과를 확인하고 승인하거나, 내용을 수정해 이 단계부터 다시 실행할 수 있습니다.
+                  아래 단계 카드에서 입력과 결과를 확인하고 승인하거나, 허용된 생성 결과를 다듬어 다음 단계로 넘길 수 있습니다.
                 </p>
               </div>
               <Button
@@ -754,10 +787,13 @@ export default function WorkflowDetail() {
                 onRun={(params?: Record<string, unknown>, rerun?: boolean) =>
                   handleRunStep(step, params, rerun)
                 }
-                onApprove={() => handleApproveStep(step)}
+                onApprove={(edits?: Record<string, string>) =>
+                  handleApproveStep(step, edits)
+                }
                 onDelete={() => attemptDeleteStep(step.id)}
                 onSkip={() => handleSkipStep(step.id)}
                 isRunning={isRunning}
+                isReviewSaving={reviewStep.isPending}
                 isActive={activeStep?.id === step.id}
                 activeElapsedSec={activeStepRecord?.id === step.id ? activeElapsedSec : 0}
               />
@@ -1160,7 +1196,7 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
 }
 
 function StepCard({ 
-  step, index, workflow, isEditing, onEdit, onCancelEdit, onRun, onApprove, onDelete, onSkip, isRunning, isActive, activeElapsedSec
+  step, index, workflow, isEditing, onEdit, onCancelEdit, onRun, onApprove, onDelete, onSkip, isRunning, isReviewSaving, isActive, activeElapsedSec
 }: { 
   step: WorkflowStep; 
   index: number; 
@@ -1169,10 +1205,11 @@ function StepCard({
   onEdit: () => void;
   onCancelEdit: () => void;
   onRun: (params?: Record<string, unknown>, rerun?: boolean) => void;
-  onApprove: () => void;
+  onApprove: (edits?: Record<string, string>) => Promise<WorkflowRecord | undefined>;
   onDelete: () => void;
   onSkip: () => void;
   isRunning: boolean;
+  isReviewSaving: boolean;
   isActive: boolean;
   activeElapsedSec: number;
 }) {
@@ -1186,6 +1223,9 @@ function StepCard({
   const isReady = step.status === 'ready' && !isActive;
   const isProvideInput = step.binding?.action === 'provide_input' && step.output.length > 0;
   const isReviewPending = step.progress?.review?.status === "pending";
+  const editableResultFields = editableResultFieldsForStep(step).filter(
+    (field) => typeof step.result?.[field] === "string",
+  );
 
   // Form values for input steps (idea / product+audience), prefilled from the
   // planner-extracted params so users can review and adjust before running.
@@ -1221,6 +1261,38 @@ function StepCard({
   const [title, setTitle] = useState(step.title);
   const [importance, setImportance] = useState(step.importance);
   const [params, setParams] = useState(step.binding?.params ? JSON.stringify(step.binding.params, null, 2) : "{}");
+  const [isEditingResult, setIsEditingResult] = useState(false);
+  const [resultEdits, setResultEdits] = useState<Record<string, string>>({});
+
+  const beginResultEdit = () => {
+    setResultEdits(
+      Object.fromEntries(
+        editableResultFields.map((field) => [
+          field,
+          String(step.result?.[field] ?? ""),
+        ]),
+      ),
+    );
+    setIsEditingResult(true);
+  };
+
+  const submitResultEdit = async () => {
+    const changes = Object.fromEntries(
+      editableResultFields
+        .map(
+          (field) =>
+            [
+              field,
+              resultEdits[field] ?? "",
+              String(step.result?.[field] ?? ""),
+            ] as const,
+        )
+        .filter(([, value, originalValue]) => value !== originalValue)
+        .map(([field, value]) => [field, value]),
+    );
+    const approved = await onApprove(changes);
+    if (approved) setIsEditingResult(false);
+  };
 
   const parseEditedParams = (): Record<string, unknown> | undefined => {
     if (isProvideInput) {
@@ -1377,8 +1449,18 @@ function StepCard({
                   {isComplete ? "입력 수정" : "편집"}
                 </Button>
               )}
+                {isReviewPending && editableResultFields.length > 0 && !isRunning && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={beginResultEdit}
+                    data-testid={`button-edit-result-${step.id}`}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" /> 결과 다듬기
+                  </Button>
+                )}
               {isReviewPending && !isRunning && (
-                <Button size="sm" onClick={onApprove} data-testid={`button-approve-step-${step.id}`}>
+                  <Button size="sm" onClick={() => void onApprove()} data-testid={`button-approve-step-${step.id}`}>
                   <ShieldCheck className="h-4 w-4 mr-2" /> 확인 완료
                 </Button>
               )}
@@ -1505,6 +1587,61 @@ function StepCard({
                   <Button size="sm" onClick={handleSave}>저장</Button>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {isReviewPending && isEditingResult && (
+          <div
+            className="space-y-4 border-b border-amber-500/20 bg-amber-500/5 p-4"
+            data-testid={`form-edit-result-${step.id}`}
+          >
+            <div>
+              <p className="font-medium">생성 결과 다듬기</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                아래 항목만 수정할 수 있습니다. 원본 AI 결과와 수정 내용은 검토 기록에 함께 남고, 승인하면 다음 단계가 수정된 내용을 사용합니다.
+              </p>
+            </div>
+            {editableResultFields.map((field) => (
+              <div key={field} className="space-y-1.5">
+                <Label htmlFor={`review-result-${step.id}-${field}`}>
+                  {EDITABLE_RESULT_FIELD_LABELS[field] ?? field}
+                </Label>
+                <Textarea
+                  id={`review-result-${step.id}-${field}`}
+                  value={resultEdits[field] ?? ""}
+                  onChange={(event) =>
+                    setResultEdits((current) => ({
+                      ...current,
+                      [field]: event.target.value,
+                    }))
+                  }
+                  rows={field === "synopsis" ? 5 : 2}
+                  className="bg-background"
+                  data-testid={`input-edit-result-${step.id}-${field}`}
+                />
+              </div>
+            ))}
+            <div className="flex justify-end gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditingResult(false)}
+                disabled={isReviewSaving}
+              >
+                취소
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => void submitResultEdit()}
+                disabled={isReviewSaving}
+                data-testid={`button-approve-edited-result-${step.id}`}
+              >
+                {isReviewSaving && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                수정 후 승인
+              </Button>
             </div>
           </div>
         )}

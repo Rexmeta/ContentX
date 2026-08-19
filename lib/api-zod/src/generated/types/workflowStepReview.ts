@@ -5,6 +5,7 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { WorkflowStepReviewEdit } from './workflowStepReviewEdit';
 import type { WorkflowStepReviewStatus } from './workflowStepReviewStatus';
 
 export interface WorkflowStepReview {
@@ -12,4 +13,6 @@ export interface WorkflowStepReview {
   requestedAt: string;
   /** @nullable */
   reviewedAt?: string | null;
+  /** Reviewer changes, retained separately from the original AI output */
+  edits?: WorkflowStepReviewEdit[];
 }

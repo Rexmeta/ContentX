@@ -259,6 +259,14 @@ router.post(
       const workflow = await approveStepReview({
         workflowId: pathParam(req.params.id),
         stepId: pathParam(req.params.stepId),
+        edits: parsed.data.edits,
+        expected: parsed.data.expected
+          ? {
+              steps: parsed.data.expected.steps as WorkflowStep[],
+              artifacts: parsed.data.expected.artifacts,
+              status: parsed.data.expected.status,
+            }
+          : undefined,
       });
       res.json(ReviewWorkflowStepResponse.parse(workflow));
     } catch (err) {

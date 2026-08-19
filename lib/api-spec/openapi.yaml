@@ -3399,7 +3399,7 @@ components:
       properties:
         kind:
           type: string
-          enum: [input, preview, validation, handoff]
+          enum: [input, preview, validation, handoff, review]
         title:
           type: string
           description: "Safe user-facing checkpoint title"
@@ -3420,6 +3420,18 @@ components:
           enum: [pending, approved]
         requestedAt: { type: string }
         reviewedAt: { type: ["string", "null"] }
+        edits:
+          type: array
+          description: "Reviewer changes, retained separately from the original AI output"
+          items:
+            $ref: "#/components/schemas/WorkflowStepReviewEdit"
+    WorkflowStepReviewEdit:
+      type: object
+      required: [field, originalValue, editedValue]
+      properties:
+        field: { type: string }
+        originalValue: { type: string }
+        editedValue: { type: string }
     WorkflowStepProgress:
       type: object
       required: [runId, startedAt, updatedAt, events]
@@ -3473,6 +3485,10 @@ components:
           oneOf:
             - $ref: "#/components/schemas/WorkflowStepBinding"
             - type: "null"
+        editableResultFields:
+          type: array
+          items: { type: string }
+          description: "Server-declared generated-result fields that may be changed during review"
         result:
           type: ["object", "null"]
           additionalProperties: true
@@ -3571,8 +3587,16 @@ components:
           description: "Re-run a completed step and invalidate its dependent outputs"
     WorkflowStepReviewInput:
       type: object
-      required: [decision]
+      required: [decision, expected]
       properties:
         decision:
           type: string
           enum: [approve]
+        edits:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Replacement text for server-declared editable result fields only"
+        expected:
+          $ref: "#/components/schemas/WorkflowUpdateExpectation"
+          description: "Exact review snapshot used to reject stale tabs and concurrent edits"
