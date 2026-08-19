@@ -20,7 +20,7 @@ export function EmptyState({
 }) {
   return (
     <div
-      className="col-span-full flex flex-col items-center justify-center border border-dashed border-border p-12 text-center text-muted-foreground bg-muted/10"
+      className="col-span-full flex flex-col items-center justify-center border border-dashed border-border rounded-xl p-8 md:p-12 text-center text-muted-foreground bg-muted/10"
       data-testid="empty-state"
     >
       <Icon className="h-8 w-8 mb-3 opacity-50" />

@@ -113,7 +113,7 @@ function NodeCard({
       )}
       <div
         onClick={() => node.record && onOpen(node.record)}
-        className={`group border p-3 mb-2 flex flex-col gap-1.5 transition-colors ${
+        className={`group border rounded-lg p-3 mb-2 flex flex-col gap-1.5 transition-colors ${
           isGhost
             ? "border-dashed border-border bg-muted/20 text-muted-foreground cursor-default"
             : "border-border bg-card hover:border-primary cursor-pointer"
@@ -134,17 +134,17 @@ function NodeCard({
             {node.record?.title || node.ghostTitle || "Untitled"}
           </span>
           {isGhost && (
-            <span className="text-[9px] font-mono uppercase tracking-wider border border-dashed border-border px-1 py-px">
+            <span className="text-[9px] font-mono uppercase tracking-wider rounded-full border border-dashed border-border px-2 py-px">
               deleted
             </span>
           )}
           {isBridge && (
-            <span className="text-[9px] font-mono uppercase tracking-wider bg-chart-3/10 text-chart-3 border border-chart-3/20 px-1 py-px flex items-center gap-1">
+            <span className="text-[9px] font-mono uppercase tracking-wider rounded-full bg-chart-3/10 text-chart-3 border border-chart-3/20 px-2 py-px flex items-center gap-1">
               <Link2 className="h-2.5 w-2.5" /> bridge
             </span>
           )}
           {node.multiParent && (
-            <span className="text-[9px] font-mono uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 px-1 py-px flex items-center gap-1">
+            <span className="text-[9px] font-mono uppercase tracking-wider rounded-full bg-secondary/10 text-secondary border border-secondary/20 px-2 py-px flex items-center gap-1">
               <GitBranch className="h-2.5 w-2.5" /> multi-parent
             </span>
           )}
@@ -158,7 +158,7 @@ function NodeCard({
           <div className="flex flex-wrap items-center gap-1">
             <CornerDownRight className="h-3 w-3 text-muted-foreground" />
             <span className="text-[9px] font-mono text-muted-foreground uppercase mr-1">via</span>
-            <span className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[9px] font-mono px-1 py-px uppercase tracking-wider">
+            <span className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[9px] font-mono rounded-full px-2 py-px uppercase tracking-wider">
               {node.bridgeRole === "source" ? "bridged from (A)" : "bridged into (B)"}
             </span>
           </div>
@@ -170,7 +170,7 @@ function NodeCard({
             {node.elements.map((el) => (
               <span
                 key={el}
-                className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono px-1 py-px uppercase tracking-wider"
+                className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono rounded-full px-2 py-px uppercase tracking-wider"
               >
                 {el}
               </span>
@@ -205,11 +205,11 @@ export default function LineageTree({
 
   if (roots.length === 0) {
     return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-        <div className="w-16 h-16 border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-8">
+        <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
           <GitMerge className="h-8 w-8" />
         </div>
-        <h3 className="text-lg font-bold mb-2">No Lineage Yet</h3>
+        <h3 className="headline-lg mb-2">No lineage yet</h3>
         <p className="text-muted-foreground text-sm max-w-md">
           Synthesize two or more scenarios in the Scenario Library — their family tree will appear here,
           showing which stories grew out of which.
@@ -219,12 +219,12 @@ export default function LineageTree({
   }
 
   return (
-    <div className="p-6 space-y-8">
-      <p className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+    <div className="p-4 md:p-6 space-y-8">
+      <p className="tech-label text-muted-foreground">
         {roots.length} family tree{roots.length > 1 ? "s" : ""} · click a node to open the scenario
       </p>
       {roots.map((root) => (
-        <div key={root.id} className="border border-border bg-background/50 p-4">
+        <div key={root.id} className="border border-border rounded-xl bg-background/50 p-4 overflow-x-auto">
           <NodeCard node={root} depth={0} onOpen={onOpen} />
         </div>
       ))}

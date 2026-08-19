@@ -38,6 +38,8 @@ export default function Workspace() {
   
   const [activePanel, setActivePanel] = useState<PanelType>('inspector');
   const [selectionId, setSelectionId] = useState<string | null>(null);
+  // Mobile: the 3-pane workspace collapses to a single pane with a tab switcher
+  const [mobilePane, setMobilePane] = useState<'entities' | 'graph' | 'panel'>('graph');
   
   const selection: SelectionType = useMemo(() => {
     if (!selectionId || !content) return null;
@@ -49,10 +51,14 @@ export default function Workspace() {
   }, [selectionId, content]);
 
   // Handlers for side panels
-  const openPanel = (panel: PanelType) => setActivePanel(panel);
+  const openPanel = (panel: PanelType) => {
+    setActivePanel(panel);
+    setMobilePane('panel');
+  };
   const handleSelect = (type: 'entity' | 'relationship', objectId: string) => {
     setSelectionId(objectId);
     setActivePanel('inspector');
+    setMobilePane('panel');
   };
 
   const { nodes, edges } = useMemo(() => {
@@ -89,29 +95,29 @@ export default function Workspace() {
 
   const contextHeader = (
     <div className="space-y-3">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <h1 className="font-bold text-xl truncate max-w-xl" title={content.title}>{content.title}</h1>
-        <span className="px-2 py-0.5 bg-muted text-xs font-mono border border-border text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-3 min-w-0">
+        <h1 className="font-serif text-xl md:text-2xl truncate max-w-[60vw] md:max-w-xl" title={content.title}>{content.title}</h1>
+        <span className="px-2 py-0.5 bg-muted text-xs font-mono border border-border rounded-full text-muted-foreground shrink-0">
           v{content.version}
         </span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <button 
           onClick={() => openPanel('validation')}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'validation' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border rounded-full transition-colors ${activePanel === 'validation' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
         >
           <CheckCircle className="h-3.5 w-3.5" /> Validate
         </button>
         <button 
           onClick={() => openPanel('versions')}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'versions' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border rounded-full transition-colors ${activePanel === 'versions' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
         >
           <GitCommit className="h-3.5 w-3.5" /> Versions
         </button>
         <button 
           onClick={() => openPanel('export')}
-          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold border transition-colors ${activePanel === 'export' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold border rounded-full transition-colors ${activePanel === 'export' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
         >
           <Download className="h-3.5 w-3.5" /> Export
         </button>
@@ -126,13 +132,33 @@ export default function Workspace() {
       breadcrumbs={[{label: "ContentX"}, {label: "World", href: "/world"}, {label: "Content Workspace"}]}
       contextHeader={contextHeader}
     >
-      <div className="flex h-full w-full bg-background overflow-hidden font-sans selection:bg-primary/20 text-foreground">
+      <div className="flex h-full w-full flex-col bg-background overflow-hidden font-sans selection:bg-primary/20 text-foreground">
+
+        {/* MOBILE PANE SWITCHER */}
+        <div className="md:hidden flex shrink-0 border-b border-border bg-card">
+          {([
+            { id: 'entities', label: '엔티티' },
+            { id: 'graph', label: '그래프' },
+            { id: 'panel', label: '패널' },
+          ] as const).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setMobilePane(tab.id)}
+              data-testid={`tab-mobile-${tab.id}`}
+              className={`flex-1 py-3 text-xs font-semibold font-mono uppercase tracking-wider transition-colors ${mobilePane === tab.id ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-1 w-full overflow-hidden">
 
         {/* LEFT SIDEBAR: ENTITIES */}
-        <div className="relative z-10 w-72 border-r border-border bg-card flex flex-col shadow-sm">
+        <div className={`relative z-10 w-full md:w-72 border-r border-border bg-card flex-col shadow-sm ${mobilePane === 'entities' ? 'flex' : 'hidden'} md:flex`}>
         
         <div className="flex-1 overflow-auto p-4 custom-scrollbar">
-          <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4">
+          <h3 className="tech-label text-muted-foreground mb-4">
             Entities ({content.entities.length})
           </h3>
           
@@ -145,7 +171,7 @@ export default function Workspace() {
       </div>
 
       {/* MAIN CONTENT: GRAPH */}
-      <div className="relative z-10 flex-1 flex flex-col">
+      <div className={`relative z-10 flex-1 flex-col ${mobilePane === 'graph' ? 'flex' : 'hidden'} md:flex`}>
         {/* SVG GRAPH */}
         <div className="flex-1 relative bg-background overflow-hidden border-r border-border">
           <StableGraph 
@@ -160,9 +186,9 @@ export default function Workspace() {
       </div>
 
       {/* RIGHT SIDEBAR: PANELS */}
-      <div className="relative z-10 w-[400px] border-l border-border bg-card flex flex-col shadow-sm">
+      <div className={`relative z-10 w-full md:w-[400px] border-l border-border bg-card flex-col shadow-sm ${mobilePane === 'panel' ? 'flex' : 'hidden'} md:flex`}>
         <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-muted/30">
-          <h2 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider">
+          <h2 className="tech-label text-muted-foreground">
             {activePanel === 'inspector' ? 'Object Inspector' : 
              activePanel === 'validation' ? 'Validation Report' :
              activePanel === 'versions' ? 'Version History' : 'Export Outputs'}
@@ -195,6 +221,7 @@ export default function Workspace() {
             <ExportPanel contentId={id} />
           )}
         </div>
+      </div>
       </div>
     </div>
     </Layout>

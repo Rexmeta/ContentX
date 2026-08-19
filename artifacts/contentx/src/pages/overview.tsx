@@ -161,8 +161,8 @@ export default function Overview() {
 
   const header = (
     <div className="space-y-1">
-      <h1 className="text-xl font-bold font-serif">ContentX Journey</h1>
-      <p className="text-sm text-muted-foreground">
+      <h1 className="headline-lg">ContentX Journey</h1>
+      <p className="text-xs md:text-sm font-mono text-muted-foreground break-words">
         SOURCE → POPULATION → CHARACTERS → AGENTS → SIMULATION → BEHAVIOR → EVALUATION → CONTENT
       </p>
     </div>
@@ -173,14 +173,14 @@ export default function Overview() {
       breadcrumbs={[{ label: "ContentX" }, { label: "Overview" }]}
       contextHeader={header}
     >
-      <div className="p-8 max-w-5xl mx-auto space-y-10">
+      <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 md:space-y-10">
 
         {/* What is ContentX? */}
-        <div className="border border-border bg-card p-6" data-testid="text-product-statement">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary mb-2">
+        <div className="border border-border bg-card rounded-xl p-5 md:p-6" data-testid="text-product-statement">
+          <div className="tech-label text-primary mb-2">
             What is ContentX?
           </div>
-          <h2 className="text-lg font-bold mb-3">AI-native World &amp; Content Intelligence Engine</h2>
+          <h2 className="headline-lg mb-3">AI-native World &amp; Content Intelligence Engine</h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">
             ContentX is an AI-native World &amp; Content Intelligence Engine that represents people
             and worlds as structured data, simulates behavior, evaluates outcomes, and transforms
@@ -189,14 +189,14 @@ export default function Overview() {
         </div>
 
         {/* Trust strip */}
-        <div className="border border-border bg-muted/20 p-4" data-testid="strip-trust">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground mb-3">
+        <div className="border border-border bg-muted/20 rounded-xl p-4" data-testid="strip-trust">
+          <div className="tech-label text-muted-foreground mb-3">
             Trust
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {trustSteps.map((step, i) => (
               <div key={step} className="flex items-center gap-2">
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider border border-border bg-card px-2.5 py-1">
+                <span className="text-[11px] font-mono font-semibold uppercase tracking-wider border border-border bg-card rounded-full px-2.5 py-1">
                   {step}
                 </span>
                 {i < trustSteps.length - 1 && (
@@ -212,31 +212,36 @@ export default function Overview() {
         </div>
 
         <div className="relative">
-          {/* Vertical connecting line */}
-          <div className="absolute left-8 top-12 bottom-12 w-px bg-border"></div>
+          {/* Vertical connecting line (desktop only) */}
+          <div className="hidden md:block absolute left-8 top-12 bottom-12 w-px bg-border"></div>
 
-          <div className="space-y-12">
+          <div className="space-y-6 md:space-y-12">
             {stages.map((stage) => {
               const Icon = stage.icon;
               return (
-                <div key={stage.id} className="relative flex items-start gap-8 group">
-                  <div className="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center border bg-card group-hover:border-primary transition-colors">
+                <div key={stage.id} className="relative flex items-start gap-4 md:gap-8 group">
+                  <div className="relative z-10 hidden md:flex h-16 w-16 shrink-0 items-center justify-center border rounded-xl bg-card group-hover:border-primary transition-colors">
                     <Icon className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   
-                  <Link href={stage.href} className="flex-1 block" data-testid={`link-stage-${stage.id}`}>
-                    <div className="border border-border bg-card p-6 hover:border-primary hover:shadow-sm transition-all cursor-pointer">
+                  <Link href={stage.href} className="flex-1 block min-w-0" data-testid={`link-stage-${stage.id}`}>
+                    <div className="border border-border bg-card rounded-xl p-5 md:p-6 hover:border-primary hover:shadow-sm transition-all cursor-pointer">
                       <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary mb-1">
-                            {stage.title}
+                        <div className="flex items-start gap-3">
+                          <div className="md:hidden mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border rounded-lg bg-muted/40">
+                            <Icon className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <h2 className="text-xl font-bold">{stage.name}</h2>
+                          <div>
+                            <div className="tech-label text-primary mb-1">
+                              {stage.title}
+                            </div>
+                            <h2 className="text-lg md:text-xl font-serif">{stage.name}</h2>
+                          </div>
                         </div>
                         <ArrowRight className="h-5 w-5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all translate-x-2 group-hover:translate-x-0" />
                       </div>
                       
-                      <div className="flex flex-wrap gap-x-12 gap-y-4">
+                      <div className="flex flex-wrap gap-x-8 md:gap-x-12 gap-y-4">
                         {stage.metrics.map((m, i) => (
                           <div key={i} className="space-y-1">
                             <div className="text-2xl font-mono font-medium">{m.value}</div>

@@ -68,13 +68,13 @@ export default function WorkflowsList() {
         </Button>
       }
     >
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-4 md:p-6 max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">작업 보관함</h1>
-          <p className="text-muted-foreground">생성 중이거나 완료된 모든 워크플로를 관리합니다.</p>
+          <h1 className="headline-lg">작업 보관함</h1>
+          <p className="text-muted-foreground mt-1">생성 중이거나 완료된 모든 워크플로를 관리합니다.</p>
         </div>
 
-        <div className="border bg-card">
+        <div className="border border-border bg-card rounded-xl overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -99,7 +99,7 @@ export default function WorkflowsList() {
                   <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                     <div className="font-semibold text-foreground mb-1">무엇부터 만들어볼까요?</div>
                     <div className="text-xs mb-4">아직 작업 내역이 없어요. 예시로 시작하거나 새로 만들어보세요.</div>
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex flex-wrap items-center justify-center gap-2">
                       <Button asChild size="sm" data-testid="button-empty-example">
                         <Link href="/examples">예시로 시작하기</Link>
                       </Button>
@@ -128,7 +128,7 @@ export default function WorkflowsList() {
                     </TableCell>
                     <TableCell className="font-medium">{workflow.title}</TableCell>
                     <TableCell>
-                      <span className="text-xs font-mono px-2 py-1 bg-muted rounded-sm text-muted-foreground">
+                      <span className="text-xs font-mono px-2 py-1 bg-muted rounded-full text-muted-foreground">
                         {workflow.intent.outputType || 'custom'}
                       </span>
                     </TableCell>

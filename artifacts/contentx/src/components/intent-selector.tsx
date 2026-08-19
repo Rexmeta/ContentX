@@ -68,15 +68,15 @@ export function IntentSelector({ isHome = false }: { isHome?: boolean }) {
   };
 
   return (
-    <div className={cn("w-full max-w-4xl mx-auto flex flex-col items-center justify-center", isHome ? "py-24" : "py-12")}>
-      <h1 className="text-3xl font-bold tracking-tight mb-3 text-center">무엇을 만들고 싶으세요?</h1>
-      <p className="text-muted-foreground mb-12 text-center max-w-lg">
+    <div className={cn("w-full max-w-4xl mx-auto flex flex-col items-center justify-center px-4 md:px-0", isHome ? "py-12 md:py-24" : "py-12")}>
+      <h1 className="headline-display mb-4 text-center">무엇을 만들고 싶으세요?</h1>
+      <p className="text-muted-foreground mb-8 md:mb-12 text-center max-w-lg">
         원하는 결과물을 선택하거나 자유롭게 설명해주세요. ContentX가 필요한 단계들을 구성해 드립니다.
       </p>
 
-      <form onSubmit={handleNaturalLanguageSubmit} className="w-full max-w-2xl mb-12 relative group">
-        <div className="absolute -inset-0.5 bg-primary/20 opacity-0 group-focus-within:opacity-100 blur transition duration-300 rounded-md"></div>
-        <div className="relative flex items-center bg-card border border-border shadow-sm focus-within:ring-1 focus-within:ring-primary transition-all">
+      <form onSubmit={handleNaturalLanguageSubmit} className="w-full max-w-2xl mb-8 md:mb-12 relative group">
+        <div className="absolute -inset-0.5 bg-primary/20 opacity-0 group-focus-within:opacity-100 blur transition duration-300 rounded-full"></div>
+        <div className="relative flex items-center bg-card border border-border rounded-full shadow-sm focus-within:ring-1 focus-within:ring-primary transition-all pl-2">
           <Input 
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -103,14 +103,14 @@ export function IntentSelector({ isHome = false }: { isHome?: boolean }) {
             aria-disabled={!type.supported}
             title={!type.supported ? "이 결과물은 아직 준비 중이에요." : undefined}
             className={cn(
-              "flex flex-col items-start p-5 text-left rounded-sm border bg-card transition-all focus:outline-none focus:ring-2 focus:ring-primary relative overflow-hidden group",
+              "flex flex-col items-start p-5 text-left rounded-xl border bg-card transition-all focus:outline-none focus:ring-2 focus:ring-primary relative overflow-hidden group",
               type.supported
                 ? "hover:bg-muted/30"
                 : "opacity-60 cursor-not-allowed"
             )}
             data-testid={`card-output-${type.id}`}
           >
-            <div className="mb-4 p-2 bg-primary/10 rounded-sm text-primary group-hover:scale-110 transition-transform">
+            <div className="mb-4 p-2 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform">
               <type.icon className="h-5 w-5" />
             </div>
             <h3 className="font-bold mb-1 flex items-center gap-2">
@@ -120,7 +120,7 @@ export function IntentSelector({ isHome = false }: { isHome?: boolean }) {
               {type.desc}
             </p>
             {!type.supported && (
-              <div className="mt-4 inline-block px-2 py-0.5 text-[10px] font-mono border border-border bg-muted text-muted-foreground uppercase tracking-wider">
+              <div className="mt-4 inline-block px-2.5 py-0.5 text-[10px] font-mono border border-border bg-muted rounded-full text-muted-foreground uppercase tracking-wider">
                 준비 중
               </div>
             )}

@@ -533,9 +533,9 @@ export default function Dashboard() {
   if (step === 'SCENARIO' && draft) {
     return (
       <Layout breadcrumbs={[{label: "ContentX"}, {label: "World", href: "/world"}, {label: "Scenario Draft"}]}>
-        <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-6">
+        <div className="relative z-10 max-w-7xl mx-auto p-4 md:p-6 space-y-6 pb-28">
           {/* Stepper */}
-          <div className="flex items-center gap-4 text-xs font-mono uppercase tracking-widest border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 tech-label border border-border rounded-xl bg-card p-4">
             <span className="text-muted-foreground flex items-center gap-2"><CheckCircle className="h-4 w-4" /> 1. IDEA</span>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
             <span className="font-bold text-primary flex items-center gap-2"><Activity className="h-4 w-4" /> 2. SCENARIO DRAFT</span>
@@ -545,9 +545,9 @@ export default function Dashboard() {
 
           {/* Synthesis Candidates Bar */}
           {(synthesisRecipe || bridgeRecipe) && candidates.length > 0 && !currentScenarioId && (
-            <div className="border border-secondary/40 bg-card shadow-sm">
+            <div className="border border-secondary/40 rounded-xl bg-card shadow-sm overflow-hidden">
               <div className="p-4 flex flex-wrap items-center gap-3">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-secondary flex items-center gap-2">
+                <span className="tech-label text-secondary flex items-center gap-2">
                   {bridgeRecipe ? <Link2 className="h-4 w-4" /> : <GitMerge className="h-4 w-4" />}
                   {bridgeRecipe ? 'Bridge Candidates' : 'Candidates'}
                 </span>
@@ -556,7 +556,7 @@ export default function Dashboard() {
                     <button
                       key={i}
                       onClick={() => handleSelectCandidate(i)}
-                      className={`px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider border transition-colors ${
+                      className={`rounded-full px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider border transition-colors ${
                         i === activeCandidate
                           ? 'bg-secondary text-secondary-foreground border-secondary'
                           : 'bg-background border-border text-muted-foreground hover:border-secondary hover:text-secondary'
@@ -567,11 +567,11 @@ export default function Dashboard() {
                     </button>
                   ))}
                 </div>
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex flex-wrap items-center gap-2">
                   {candidates.length > 1 && (
                     <button
                       onClick={() => setIsCompareOpen(o => !o)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors ${
                         isCompareOpen ? 'bg-muted border-border' : 'bg-background border-border hover:border-primary hover:text-primary'
                       }`}
                     >
@@ -581,7 +581,7 @@ export default function Dashboard() {
                   <button
                     onClick={handleReroll}
                     disabled={isRerolling}
-                    className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-1.5 text-xs font-bold border border-secondary transition-colors hover:bg-secondary/90 disabled:opacity-50"
+                    className="flex items-center gap-2 bg-secondary text-secondary-foreground rounded-full px-4 py-1.5 text-xs font-bold border border-secondary transition-colors hover:bg-secondary/90 disabled:opacity-50"
                   >
                     {isRerolling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                     {isRerolling ? 'Re-rolling (takes ~1 min)...' : 'Re-run Same Ingredients'}
@@ -596,7 +596,7 @@ export default function Dashboard() {
                   {candidates.map((c, i) => {
                     const s = i === activeCandidate ? draft : c.scenario;
                     return (
-                      <div key={i} className={`border p-4 flex flex-col gap-2 bg-card ${i === activeCandidate ? 'border-secondary' : 'border-border'}`}>
+                      <div key={i} className={`border rounded-lg p-4 flex flex-col gap-2 bg-card ${i === activeCandidate ? 'border-secondary' : 'border-border'}`}>
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground">Candidate #{i + 1}{i === activeCandidate ? ' — VIEWING' : ''}</span>
                           {i !== activeCandidate && (
@@ -636,22 +636,22 @@ export default function Dashboard() {
               return <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />;
             };
             return (
-              <div className="border border-chart-3/40 bg-card shadow-sm p-4 space-y-3">
+              <div className="border border-chart-3/40 rounded-xl bg-card shadow-sm p-4 space-y-3 overflow-x-auto">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-chart-3 flex items-center gap-2">
+                  <span className="tech-label text-chart-3 flex items-center gap-2">
                     <Link2 className="h-4 w-4" /> Bridge Story
                   </span>
                   <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="border border-border bg-background px-3 py-1.5 flex items-center gap-2">
+                    <span className="border border-border rounded-full bg-background px-3 py-1.5 flex items-center gap-2">
                       <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Source A</span>
                       <span className="font-bold">{src?.title || '?'}</span>
                     </span>
                     <ArrowRight className="h-4 w-4 text-chart-3" />
-                    <span className="border border-chart-3 bg-chart-3/10 px-3 py-1.5 font-bold text-chart-3">
+                    <span className="border border-chart-3 rounded-full bg-chart-3/10 px-3 py-1.5 font-bold text-chart-3">
                       {draft.title || 'Bridge'}
                     </span>
                     <ArrowRight className="h-4 w-4 text-chart-3" />
-                    <span className="border border-border bg-background px-3 py-1.5 flex items-center gap-2">
+                    <span className="border border-border rounded-full bg-background px-3 py-1.5 flex items-center gap-2">
                       <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Target B</span>
                       <span className="font-bold">{tgt?.title || '?'}</span>
                     </span>
@@ -661,12 +661,12 @@ export default function Dashboard() {
                   <div className="flex flex-wrap gap-1.5 items-center">
                     <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Transition requirements:</span>
                     {lineage.requirements.map((r, i) => (
-                      <span key={i} className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[10px] font-mono px-1.5 py-0.5">{r}</span>
+                      <span key={i} className="bg-chart-3/10 text-chart-3 border border-chart-3/20 rounded-full text-[10px] font-mono px-2 py-0.5">{r}</span>
                     ))}
                   </div>
                 )}
                 {analysis && (
-                  <details className="group border border-chart-3/20 bg-chart-3/5">
+                  <details className="group border border-chart-3/20 rounded-lg bg-chart-3/5">
                     <summary className="cursor-pointer px-4 py-2.5 flex items-center justify-between hover:bg-chart-3/10 transition-colors">
                       <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-chart-3 flex items-center gap-2">
                         Connection Analysis
@@ -688,7 +688,7 @@ export default function Dashboard() {
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {analysis.gaps.map(gap => (
-                          <div key={gap.dimension} className="flex items-start gap-2 text-xs p-2 bg-background border border-border">
+                          <div key={gap.dimension} className="flex items-start gap-2 text-xs p-2 bg-background border border-border rounded-lg">
                             {statusIcon(gap.status)}
                             <div className="min-w-0">
                               <span className="font-mono font-bold uppercase text-[9px] tracking-wider text-muted-foreground block">{gap.dimension}</span>
@@ -710,11 +710,11 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column: Editable Core Structure */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="border border-border bg-card p-6 shadow-sm space-y-4">
-                <h2 className="text-sm font-mono font-bold text-primary uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center justify-between">
+              <div className="border border-border rounded-xl bg-card p-4 md:p-6 shadow-sm space-y-4">
+                <h2 className="tech-label text-primary mb-4 border-b border-border pb-2 flex items-center justify-between gap-2">
                   <span className="flex items-center gap-2"><Wand2 className="h-4 w-4" /> Core Scenario</span>
                   {currentScenarioId && (
-                    <span className="bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold border border-primary/20">SAVED IN LIBRARY</span>
+                    <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[10px] font-bold border border-primary/20">SAVED IN LIBRARY</span>
                   )}
                 </h2>
                 
@@ -724,7 +724,7 @@ export default function Dashboard() {
                     type="text" 
                     value={draft.title || ""}
                     onChange={(e) => handleDraftChange('title', e.target.value)}
-                    className="w-full bg-background border border-border px-3 py-2 text-lg font-bold focus:outline-none focus:border-primary transition-colors"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-lg font-bold focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
                 
@@ -734,7 +734,7 @@ export default function Dashboard() {
                     value={draft.logline || ""}
                     onChange={(e) => handleDraftChange('logline', e.target.value)}
                     rows={2}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm font-medium focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                   />
                 </div>
 
@@ -744,7 +744,7 @@ export default function Dashboard() {
                     value={draft.synopsis || ""}
                     onChange={(e) => handleDraftChange('synopsis', e.target.value)}
                     rows={4}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed field-sizing-content overflow-hidden"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none leading-relaxed field-sizing-content overflow-hidden"
                   />
                 </div>
 
@@ -755,7 +755,7 @@ export default function Dashboard() {
                       value={draft.theme || ""}
                       onChange={(e) => handleDraftChange('theme', e.target.value)}
                       rows={1}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                     />
                   </div>
                   <div>
@@ -764,7 +764,7 @@ export default function Dashboard() {
                       value={draft.stakes || ""}
                       onChange={(e) => handleDraftChange('stakes', e.target.value)}
                       rows={1}
-                      className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                     />
                   </div>
                 </div>
@@ -775,15 +775,15 @@ export default function Dashboard() {
                     value={draft.twist || ""}
                     onChange={(e) => handleDraftChange('twist', e.target.value)}
                     rows={1}
-                    className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors resize-none field-sizing-content overflow-hidden"
                   />
                 </div>
               </div>
 
               {/* Classification Panel (Only visible for saved scenarios) */}
               {currentScenarioId && (
-                <div className="border border-border bg-card p-6 shadow-sm space-y-4">
-                   <h2 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center gap-2">
+                <div className="border border-border rounded-xl bg-card p-4 md:p-6 shadow-sm space-y-4">
+                   <h2 className="tech-label text-muted-foreground mb-4 border-b border-border pb-2 flex items-center gap-2">
                     <Tag className="h-4 w-4" /> Categorization Mapping
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -792,7 +792,7 @@ export default function Dashboard() {
                       <select 
                         value={editedClassification.domain} 
                         onChange={e => setEditedClassification(p => ({...p, domain: e.target.value}))}
-                        className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
                       >
                         <option value="">(Select Domain)</option>
                         {uniqueDomains.map(d => <option key={d} value={d}>{d}</option>)}
@@ -803,7 +803,7 @@ export default function Dashboard() {
                       <select 
                         value={editedClassification.conflictType} 
                         onChange={e => setEditedClassification(p => ({...p, conflictType: e.target.value}))}
-                        className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
                       >
                         <option value="">(Select Conflict)</option>
                         {uniqueConflicts.map(d => <option key={d} value={d}>{d}</option>)}
@@ -814,7 +814,7 @@ export default function Dashboard() {
                       <select 
                         value={editedClassification.tone} 
                         onChange={e => setEditedClassification(p => ({...p, tone: e.target.value}))}
-                        className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary appearance-none"
                       >
                         <option value="">(Select Tone)</option>
                         {uniqueTones.map(d => <option key={d} value={d}>{d}</option>)}
@@ -828,11 +828,11 @@ export default function Dashboard() {
                       value={editedClassification.tags}
                       onChange={e => setEditedClassification(p => ({...p, tags: e.target.value}))}
                       placeholder="e.g. survival, fast-paced"
-                      className="w-full bg-background border border-border px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary transition-colors"
+                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                   {showClassificationHint && (
-                    <p className="text-[10px] text-orange-500 font-mono mt-2 uppercase tracking-wider">
+                    <p className="text-[10px] text-amber-500 font-mono mt-2 uppercase tracking-wider">
                       Select all three axes and at least one tag to override auto-classification.
                     </p>
                   )}
@@ -841,17 +841,17 @@ export default function Dashboard() {
 
               {/* Lineage Panel */}
               {(currentScenario?.lineage || draftLineage) && (
-                <div className="border border-border bg-card p-6 shadow-sm space-y-4">
-                  <h2 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center gap-2">
+                <div className="border border-border rounded-xl bg-card p-4 md:p-6 shadow-sm space-y-4">
+                  <h2 className="tech-label text-muted-foreground mb-4 border-b border-border pb-2 flex items-center gap-2">
                     <GitMerge className="h-4 w-4" /> Synthesis Lineage
                   </h2>
                   <div className="space-y-4">
                     {(currentScenario?.lineage || draftLineage)?.parents.map((parent: any, i: number) => (
-                      <div key={i} className="flex flex-col gap-1.5 p-3 bg-muted/20 border border-border">
+                      <div key={i} className="flex flex-col gap-1.5 p-3 bg-muted/20 border border-border rounded-lg">
                         <div className="text-sm font-bold">{parent.title}</div>
                         <div className="flex flex-wrap gap-1.5">
                           {parent.elements.map((el: string) => (
-                            <span key={el} className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">
+                            <span key={el} className="bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider">
                               {el}
                             </span>
                           ))}
@@ -871,11 +871,11 @@ export default function Dashboard() {
             {/* Right Column: Acts, Characters, Similar */}
             <div className="lg:col-span-5 space-y-6">
               <div className="space-y-4">
-                <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
+                <h3 className="tech-label text-muted-foreground border-b border-border pb-2">
                   Structural Beats (Read-only)
                 </h3>
                 {draft.acts?.map((act: any, i: number) => (
-                  <details key={i} open className="group border border-border bg-card open:bg-muted/10 transition-colors">
+                  <details key={i} open className="group border border-border rounded-xl overflow-hidden bg-card open:bg-muted/10 transition-colors">
                     <summary className="cursor-pointer p-4 font-bold uppercase tracking-wider text-sm flex items-center justify-between hover:bg-muted/50 transition-colors">
                       {act.name}
                       <ChevronDown className="h-4 w-4 text-muted-foreground group-open:rotate-180 transition-transform" />
@@ -891,14 +891,14 @@ export default function Dashboard() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
+                <h3 className="tech-label text-muted-foreground border-b border-border pb-2">
                   Characters
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {draft.characters?.map((char: any, i: number) => (
-                    <div key={i} className="border border-border p-4 bg-card">
+                    <div key={i} className="border border-border rounded-xl p-4 bg-card">
                       <div className="font-bold text-base mb-1">{char.name}</div>
-                      <div className="text-[10px] text-primary font-mono mb-3 uppercase tracking-widest">{char.role}</div>
+                      <div className="tech-label text-primary mb-3">{char.role}</div>
                       <div className="text-sm text-muted-foreground">{char.motivation}</div>
                     </div>
                   ))}
@@ -911,7 +911,7 @@ export default function Dashboard() {
         </div>
 
         {/* Floating Action Bar */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-md border-t border-border z-50 flex items-center justify-between px-6">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-md border-t border-border z-50 flex flex-wrap items-center justify-between gap-3 px-4 md:px-6">
           <button 
             onClick={() => {
               setStep('IDEA');
@@ -919,16 +919,16 @@ export default function Dashboard() {
               setDraftLineage(null);
               clearCandidates();
             }} 
-            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-4 py-2"
+            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors px-4 py-2 min-h-9"
           >
             <ArrowRight className="h-4 w-4 rotate-180" /> Back to Library / Idea
           </button>
           
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 md:gap-3">
             <button 
               onClick={handleAmplify} 
               disabled={draftScenario.isPending}
-              className="flex items-center justify-center gap-2 bg-muted text-foreground border border-border h-10 px-4 font-semibold text-sm transition-colors hover:bg-muted/80 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-muted text-foreground border border-border rounded-full h-10 px-4 font-semibold text-sm transition-colors hover:bg-muted/80 disabled:opacity-50"
             >
               {draftScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
               Re-Amplify
@@ -936,7 +936,7 @@ export default function Dashboard() {
             <button 
               onClick={handleSaveToLibrary}
               disabled={createScenario.isPending || updateScenario.isPending}
-              className="flex items-center justify-center gap-2 bg-card text-foreground border border-border h-10 px-4 font-semibold text-sm transition-colors hover:bg-muted disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-card text-foreground border border-border rounded-full h-10 px-4 font-semibold text-sm transition-colors hover:bg-muted disabled:opacity-50"
             >
               {createScenario.isPending || updateScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
               {currentScenarioId ? "Save Changes" : "Save to Library"}
@@ -944,7 +944,7 @@ export default function Dashboard() {
             <button 
               onClick={handleConfirmGraph}
               disabled={createContent.isPending}
-              className="flex items-center justify-center gap-2 bg-primary text-primary-foreground h-10 px-8 font-semibold text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-full h-10 px-6 md:px-8 font-semibold text-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {createContent.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Confirm & Build Graph
@@ -957,19 +957,19 @@ export default function Dashboard() {
 
   return (
     <Layout breadcrumbs={[{label: "ContentX"}, {label: "World"}]}>
-      <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1600px] mx-auto">
+      <div className="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1600px] mx-auto">
         
         {/* Left Column: Generator & Stats */}
         <div className="lg:col-span-4 space-y-6">
           
           {/* Generator Panel */}
-          <div className="border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2">
+          <div className="border border-border rounded-xl bg-card p-4 md:p-6 shadow-sm">
+            <h2 className="headline-lg mb-4 border-b border-border pb-2">
               Generate Structure
             </h2>
             
             {/* Stepper for Idea Phase */}
-            <div className="flex flex-col gap-2 mb-6 text-[10px] font-mono uppercase tracking-widest text-muted-foreground bg-muted/30 p-3 border border-border">
+            <div className="flex flex-col gap-2 mb-6 text-[10px] font-mono uppercase tracking-widest text-muted-foreground bg-muted/30 p-3 rounded-lg border border-border">
                <div className="flex items-center gap-1.5 font-bold text-primary"><CheckCircle className="h-3 w-3" /> 1. IDEA</div>
                <div className="flex items-center gap-1.5"><ArrowRight className="h-3 w-3 opacity-50" /> 2. SCENARIO DRAFT</div>
                <div className="flex items-center gap-1.5"><ArrowRight className="h-3 w-3 opacity-50" /> 3. GRAPH GENERATION</div>
@@ -985,7 +985,7 @@ export default function Dashboard() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Project Orion"
                   disabled={draftScenario.isPending}
-                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-50"
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-50"
                 />
               </div>
               <div>
@@ -998,14 +998,14 @@ export default function Dashboard() {
                   rows={5}
                   required
                   disabled={draftScenario.isPending}
-                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono disabled:opacity-50"
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono disabled:opacity-50"
                 />
               </div>
               
               <button 
                 type="submit"
                 disabled={draftScenario.isPending || !prompt.trim()}
-                className="w-full flex flex-col items-center justify-center gap-1 bg-primary text-primary-foreground h-12 px-4 font-semibold text-sm transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+                className="w-full flex flex-col items-center justify-center gap-1 bg-primary text-primary-foreground rounded-full h-12 px-4 font-semibold text-sm transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
               >
                 {draftScenario.isPending ? (
                   <>
@@ -1021,33 +1021,33 @@ export default function Dashboard() {
           </div>
 
           {/* Stats Panel */}
-          <div className="border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wider mb-4 border-b border-border pb-2">
+          <div className="border border-border rounded-xl bg-card p-4 md:p-6 shadow-sm">
+            <h2 className="tech-label text-muted-foreground mb-4 border-b border-border pb-2">
               System Telemetry
             </h2>
             {isSummaryLoading ? (
               <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
             ) : summary ? (
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-background border border-border">
+                <div className="p-4 bg-background border border-border rounded-lg">
                   <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                     <Database className="h-3 w-3" /> Graphs
                   </div>
                   <div className="text-2xl font-bold font-mono">{summary.contentCount}</div>
                 </div>
-                <div className="p-4 bg-background border border-border">
+                <div className="p-4 bg-background border border-border rounded-lg">
                   <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                     <BookOpen className="h-3 w-3" /> Scenarios
                   </div>
                   <div className="text-2xl font-bold font-mono">{scenarios?.length || 0}</div>
                 </div>
-                <div className="p-4 bg-background border border-border">
+                <div className="p-4 bg-background border border-border rounded-lg">
                   <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                     <Box className="h-3 w-3" /> Entities
                   </div>
                   <div className="text-2xl font-bold font-mono">{summary.entityCount}</div>
                 </div>
-                <div className="p-4 bg-background border border-border">
+                <div className="p-4 bg-background border border-border rounded-lg">
                   <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
                     <Network className="h-3 w-3" /> Relations
                   </div>
@@ -1062,32 +1062,34 @@ export default function Dashboard() {
 
         {/* Right Column: Library Tabs */}
         <div className="lg:col-span-8">
-          <div className="border border-border bg-card flex flex-col h-full min-h-[600px] shadow-sm">
+          <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col h-full min-h-[600px] shadow-sm">
             
             <div className="flex border-b border-border">
               <button 
                 onClick={() => setActiveTab('CONTENT')}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'CONTENT' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-4 px-1 text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'CONTENT' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
               >
-                <Database className="h-4 w-4" />
-                Content Library
-                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{contents?.length || 0}</span>
+                <Database className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">Content Library</span>
+                <span className="sm:hidden">Content</span>
+                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-full">{contents?.length || 0}</span>
               </button>
               <button 
                 onClick={() => setActiveTab('SCENARIOS')}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'SCENARIOS' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-4 px-1 text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'SCENARIOS' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
               >
-                <BookOpen className="h-4 w-4" />
-                Scenario Library
-                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{scenarios?.length || 0}</span>
+                <BookOpen className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">Scenario Library</span>
+                <span className="sm:hidden">Scenarios</span>
+                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-full">{scenarios?.length || 0}</span>
               </button>
               <button 
                 onClick={() => setActiveTab('LINEAGE')}
-                className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'LINEAGE' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
+                className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-4 px-1 text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'LINEAGE' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
               >
-                <GitMerge className="h-4 w-4" />
+                <GitMerge className="h-4 w-4 shrink-0" />
                 Lineage
-                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-sm">{scenarios?.filter(s => s.lineage).length || 0}</span>
+                <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-full">{scenarios?.filter(s => s.lineage).length || 0}</span>
               </button>
             </div>
 
@@ -1101,7 +1103,7 @@ export default function Dashboard() {
                 
                 <select 
                   value={filterDomain} onChange={(e) => setFilterDomain(e.target.value)}
-                  className="bg-background border border-border px-2 py-1 focus:border-primary appearance-none cursor-pointer"
+                  className="bg-background border border-border rounded-full px-3 py-1.5 focus:border-primary appearance-none cursor-pointer"
                 >
                   <option value="All">Domain: All</option>
                   {uniqueDomains.map(d => <option key={d} value={d}>{d}</option>)}
@@ -1109,7 +1111,7 @@ export default function Dashboard() {
 
                 <select 
                   value={filterConflict} onChange={(e) => setFilterConflict(e.target.value)}
-                  className="bg-background border border-border px-2 py-1 focus:border-primary appearance-none cursor-pointer"
+                  className="bg-background border border-border rounded-full px-3 py-1.5 focus:border-primary appearance-none cursor-pointer"
                 >
                   <option value="All">Conflict: All</option>
                   {uniqueConflicts.map(d => <option key={d} value={d}>{d}</option>)}
@@ -1117,13 +1119,13 @@ export default function Dashboard() {
 
                 <select 
                   value={filterTone} onChange={(e) => setFilterTone(e.target.value)}
-                  className="bg-background border border-border px-2 py-1 focus:border-primary appearance-none cursor-pointer"
+                  className="bg-background border border-border rounded-full px-3 py-1.5 focus:border-primary appearance-none cursor-pointer"
                 >
                   <option value="All">Tone: All</option>
                   {uniqueTones.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
 
-                <div className="ml-auto flex items-center gap-2">
+                <div className="w-full md:w-auto md:ml-auto flex flex-wrap items-center gap-2">
                   <button 
                     onClick={() => {
                       setIsSynthesizeMode(!isSynthesizeMode);
@@ -1131,7 +1133,7 @@ export default function Dashboard() {
                       setIsBridgeMode(false);
                       setBridgeSelection([]);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1 font-bold border transition-colors ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-bold border transition-colors ${
                       isSynthesizeMode 
                         ? 'bg-primary text-primary-foreground border-primary' 
                         : 'bg-background border-border hover:border-primary hover:text-primary'
@@ -1144,7 +1146,7 @@ export default function Dashboard() {
                     <button
                       disabled={selectedForSynthesis.length < 2}
                       onClick={() => setIsSynthesisPanelOpen(true)}
-                      className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-3 py-1 font-bold border border-secondary transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 bg-secondary text-secondary-foreground rounded-full px-3 py-1.5 font-bold border border-secondary transition-colors disabled:opacity-50"
                     >
                       Synthesize ({selectedForSynthesis.length})
                     </button>
@@ -1156,7 +1158,7 @@ export default function Dashboard() {
                       setIsSynthesizeMode(false);
                       setSelectedForSynthesis([]);
                     }}
-                    className={`flex items-center gap-1.5 px-3 py-1 font-bold border transition-colors ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-bold border transition-colors ${
                       isBridgeMode
                         ? 'bg-chart-3 text-background border-chart-3'
                         : 'bg-background border-border hover:border-chart-3 hover:text-chart-3'
@@ -1174,16 +1176,16 @@ export default function Dashboard() {
                         setBridgeInstruction("");
                         setIsBridgePanelOpen(true);
                       }}
-                      className="flex items-center gap-1.5 bg-chart-3 text-background px-3 py-1 font-bold border border-chart-3 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 bg-chart-3 text-background rounded-full px-3 py-1.5 font-bold border border-chart-3 transition-colors disabled:opacity-50"
                     >
                       {bridgeSelection.length === 0 ? 'Pick Source (A)' : bridgeSelection.length === 1 ? 'Pick Target (B)' : 'Analyze Connection'}
                     </button>
                   )}
-                  <div className="w-px h-4 bg-border mx-1"></div>
+                  <div className="hidden md:block w-px h-4 bg-border mx-1"></div>
                   <button 
                     onClick={handleReclassifyAll}
                     disabled={reclassifyScenarios.isPending}
-                    className="flex items-center gap-1.5 bg-background border border-border px-2 py-1 hover:text-primary hover:border-primary transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 bg-background border border-border rounded-full px-3 py-1.5 hover:text-primary hover:border-primary transition-colors disabled:opacity-50"
                   >
                     {reclassifyScenarios.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
                     Reclassify All
@@ -1203,12 +1205,12 @@ export default function Dashboard() {
                   <div className="divide-y divide-border">
                     {contents.map((item) => (
                       <Link key={item.id} href={`/content/${item.id}`} className="block group">
-                        <div className="p-6 transition-colors hover:bg-muted hover:border-l-4 hover:border-l-primary hover:-ml-[1px] cursor-pointer">
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{item.title}</h3>
+                        <div className="p-4 md:p-6 transition-colors hover:bg-muted hover:border-l-4 hover:border-l-primary hover:-ml-[1px] cursor-pointer">
+                          <div className="flex justify-between items-start gap-2 mb-2">
+                            <h3 className="text-lg md:text-xl font-serif group-hover:text-primary transition-colors">{item.title}</h3>
                             <button 
                               onClick={(e) => handleDeleteContent(item.id, e)}
-                              className="text-muted-foreground hover:text-destructive p-2 -mr-2 transition-colors opacity-0 group-hover:opacity-100"
+                              className="text-muted-foreground hover:text-destructive p-2 -mr-2 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
                               title="Delete Graph"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -1222,10 +1224,10 @@ export default function Dashboard() {
                           <div className="flex flex-wrap items-center gap-4 text-[11px] font-mono text-muted-foreground">
                             <span className="flex items-center gap-1.5"><Box className="h-3 w-3"/> {item.entityCount}</span>
                             <span className="flex items-center gap-1.5"><Network className="h-3 w-3"/> {item.relationshipCount}</span>
-                            <span className="flex items-center gap-1.5 bg-border/50 px-1.5 py-0.5 border border-border">v{item.version}</span>
+                            <span className="flex items-center gap-1.5 bg-border/50 rounded-full px-2 py-0.5 border border-border">v{item.version}</span>
                             <span>{format(new Date(item.updatedAt), "yyyy-MM-dd HH:mm")}</span>
                             
-                            <div className="ml-auto flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity font-sans font-semibold text-sm">
+                            <div className="ml-auto flex items-center text-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity font-sans font-semibold text-sm">
                               Enter Workspace <ArrowRight className="ml-1 h-3 w-3" />
                             </div>
                           </div>
@@ -1234,11 +1236,11 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                    <div className="w-16 h-16 border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-8">
+                    <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
                       <Database className="h-8 w-8" />
                     </div>
-                    <h3 className="text-lg font-bold mb-2">No Graphs Found</h3>
+                    <h3 className="headline-lg mb-2">No graphs found</h3>
                     <p className="text-muted-foreground text-sm max-w-md">
                       Generate graphs from scenarios to start populating your library.
                     </p>
@@ -1257,7 +1259,7 @@ export default function Dashboard() {
                     {filteredScenarios.map((record) => (
                       <div 
                         key={record.id} 
-                        className={`p-6 transition-colors group flex flex-col ${
+                        className={`p-4 md:p-6 transition-colors group flex flex-col ${
                           isSynthesizeMode && selectedForSynthesis.includes(record.id) 
                             ? 'bg-secondary/10 border-l-4 border-secondary -ml-[1px]' 
                             : isBridgeMode && bridgeSelection.includes(record.id)
@@ -1285,11 +1287,11 @@ export default function Dashboard() {
                                 type="checkbox"
                                 checked={selectedForSynthesis.includes(record.id)}
                                 readOnly
-                                className="h-4 w-4 rounded-none border-border text-secondary focus:ring-secondary cursor-pointer"
+                                className="h-4 w-4 rounded border-border text-secondary focus:ring-secondary cursor-pointer"
                               />
                             )}
                             {isBridgeMode && (
-                              <span className={`h-6 min-w-6 px-1 flex items-center justify-center text-[10px] font-mono font-bold border ${
+                              <span className={`h-6 min-w-6 px-1 rounded-full flex items-center justify-center text-[10px] font-mono font-bold border ${
                                 bridgeSelection[0] === record.id
                                   ? 'bg-chart-3 text-background border-chart-3'
                                   : bridgeSelection[1] === record.id
@@ -1299,17 +1301,17 @@ export default function Dashboard() {
                                 {bridgeSelection[0] === record.id ? 'A' : bridgeSelection[1] === record.id ? 'B' : '·'}
                               </span>
                             )}
-                            <h3 className="text-lg font-bold group-hover:text-primary transition-colors cursor-pointer" onClick={(e) => {
+                            <h3 className="text-lg md:text-xl font-serif group-hover:text-primary transition-colors cursor-pointer" onClick={(e) => {
                                if (!isSynthesizeMode && !isBridgeMode) {
                                  handleOpenScenario(record);
                                }
                             }}>{record.title || "Untitled Scenario"}</h3>
                           </div>
-                          <div className={`flex gap-2 transition-opacity ${isSynthesizeMode ? 'hidden' : 'opacity-0 group-hover:opacity-100'}`}>
+                          <div className={`flex gap-2 transition-opacity ${isSynthesizeMode ? 'hidden' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
                             <button 
                               onClick={(e) => handleReclassifySingle(record.id, e)}
                               disabled={classifyScenario.isPending}
-                              className="text-xs font-mono text-muted-foreground hover:text-primary border border-transparent hover:border-primary/20 px-2 py-1 flex items-center gap-1 disabled:opacity-50"
+                              className="text-xs font-mono text-muted-foreground hover:text-primary border border-transparent hover:border-primary/20 rounded-full px-2 py-1 flex items-center gap-1 disabled:opacity-50"
                               title="Reclassify"
                             >
                               {classifyScenario.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
@@ -1328,26 +1330,26 @@ export default function Dashboard() {
                         <div className="flex flex-wrap gap-2 mb-3">
                           {record.lineage && (
                             record.lineage.kind === 'bridge' ? (
-                              <span className="bg-chart-3 text-background border border-chart-3 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider flex items-center gap-1">
+                              <span className="bg-chart-3 text-background border border-chart-3 rounded-full text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider flex items-center gap-1">
                                 <Link2 className="h-2.5 w-2.5" /> BRIDGE ({record.lineage.parents.find(p => p.role === 'source')?.title} → {record.lineage.parents.find(p => p.role === 'target')?.title})
                               </span>
                             ) : (
-                              <span className="bg-foreground text-background border border-foreground text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider flex items-center gap-1">
+                              <span className="bg-foreground text-background border border-foreground rounded-full text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider flex items-center gap-1">
                                 <GitMerge className="h-2.5 w-2.5" /> SYNTHESIZED ({record.lineage.parents.length})
                               </span>
                             )
                           )}
                           {record.classification ? (
                             <>
-                              <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">{record.classification.domain}</span>
-                              <span className="bg-secondary/10 text-secondary border border-secondary/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">{record.classification.conflictType}</span>
-                              <span className="bg-chart-3/10 text-chart-3 border border-chart-3/20 text-[10px] font-mono px-1.5 py-0.5 uppercase tracking-wider">{record.classification.tone}</span>
+                              <span className="bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider">{record.classification.domain}</span>
+                              <span className="bg-secondary/10 text-secondary border border-secondary/20 rounded-full text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider">{record.classification.conflictType}</span>
+                              <span className="bg-chart-3/10 text-chart-3 border border-chart-3/20 rounded-full text-[10px] font-mono px-2 py-0.5 uppercase tracking-wider">{record.classification.tone}</span>
                               {record.classification.tags?.slice(0, 3).map(t => (
-                                <span key={t} className="bg-muted text-muted-foreground border border-border text-[10px] font-mono px-1.5 py-0.5 flex items-center gap-1"><Tag className="h-2 w-2"/> {t}</span>
+                                <span key={t} className="bg-muted text-muted-foreground border border-border rounded-full text-[10px] font-mono px-2 py-0.5 flex items-center gap-1"><Tag className="h-2 w-2"/> {t}</span>
                               ))}
                             </>
                           ) : (
-                            <span className="bg-destructive/10 text-destructive border border-destructive/20 text-[10px] font-mono font-bold px-1.5 py-0.5 uppercase tracking-wider">UNCLASSIFIED</span>
+                            <span className="bg-destructive/10 text-destructive border border-destructive/20 rounded-full text-[10px] font-mono font-bold px-2 py-0.5 uppercase tracking-wider">UNCLASSIFIED</span>
                           )}
                         </div>
 
@@ -1364,7 +1366,7 @@ export default function Dashboard() {
                           {!isSynthesizeMode && !isBridgeMode && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleOpenScenario(record); }}
-                              className="flex items-center gap-2 bg-background border border-border px-3 py-1.5 text-xs font-semibold hover:border-primary hover:text-primary transition-colors"
+                              className="flex items-center gap-2 bg-background border border-border rounded-full px-4 py-2 text-xs font-semibold hover:border-primary hover:text-primary transition-colors"
                             >
                               <FileText className="h-3 w-3" /> Edit / Build Graph
                             </button>
@@ -1374,11 +1376,11 @@ export default function Dashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                    <div className="w-16 h-16 border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 md:p-8">
+                    <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground mb-4">
                       <BookOpen className="h-8 w-8" />
                     </div>
-                    <h3 className="text-lg font-bold mb-2">No Matching Scenarios</h3>
+                    <h3 className="headline-lg mb-2">No matching scenarios</h3>
                     <p className="text-muted-foreground text-sm max-w-md mb-6">
                       Adjust your filters or amplify a new idea into a scenario.
                     </p>
@@ -1412,10 +1414,10 @@ export default function Dashboard() {
         const statusLabel = (status: string) =>
           status === 'compatible' ? '✓ COMPATIBLE' : status === 'transition' ? '⚠ REQUIRES TRANSITION' : '✕ CONFLICT';
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
-            <div className="bg-card border border-border w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 md:p-6">
+            <div className="bg-card border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative">
               <div className="p-4 border-b border-border bg-muted/30 flex justify-between items-center">
-                <h2 className="text-sm font-mono font-bold uppercase tracking-wider flex items-center gap-2">
+                <h2 className="tech-label flex items-center gap-2">
                   <Link2 className="h-4 w-4" /> Bridge Story
                 </h2>
                 <button
@@ -1426,23 +1428,23 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-auto p-6 space-y-6">
+              <div className="flex-1 overflow-auto p-4 md:p-6 space-y-6">
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <span className="border border-border bg-background px-3 py-1.5">
+                  <span className="border border-border rounded-full bg-background px-3 py-1.5">
                     <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mr-2">Source A</span>
                     <span className="font-bold">{sourceRecord?.title || bridgeSelection[0]}</span>
                   </span>
                   <ArrowRight className="h-4 w-4 text-chart-3" />
-                  <span className="border border-dashed border-chart-3 text-chart-3 px-3 py-1.5 font-mono text-xs uppercase tracking-wider">Bridge</span>
+                  <span className="border border-dashed border-chart-3 text-chart-3 rounded-full px-3 py-1.5 font-mono text-xs uppercase tracking-wider">Bridge</span>
                   <ArrowRight className="h-4 w-4 text-chart-3" />
-                  <span className="border border-border bg-background px-3 py-1.5">
+                  <span className="border border-border rounded-full bg-background px-3 py-1.5">
                     <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mr-2">Target B</span>
                     <span className="font-bold">{targetRecord?.title || bridgeSelection[1]}</span>
                   </span>
                 </div>
 
                 {!bridgeAnalysis ? (
-                  <div className="border border-border bg-background/50 p-6 flex flex-col items-center gap-4 text-center">
+                  <div className="border border-border rounded-xl bg-background/50 p-6 flex flex-col items-center gap-4 text-center">
                     <p className="text-sm text-muted-foreground max-w-md">
                       Analyze the gap between Story A's ending and Story B's beginning — timeline, location,
                       characters, goals, conflict, relationships, knowledge, unresolved threads, and contradictions.
@@ -1450,7 +1452,7 @@ export default function Dashboard() {
                     <button
                       onClick={handleAnalyzeBridge}
                       disabled={analyzeBridge.isPending}
-                      className="flex items-center gap-2 bg-chart-3 text-background px-6 py-2 text-sm font-bold border border-chart-3 transition-colors hover:bg-chart-3/90 disabled:opacity-50"
+                      className="flex items-center gap-2 bg-chart-3 text-background rounded-full px-6 py-2 text-sm font-bold border border-chart-3 transition-colors hover:bg-chart-3/90 disabled:opacity-50"
                     >
                       {analyzeBridge.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                       {analyzeBridge.isPending ? 'Analyzing connection (takes ~1 min)...' : 'Analyze Connection'}
@@ -1458,7 +1460,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <>
-                    <div className="border border-chart-3/40 bg-chart-3/5 p-4">
+                    <div className="border border-chart-3/40 rounded-xl bg-chart-3/5 p-4">
                       <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-chart-3 mb-1.5">Why a bridge is needed</div>
                       <p className="text-sm leading-relaxed">{bridgeAnalysis.summary}</p>
                     </div>
@@ -1466,12 +1468,12 @@ export default function Dashboard() {
                     <div className="space-y-1.5">
                       <div className="text-xs font-semibold uppercase text-muted-foreground">Connection Analysis</div>
                       {bridgeAnalysis.gaps.map((gap) => (
-                        <div key={gap.dimension} className="border border-border bg-background/50 p-3 flex items-start gap-3">
+                        <div key={gap.dimension} className="border border-border rounded-lg bg-background/50 p-3 flex items-start gap-3">
                           {statusIcon(gap.status)}
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs font-mono font-bold uppercase tracking-wider">{gap.dimension}</span>
-                              <span className={`text-[9px] font-mono px-1 py-px border ${
+                              <span className={`text-[9px] font-mono rounded-full px-2 py-px border ${
                                 gap.status === 'compatible' ? 'text-primary border-primary/30 bg-primary/10'
                                 : gap.status === 'transition' ? 'text-chart-3 border-chart-3/30 bg-chart-3/10'
                                 : 'text-destructive border-destructive/30 bg-destructive/10'
@@ -1493,7 +1495,7 @@ export default function Dashboard() {
                       <textarea
                         value={bridgeRequirements}
                         onChange={(e) => setBridgeRequirements(e.target.value)}
-                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-chart-3 focus:ring-1 focus:ring-chart-3 transition-all font-mono min-h-[120px]"
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-chart-3 focus:ring-1 focus:ring-chart-3 transition-all font-mono min-h-[120px]"
                       />
                     </div>
 
@@ -1503,17 +1505,17 @@ export default function Dashboard() {
                         value={bridgeInstruction}
                         onChange={(e) => setBridgeInstruction(e.target.value)}
                         placeholder="e.g. Keep the tone quiet and melancholic; a year passes between the two stories..."
-                        className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-chart-3 focus:ring-1 focus:ring-chart-3 transition-all resize-none font-mono min-h-[80px]"
+                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-chart-3 focus:ring-1 focus:ring-chart-3 transition-all resize-none font-mono min-h-[80px]"
                       />
                     </div>
                   </>
                 )}
               </div>
 
-              <div className="p-4 border-t border-border bg-muted/10 flex justify-end gap-3">
+              <div className="p-4 border-t border-border bg-muted/10 flex flex-wrap justify-end gap-3">
                 <button
                   onClick={() => setIsBridgePanelOpen(false)}
-                  className="px-4 py-2 text-sm font-semibold border border-transparent hover:bg-muted transition-colors"
+                  className="rounded-full px-4 py-2 text-sm font-semibold border border-transparent hover:bg-muted transition-colors"
                   disabled={bridgeScenario.isPending}
                 >
                   Cancel
@@ -1523,7 +1525,7 @@ export default function Dashboard() {
                     <button
                       onClick={handleAnalyzeBridge}
                       disabled={analyzeBridge.isPending || bridgeScenario.isPending}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-semibold border border-border hover:border-chart-3 hover:text-chart-3 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border border-border hover:border-chart-3 hover:text-chart-3 transition-colors disabled:opacity-50"
                     >
                       {analyzeBridge.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                       Re-analyze
@@ -1531,7 +1533,7 @@ export default function Dashboard() {
                     <button
                       onClick={handleGenerateBridge}
                       disabled={bridgeScenario.isPending}
-                      className="flex items-center gap-2 bg-chart-3 text-background px-6 py-2 text-sm font-bold border border-chart-3 transition-colors hover:bg-chart-3/90 disabled:opacity-50"
+                      className="flex items-center gap-2 bg-chart-3 text-background rounded-full px-6 py-2 text-sm font-bold border border-chart-3 transition-colors hover:bg-chart-3/90 disabled:opacity-50"
                     >
                       {bridgeScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
                       {bridgeScenario.isPending ? 'Generating bridge (takes ~1 min)...' : 'Generate Bridge Story'}
@@ -1550,10 +1552,10 @@ export default function Dashboard() {
 
       {/* Synthesis Panel Overlay */}
       {isSynthesisPanelOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
-          <div className="bg-card border border-border w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 md:p-6">
+          <div className="bg-card border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
             <div className="p-4 border-b border-border bg-muted/30 flex justify-between items-center">
-              <h2 className="text-sm font-mono font-bold uppercase tracking-wider flex items-center gap-2">
+              <h2 className="tech-label flex items-center gap-2">
                 <GitMerge className="h-4 w-4" /> Synthesize Scenarios
               </h2>
               <button 
@@ -1564,7 +1566,7 @@ export default function Dashboard() {
               </button>
             </div>
             
-            <div className="flex-1 overflow-auto p-6 space-y-6">
+            <div className="flex-1 overflow-auto p-4 md:p-6 space-y-6">
               <p className="text-sm text-muted-foreground">
                 Select the structural elements to extract from each source scenario. At least one element must be selected per source.
               </p>
@@ -1585,7 +1587,7 @@ export default function Dashboard() {
                   const selectedCount = (synthesisElements[id] || []).length;
                   
                   return (
-                    <div key={id} className="border border-border p-4">
+                    <div key={id} className="border border-border rounded-xl p-4">
                       <div className="font-bold text-sm mb-3 flex items-center justify-between">
                         <span>{record.title || "Untitled"}</span>
                         <span className={`text-[10px] font-mono ${selectedCount === 0 ? 'text-destructive' : 'text-primary'}`}>
@@ -1599,7 +1601,7 @@ export default function Dashboard() {
                             <button
                               key={el}
                               onClick={() => toggleElement(el)}
-                              className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider border transition-colors ${
+                              className={`rounded-full px-3 py-1.5 text-xs font-mono uppercase tracking-wider border transition-colors ${
                                 isSelected 
                                   ? 'bg-primary/20 border-primary text-primary' 
                                   : 'bg-background border-border text-muted-foreground hover:border-primary/50'
@@ -1621,15 +1623,15 @@ export default function Dashboard() {
                   value={synthesisInstruction}
                   onChange={(e) => setSynthesisInstruction(e.target.value)}
                   placeholder="e.g. Combine the setting from Source A with the characters from Source B, but make the tone much darker..."
-                  className="w-full bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono min-h-[80px]"
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono min-h-[80px]"
                 />
               </div>
             </div>
 
-            <div className="p-4 border-t border-border bg-muted/10 flex justify-end gap-3">
+            <div className="p-4 border-t border-border bg-muted/10 flex flex-wrap justify-end gap-3">
               <button 
                 onClick={() => setIsSynthesisPanelOpen(false)}
-                className="px-4 py-2 text-sm font-semibold border border-transparent hover:bg-muted transition-colors"
+                className="rounded-full px-4 py-2 text-sm font-semibold border border-transparent hover:bg-muted transition-colors"
                 disabled={synthesizeScenario.isPending}
               >
                 Cancel
@@ -1637,7 +1639,7 @@ export default function Dashboard() {
               <button 
                 onClick={handleSynthesize}
                 disabled={synthesizeScenario.isPending || selectedForSynthesis.some(id => (synthesisElements[id] || []).length === 0)}
-                className="flex items-center gap-2 bg-secondary text-secondary-foreground px-6 py-2 text-sm font-bold border border-secondary transition-colors hover:bg-secondary/90 disabled:opacity-50"
+                className="flex items-center gap-2 bg-secondary text-secondary-foreground rounded-full px-6 py-2 text-sm font-bold border border-secondary transition-colors hover:bg-secondary/90 disabled:opacity-50"
               >
                 {synthesizeScenario.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitMerge className="h-4 w-4" />}
                 {synthesizeScenario.isPending ? 'Synthesizing (takes ~1 min)...' : 'Run Synthesis'}
@@ -1659,7 +1661,7 @@ function SimilarScenariosPanel({ scenarioId, onOpen }: { scenarioId: string, onO
 
   if (isLoading) {
     return (
-      <div className="border border-border bg-card p-6 shadow-sm flex justify-center">
+      <div className="border border-border rounded-xl bg-card p-6 shadow-sm flex justify-center">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -1668,8 +1670,8 @@ function SimilarScenariosPanel({ scenarioId, onOpen }: { scenarioId: string, onO
   if (!similar || similar.length === 0) return null;
 
   return (
-    <div className="border border-border bg-card shadow-sm">
-      <h3 className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-widest border-b border-border p-4 bg-muted/10 flex items-center gap-2">
+    <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
+      <h3 className="tech-label text-muted-foreground border-b border-border p-4 bg-muted/10 flex items-center gap-2">
         <GitMerge className="h-4 w-4" /> Similar Scenarios in Library
       </h3>
       <div className="divide-y divide-border">
@@ -1680,8 +1682,8 @@ function SimilarScenariosPanel({ scenarioId, onOpen }: { scenarioId: string, onO
             <div className="flex flex-wrap gap-1.5">
               {record.classification && (
                 <>
-                  <span className="bg-primary/10 text-primary border border-primary/20 text-[9px] font-mono px-1 py-px uppercase">{record.classification.domain}</span>
-                  <span className="bg-secondary/10 text-secondary border border-secondary/20 text-[9px] font-mono px-1 py-px uppercase">{record.classification.conflictType}</span>
+                  <span className="bg-primary/10 text-primary border border-primary/20 rounded-full text-[9px] font-mono px-2 py-px uppercase">{record.classification.domain}</span>
+                  <span className="bg-secondary/10 text-secondary border border-secondary/20 rounded-full text-[9px] font-mono px-2 py-px uppercase">{record.classification.conflictType}</span>
                 </>
               )}
             </div>

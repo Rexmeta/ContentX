@@ -12,9 +12,9 @@ export default function PopulationsList() {
   return (
     <Layout 
       breadcrumbs={[{ label: "ContentX" }, { label: "Populations" }]}
-      title={<div className="font-bold text-lg">Populations</div>}
+      title={<div className="font-serif text-xl">Populations</div>}
     >
-      <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
         <p className="text-muted-foreground text-sm">
           A Population is a statistical / generative definition of a group. It defines the probability distributions 
           and dependency rules that guide the sampling of specific Characters.
@@ -30,14 +30,14 @@ export default function PopulationsList() {
               <Link 
                 key={pop.id} 
                 href={`/populations/${pop.id}`}
-                className="block border border-border bg-card p-4 hover:border-primary transition-colors cursor-pointer group"
+                className="block border border-border bg-card rounded-xl p-4 hover:border-primary transition-colors cursor-pointer group"
               >
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between mb-3 gap-2">
                   <div>
-                    <div className="text-[10px] font-mono text-primary uppercase tracking-widest mb-1">{pop.domain}</div>
+                    <div className="tech-label text-primary mb-1">{pop.domain}</div>
                     <div className="font-bold text-lg group-hover:text-primary transition-colors" title={pop.name}>{formatDisplayName(pop.name)}</div>
                   </div>
-                  <span className="text-[10px] bg-muted px-1.5 py-0.5 border font-mono">v{pop.version}</span>
+                  <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full border border-border font-mono shrink-0">v{pop.version}</span>
                 </div>
                 
                 <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground">

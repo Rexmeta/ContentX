@@ -66,18 +66,18 @@ export default function PopulationDetail() {
 
   const contextHeader = (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold font-serif" title={pop.name}>{formatDisplayName(pop.name)}</h1>
-          <span className="text-sm font-mono font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5" data-testid="text-population-version">
+          <h1 className="headline-lg" title={pop.name}>{formatDisplayName(pop.name)}</h1>
+          <span className="text-sm font-mono font-bold bg-primary/10 text-primary border border-primary/20 rounded-full px-2.5 py-0.5" data-testid="text-population-version">
             v{pop.version}
           </span>
         </div>
-        <Link href={`/explorer?perspective=population&id=${id}`} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
+        <Link href={`/explorer?perspective=population&id=${id}`} className="flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
           <Network className="h-4 w-4" /> View in Explorer
         </Link>
       </div>
-      <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono text-muted-foreground uppercase tracking-widest">
         <span className="text-primary" data-testid="text-origin">
           Origin: {pop.provenance?.operation === "import-bridge" ? "Imported (MatrAIx)" : pop.provenance?.sourceType === "matraix" ? "Imported (MatrAIx)" : "Defined"}
         </span>
@@ -94,9 +94,9 @@ export default function PopulationDetail() {
       breadcrumbs={[{ label: "ContentX" }, { label: "Populations", href: "/populations" }, { label: formatDisplayName(pop.name) }]}
       contextHeader={contextHeader}
     >
-      <div className="h-full flex overflow-hidden">
+      <div className="h-full flex flex-col md:flex-row overflow-hidden">
         {/* Simplified preview graph taking up 60% of the screen */}
-        <div className="flex-1 relative border-r border-border bg-background">
+        <div className="flex-1 relative border-b md:border-b-0 md:border-r border-border bg-background min-h-[320px]">
           <StableGraph 
             nodes={nodes} 
             edges={edges}
@@ -107,19 +107,19 @@ export default function PopulationDetail() {
         </div>
         
         {/* Right side inspector content lists */}
-        <div className="w-[450px] flex flex-col bg-card overflow-auto custom-scrollbar">
+        <div className="w-full md:w-[450px] flex flex-col bg-card overflow-auto custom-scrollbar">
           <div className="p-4 border-b border-border bg-muted/30">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2">
+            <h3 className="tech-label flex items-center gap-2">
               <TableProperties className="h-4 w-4" /> Dimensions & Rules
             </h3>
           </div>
           
           <div className="p-4 space-y-4">
             {dimensions?.map(dim => (
-              <div key={dim.id} className="border border-border p-3 text-sm">
-                <div className="flex justify-between items-start mb-2">
+              <div key={dim.id} className="border border-border rounded-lg p-3 text-sm">
+                <div className="flex justify-between items-start gap-2 mb-2">
                   <div className="font-bold">{dim.name}</div>
-                  <span className="text-[10px] font-mono bg-muted px-1 border uppercase">{dim.dataType}</span>
+                  <span className="text-[10px] font-mono bg-muted rounded-full px-2 border border-border uppercase shrink-0">{dim.dataType}</span>
                 </div>
                 <div className="text-xs text-muted-foreground mb-2">{dim.category}</div>
                 
@@ -127,9 +127,9 @@ export default function PopulationDetail() {
                 {rules?.filter(r => r.targetDimension === dim.id).map(rule => {
                   const srcDim = dimensions.find(d => d.id === rule.sourceDimension);
                   return (
-                    <div key={rule.id} className="mt-2 bg-muted/20 border-l-2 border-secondary pl-2 py-1 text-xs font-mono text-muted-foreground flex flex-col gap-1">
+                    <div key={rule.id} className="mt-2 bg-muted/20 border-l-2 border-primary pl-2 py-1 text-xs font-mono text-muted-foreground flex flex-col gap-1">
                       <div className="flex items-center gap-1">
-                        <GitBranch className="h-3 w-3 text-secondary" /> 
+                        <GitBranch className="h-3 w-3 text-primary" /> 
                         <span className="text-foreground">{srcDim?.name}</span> influences <span className="text-foreground">{dim.name}</span>
                       </div>
                       <div className="pl-4 opacity-70">
@@ -145,7 +145,7 @@ export default function PopulationDetail() {
           {selectedCluster && (
             <>
               <div className="p-4 border-y border-border bg-muted/30">
-                <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-primary">
+                <h3 className="tech-label text-primary">
                   Selected Cluster · {selectedCluster.metadata.characters.length} Characters
                 </h3>
               </div>
@@ -165,12 +165,12 @@ export default function PopulationDetail() {
           )}
 
           <div className="p-4 border-y border-border bg-muted/30 mt-auto">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest">Sampled Characters</h3>
+            <h3 className="tech-label">Sampled Characters</h3>
           </div>
           
           <div className="p-4 space-y-2">
             {characters?.slice(0, 5).map(char => (
-              <Link key={char.id} href={`/characters/${char.id}`} className="block border border-border p-2 hover:border-primary transition-colors text-sm font-semibold" title={char.name}>
+              <Link key={char.id} href={`/characters/${char.id}`} className="block border border-border rounded-lg p-2 hover:border-primary transition-colors text-sm font-semibold" title={char.name}>
                 {formatDisplayName(char.name)}
               </Link>
             ))}

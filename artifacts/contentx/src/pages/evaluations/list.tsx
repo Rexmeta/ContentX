@@ -11,9 +11,9 @@ export default function EvaluationsList() {
   return (
     <Layout 
       breadcrumbs={[{ label: "ContentX" }, { label: "Evaluations" }]}
-      title={<div className="font-bold text-lg">Evaluations</div>}
+      title={<div className="font-serif text-xl">Evaluations</div>}
     >
-      <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
         <p className="text-muted-foreground text-sm">
           An Evaluation is an automated assessment of behavior, outcome, or persona fidelity for a simulation run.
         </p>
@@ -32,10 +32,10 @@ export default function EvaluationsList() {
                 <Link 
                   key={ev.id} 
                   href={`/evaluations/${ev.id}`}
-                  className="block border border-border bg-card p-4 hover:border-primary transition-colors cursor-pointer group flex flex-col"
+                  className="block border border-border bg-card rounded-xl p-4 hover:border-primary transition-colors cursor-pointer group flex flex-col"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <span className="bg-primary text-primary-foreground text-[9px] font-mono px-1.5 py-0.5 uppercase tracking-widest">
+                    <span className="bg-primary text-primary-foreground text-[9px] font-mono rounded-full px-2 py-0.5 uppercase tracking-widest">
                       {ev.kind}
                     </span>
                     <span className="text-[10px] font-mono text-muted-foreground">{format(new Date(ev.createdAt), "MM/dd")}</span>
@@ -43,10 +43,10 @@ export default function EvaluationsList() {
                   
                   <div className="mt-auto">
                     <div className="flex items-end gap-2 mb-2">
-                      <span className={`text-3xl font-mono font-bold leading-none ${isGood ? 'text-primary' : 'text-orange-500'}`}>
+                      <span className={`text-3xl font-mono font-bold leading-none ${isGood ? 'text-primary' : 'text-amber-500'}`}>
                         {avgScore.toFixed(2)}
                       </span>
-                      <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-1">Avg Score</span>
+                      <span className="tech-label text-muted-foreground mb-1">Avg Score</span>
                     </div>
                     <div className="text-xs font-mono text-muted-foreground truncate border-t border-border pt-2 flex items-center gap-1.5">
                       <PlayCircle className="h-3 w-3" /> {ev.simulationId}

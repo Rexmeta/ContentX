@@ -41,7 +41,7 @@ function FreqBar({
   if (items.length === 0)
     return (
       <div className="space-y-1">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+        <p className="tech-label text-muted-foreground">
           {label}
         </p>
         <p className="text-xs text-muted-foreground">데이터 없음</p>
@@ -50,7 +50,7 @@ function FreqBar({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+      <p className="tech-label text-muted-foreground">
         {label}
       </p>
       <div className="space-y-1.5">
@@ -97,7 +97,7 @@ function ReportView({ report }: { report: BenchmarkReport }) {
   return (
     <div className="space-y-6">
       {/* Summary row */}
-      <div className="flex flex-wrap gap-4 border border-border rounded-sm p-4 bg-muted/30">
+      <div className="flex flex-wrap gap-4 border border-border rounded-xl p-4 bg-muted/30">
         <div className="text-center">
           <p className="text-2xl font-bold">{report.scenarioCount}</p>
           <p className="text-xs text-muted-foreground">선택된 작품</p>
@@ -113,7 +113,7 @@ function ReportView({ report }: { report: BenchmarkReport }) {
           <p className="text-xs text-muted-foreground">고유 태그</p>
         </div>
         {report.warning && (
-          <div className="flex-1 flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-sm p-3 text-xs text-yellow-700 dark:text-yellow-400">
+          <div className="flex-1 flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-400">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
             {report.warning}
           </div>
@@ -126,22 +126,22 @@ function ReportView({ report }: { report: BenchmarkReport }) {
           <FreqBar
             items={report.profile.domain}
             label="배경 영역"
-            colorClass="bg-blue-500"
+            colorClass="bg-[hsl(var(--chart-1))]"
           />
           <FreqBar
             items={report.profile.conflictType}
             label="갈등 유형"
-            colorClass="bg-rose-500"
+            colorClass="bg-[hsl(var(--chart-3))]"
           />
           <FreqBar
             items={report.profile.tone}
             label="분위기"
-            colorClass="bg-violet-500"
+            colorClass="bg-[hsl(var(--chart-4))]"
           />
           <FreqBar
             items={report.profile.tags}
             label="태그"
-            colorClass="bg-emerald-500"
+            colorClass="bg-[hsl(var(--chart-5))]"
           />
         </div>
       ) : (
@@ -152,7 +152,7 @@ function ReportView({ report }: { report: BenchmarkReport }) {
 
       {/* Draft constraints */}
       {report.draftConstraints && (
-        <div className="border border-primary/30 rounded-sm p-4 bg-primary/5 space-y-2">
+        <div className="border border-primary/30 rounded-xl p-4 bg-primary/5 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -166,7 +166,7 @@ function ReportView({ report }: { report: BenchmarkReport }) {
             </button>
           </div>
           {showConstraints && (
-            <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-muted/50 rounded p-3">
+            <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-muted/50 rounded-lg p-3 overflow-x-auto">
               {report.draftConstraints}
             </pre>
           )}
@@ -229,9 +229,9 @@ export default function BenchmarkPage() {
     <Layout
       breadcrumbs={[{ label: "벤치마크", href: "/benchmark" }]}
       contextHeader={
-        <div className="flex items-start justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold mb-1 flex items-center gap-2">
+            <h1 className="headline-lg mb-1 flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" />
               그룹 패턴 리포트
             </h1>
@@ -256,7 +256,7 @@ export default function BenchmarkPage() {
         </div>
       }
     >
-      <div className="p-6 max-w-5xl mx-auto space-y-8 pb-32">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-8 pb-32">
         {/* Scenario selector */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -284,7 +284,7 @@ export default function BenchmarkPage() {
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : !scenarios || scenarios.length === 0 ? (
-            <div className="border border-dashed border-border rounded-sm p-8 text-center text-sm text-muted-foreground">
+            <div className="border border-dashed border-border rounded-xl p-8 text-center text-sm text-muted-foreground">
               저장된 시나리오가 없습니다. 워크플로에서 이야기 초안을 먼저
               만들고 저장해주세요.
             </div>
@@ -298,7 +298,7 @@ export default function BenchmarkPage() {
                     key={s.id}
                     htmlFor={`sc-${s.id}`}
                     className={cn(
-                      "flex items-start gap-3 border rounded-sm p-3 cursor-pointer transition-colors",
+                      "flex items-start gap-3 border rounded-xl p-3 cursor-pointer transition-colors",
                       isSelected
                         ? "border-primary/60 bg-primary/5"
                         : "border-border hover:border-border/80 bg-card",
@@ -317,13 +317,13 @@ export default function BenchmarkPage() {
                       </p>
                       {c ? (
                         <div className="flex flex-wrap gap-1">
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0 rounded-full">
                             {c.domain}
                           </Badge>
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0 rounded-full">
                             {c.conflictType}
                           </Badge>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="outline" className="text-[10px] px-2 py-0 rounded-full">
                             {c.tone}
                           </Badge>
                         </div>
@@ -342,7 +342,7 @@ export default function BenchmarkPage() {
 
         {/* Single-source warning */}
         {selected.size === 1 && (
-          <div className="flex items-start gap-2 border border-yellow-500/40 bg-yellow-500/10 rounded-sm p-3 text-xs text-yellow-700 dark:text-yellow-400">
+          <div className="flex items-start gap-2 border border-amber-500/40 bg-amber-500/10 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-400">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
             단일 작품은 그룹 특성 분석이 아닌 원본 재현이 될 수 있습니다.
             최소 2개 이상 선택해주세요.

@@ -48,13 +48,13 @@ export default function CharacterDetail() {
 
   const contextHeader = (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-serif" title={character.name}>{formatDisplayName(character.name)}</h1>
-        <Link href={`/explorer?perspective=character&id=${id}`} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="headline-lg" title={character.name}>{formatDisplayName(character.name)}</h1>
+        <Link href={`/explorer?perspective=character&id=${id}`} className="flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
           <Network className="h-4 w-4" /> View in Explorer
         </Link>
       </div>
-      <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono text-muted-foreground uppercase tracking-widest">
         <span>Identity Record</span>
         <span title={pop?.name}>Population: {formatDisplayName(pop?.name) || "Unknown"}{pop?.version != null ? ` v${pop.version}` : ""}</span>
         <span>Seed: {character.provenance.seed ?? "N/A"}</span>
@@ -75,35 +75,35 @@ export default function CharacterDetail() {
       breadcrumbs={[{ label: "ContentX" }, { label: "Characters", href: "/characters" }, { label: formatDisplayName(character.name) }]}
       contextHeader={contextHeader}
     >
-      <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="p-4 md:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Identity & Demographics */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="border border-border bg-card p-6">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest border-b border-border pb-2 mb-4 text-muted-foreground">Demographics & Attributes</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="border border-border rounded-xl bg-card p-6">
+            <h3 className="tech-label border-b border-border pb-2 mb-4 text-muted-foreground">Demographics & Attributes</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {Object.entries(character.attributes.identity || {}).map(([k, v]) => (
-                <div key={k} className="bg-muted/10 p-3 border border-border">
-                  <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">{k}</div>
+                <div key={k} className="bg-muted/10 rounded-lg p-3 border border-border">
+                  <div className="tech-label text-muted-foreground mb-1">{k}</div>
                   <div className="text-sm font-semibold truncate" title={String(v)}>{String(v)}</div>
                 </div>
               ))}
               {Object.entries(character.attributes.professional || {}).map(([k, v]) => (
-                <div key={k} className="bg-muted/10 p-3 border border-border">
-                  <div className="text-[10px] font-mono text-muted-foreground uppercase mb-1">{k}</div>
+                <div key={k} className="bg-muted/10 rounded-lg p-3 border border-border">
+                  <div className="tech-label text-muted-foreground mb-1">{k}</div>
                   <div className="text-sm font-semibold truncate" title={String(v)}>{String(v)}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="border border-border bg-card p-6">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest border-b border-border pb-2 mb-4 text-muted-foreground">Behavioral Profile</h3>
+          <div className="border border-border rounded-xl bg-card p-6">
+            <h3 className="tech-label border-b border-border pb-2 mb-4 text-muted-foreground">Behavioral Profile</h3>
             
             <div className="space-y-4">
               {character.attributes.goals && (
                 <div>
-                  <div className="text-[10px] font-mono text-muted-foreground uppercase mb-2">Goals</div>
+                  <div className="tech-label text-muted-foreground mb-2">Goals</div>
                   <ul className="list-disc pl-4 space-y-1 text-sm">
                     {character.attributes.goals.map((g, i) => <li key={i}>{g}</li>)}
                   </ul>
@@ -112,7 +112,7 @@ export default function CharacterDetail() {
               
               {character.attributes.constraints && (
                 <div>
-                  <div className="text-[10px] font-mono text-muted-foreground uppercase mb-2">Constraints</div>
+                  <div className="tech-label text-muted-foreground mb-2">Constraints</div>
                   <ul className="list-disc pl-4 space-y-1 text-sm text-secondary">
                     {character.attributes.constraints.map((c, i) => <li key={i}>{c}</li>)}
                   </ul>
@@ -124,16 +124,16 @@ export default function CharacterDetail() {
 
         {/* Snapshots & Agents */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="border border-border bg-card">
+          <div className="border border-border rounded-xl bg-card overflow-hidden">
             <div className="p-4 border-b border-border bg-muted/30">
-              <h3 className="text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2">
+              <h3 className="tech-label flex items-center gap-2">
                 <Lock className="h-4 w-4 text-primary" /> CharacterSnapshots
               </h3>
               <p className="text-[10px] text-muted-foreground mt-1">Immutable resolved states for simulation.</p>
             </div>
             <div className="p-4 space-y-3">
               {snapshots?.map((snap, i) => (
-                <div key={snap.id} className="border border-border p-3 text-xs bg-muted/10 font-mono">
+                <div key={snap.id} className="border border-border rounded-lg p-3 text-xs bg-muted/10 font-mono">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-foreground">v{snapshots.length - i}</span>
                     <span className="text-muted-foreground">{format(new Date(snap.createdAt), "MM/dd HH:mm")}</span>
@@ -147,17 +147,17 @@ export default function CharacterDetail() {
             </div>
           </div>
 
-          <div className="border border-border bg-card">
+          <div className="border border-border rounded-xl bg-card overflow-hidden">
             <div className="p-4 border-b border-border bg-muted/30">
-              <h3 className="text-xs font-mono font-bold uppercase tracking-widest flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-secondary" /> Runtime Agents
+              <h3 className="tech-label flex items-center gap-2">
+                <Terminal className="h-4 w-4 text-primary" /> Runtime Agents
               </h3>
               <p className="text-[10px] text-muted-foreground mt-1">Actors instantiated from snapshots.</p>
             </div>
             <div className="p-4 space-y-3">
               {agents?.map(agent => (
-                <div key={agent.id} className="border border-secondary/30 p-3 text-xs bg-secondary/5 font-mono">
-                  <div className="font-bold text-secondary mb-1 truncate" title={agent.name}>{formatDisplayName(agent.name)}</div>
+                <div key={agent.id} className="border border-border rounded-lg p-3 text-xs bg-muted/10 font-mono">
+                  <div className="font-bold text-foreground mb-1 truncate" title={agent.name}>{formatDisplayName(agent.name)}</div>
                   <div className="text-muted-foreground truncate" title={agent.id}>{agent.id}</div>
                 </div>
               ))}

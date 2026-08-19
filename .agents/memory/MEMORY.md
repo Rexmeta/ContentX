@@ -4,4 +4,5 @@
 - [Simulation runtime layering](simulation-runtime-layering.md) — interaction_events payload field names are a compat contract; action objects spread into payloads, never rename their fields.
 - [Version-history snapshot rules](version-history-snapshots.md) — snapshot pre-mutation state idempotently and validate patches inside the FOR UPDATE transaction, never from a stale pre-lock read.
 - [LLM fixed-set output contracts](llm-output-set-contracts.md) — validate set completeness/uniqueness of LLM lists server-side (in a validator the route calls too), not just item shape.
+- [Parallel subagents vs git stash](parallel-subagent-git-stash.md) — a subagent's `git stash` can revert the parent's uncommitted edits; forbid stashing in briefs and re-verify own edits after joins.
 - [Import dedup must be atomic](import-dedup-atomicity.md) — dedup on JSONB provenance needs a pg advisory xact lock around lookup+write; NUL bytes are illegal in lock key text.

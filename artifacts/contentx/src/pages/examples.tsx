@@ -45,9 +45,9 @@ export default function Examples() {
 
   return (
     <Layout breadcrumbs={[{ label: "예시", href: "/examples" }]}>
-      <div className="p-6 max-w-5xl mx-auto space-y-8 pb-24">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-8 pb-24">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight mb-2">예시로 시작하기</h1>
+          <h1 className="headline-display mb-2">예시로 시작하기</h1>
           <p className="text-muted-foreground max-w-2xl">
             설명서를 읽는 대신, 미리 채워진 예시를 그대로 실행해보세요.
             시작하면 단계들이 준비된 워크플로가 열리고, 내용을 자유롭게 바꾼 뒤 실행할 수 있어요.
@@ -62,18 +62,18 @@ export default function Examples() {
                 key={example.id}
                 data-testid={`card-example-${example.id}`}
                 className={cn(
-                  "border bg-card flex flex-col",
+                  "border border-border bg-card rounded-xl flex flex-col",
                   example.supported ? "hover:border-primary/50 transition-colors" : "opacity-70",
                 )}
               >
                 <div className="p-5 flex-1">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="p-2 bg-primary/10 rounded-sm text-primary">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
                       <example.icon className="h-5 w-5" />
                     </div>
                     {!example.supported && (
                       <span
-                        className="px-2 py-0.5 text-[10px] font-mono border border-border bg-muted text-muted-foreground uppercase tracking-wider"
+                        className="rounded-full px-2.5 py-0.5 tech-label border border-border bg-muted text-muted-foreground"
                         data-testid={`badge-coming-soon-${example.id}`}
                       >
                         준비 중
@@ -84,7 +84,7 @@ export default function Examples() {
                   <p className="text-sm text-muted-foreground mb-4">{example.summary}</p>
 
                   <div className="border-l-2 border-primary/20 pl-3 mb-4">
-                    <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">
+                    <div className="tech-label text-muted-foreground mb-1">
                       예시 입력
                     </div>
                     <p className="text-xs text-muted-foreground italic leading-relaxed">
@@ -96,13 +96,13 @@ export default function Examples() {
                     {example.stepsPreview.map((step, i) => (
                       <span key={i} className="flex items-center gap-1">
                         {i > 0 && <ChevronRight className="h-3 w-3 opacity-50" />}
-                        <span className="bg-muted/50 px-1.5 py-0.5 rounded-sm">{step}</span>
+                        <span className="bg-muted/50 px-2 py-0.5 rounded-full">{step}</span>
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div className="p-4 border-t border-border bg-muted/10">
+                <div className="p-4 border-t border-border bg-muted/10 rounded-b-xl">
                   <Button
                     className="w-full"
                     disabled={!example.supported || planWorkflow.isPending}

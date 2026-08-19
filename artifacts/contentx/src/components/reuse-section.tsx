@@ -82,7 +82,7 @@ export function ReuseSection({
               title={!type.supported ? "이 결과물은 아직 준비 중이에요." : type.desc}
               data-testid={`button-reuse-${type.id}`}
               className={cn(
-                "flex items-center gap-1.5 border px-3 py-1.5 text-sm bg-card transition-colors",
+                "flex items-center gap-1.5 border border-border rounded-full px-4 py-2 text-sm bg-card transition-colors min-h-9",
                 type.supported
                   ? "hover:border-primary hover:text-primary"
                   : "opacity-50 cursor-not-allowed",
@@ -95,7 +95,7 @@ export function ReuseSection({
               )}
               {type.label}
               {!type.supported && (
-                <span className="text-[9px] font-mono border border-border bg-muted px-1 py-px uppercase tracking-wider text-muted-foreground">
+                <span className="tech-label rounded-full border border-border bg-muted px-2 py-px text-muted-foreground">
                   준비 중
                 </span>
               )}

@@ -222,7 +222,7 @@ export function StableGraph({
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50">
         <Network className="h-12 w-12 text-muted-foreground/30 mb-4" />
-        <h2 className="text-lg font-bold text-muted-foreground">NO GRAPH DATA</h2>
+        <h2 className="headline-lg text-muted-foreground">No graph data</h2>
         <p className="text-sm text-muted-foreground/70">Import a dataset or create a Population to begin.</p>
       </div>
     );
@@ -378,21 +378,21 @@ export function StableGraph({
       </svg>
 
       {/* Explicit Graph Controls Overlay */}
-      <div className="absolute bottom-6 left-6 flex items-center gap-1 bg-card/90 backdrop-blur border border-border shadow-sm rounded-none p-1">
-        <button onClick={handleZoomIn} className="p-2 hover:bg-muted text-foreground transition-colors" title="Zoom In">
+      <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-1 bg-card/90 backdrop-blur border border-border shadow-sm rounded-full p-1">
+        <button onClick={handleZoomIn} className="p-2 rounded-full hover:bg-muted text-foreground transition-colors" title="Zoom In">
           <ZoomIn className="h-4 w-4" />
         </button>
-        <button onClick={handleZoomOut} className="p-2 hover:bg-muted text-foreground transition-colors" title="Zoom Out">
+        <button onClick={handleZoomOut} className="p-2 rounded-full hover:bg-muted text-foreground transition-colors" title="Zoom Out">
           <ZoomOut className="h-4 w-4" />
         </button>
         <div className="w-px h-4 bg-border mx-1"></div>
-        <button onClick={handleFit} className="p-2 hover:bg-muted text-foreground transition-colors" title="Fit to Screen">
+        <button onClick={handleFit} className="p-2 rounded-full hover:bg-muted text-foreground transition-colors" title="Fit to Screen">
           <Maximize className="h-4 w-4" />
         </button>
-        <button onClick={handleCenterSelected} disabled={!selectionId} className="p-2 hover:bg-muted text-foreground transition-colors disabled:opacity-30" title="Center Selected">
+        <button onClick={handleCenterSelected} disabled={!selectionId} className="p-2 rounded-full hover:bg-muted text-foreground transition-colors disabled:opacity-30" title="Center Selected">
           <Crosshair className="h-4 w-4" />
         </button>
-        <button onClick={handleReset} className="p-2 hover:bg-muted text-foreground transition-colors" title="Reset Layout">
+        <button onClick={handleReset} className="p-2 rounded-full hover:bg-muted text-foreground transition-colors" title="Reset Layout">
           <RotateCcw className="h-4 w-4" />
         </button>
       </div>
@@ -409,12 +409,12 @@ export function GraphLegend({
   relationshipTypes: { label: string, strokeDasharray?: string }[]
 }) {
   return (
-    <div className="absolute top-6 left-6 bg-card/90 backdrop-blur border border-border shadow-sm p-4 w-64 pointer-events-none">
-      <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground mb-3">Legend</div>
+    <div className="hidden sm:block absolute top-4 left-4 md:top-6 md:left-6 bg-card/90 backdrop-blur border border-border shadow-sm rounded-xl p-4 w-52 md:w-64 pointer-events-none">
+      <div className="tech-label text-muted-foreground mb-3">Legend</div>
       
       <div className="space-y-4">
         <div>
-          <div className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Node Types</div>
+          <div className="tech-label text-muted-foreground mb-2">Node Types</div>
           <div className="space-y-1.5">
             {nodeTypes.map(nt => (
               <div key={nt.label} className="flex items-center gap-2">
@@ -426,7 +426,7 @@ export function GraphLegend({
         </div>
 
         <div>
-          <div className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Relationships</div>
+          <div className="tech-label text-muted-foreground mb-2">Relationships</div>
           <div className="space-y-2">
             {relationshipTypes.map(rt => (
               <div key={rt.label} className="flex items-center gap-2">

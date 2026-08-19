@@ -331,12 +331,12 @@ export default function WorkflowDetail() {
         { label: workflow.title || "새 워크플로" }
       ]}
       contextHeader={
-        <div className="flex items-start justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold mb-1">{workflow.title}</h1>
+            <h1 className="headline-lg mb-1">{workflow.title}</h1>
             <p className="text-sm text-muted-foreground max-w-2xl">{workflow.intent.description}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {!isComplete && isSupportedType && (
               <>
                 <Button 
@@ -367,10 +367,10 @@ export default function WorkflowDetail() {
         </div>
       }
     >
-      <div className="p-6 max-w-5xl mx-auto space-y-8 pb-32">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-8 pb-32">
         
         {!isSupportedType && (
-          <div className="border border-dashed border-border bg-muted/20 p-6 rounded-sm" data-testid="banner-coming-soon">
+          <div className="border border-dashed border-border bg-muted/20 p-6 rounded-xl" data-testid="banner-coming-soon">
             <h2 className="font-bold mb-1">이 결과물은 아직 준비 중이에요</h2>
             <p className="text-sm text-muted-foreground">
               곧 지원될 예정이에요. 지금은 소설, 롤플레이, 제품 반응 시뮬레이션을 만들어볼 수 있어요.
@@ -597,8 +597,8 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
     workflow.title;
 
   return (
-    <div className="bg-primary/5 border border-primary/20 p-6 flex flex-col gap-6">
-      <h2 className="text-lg font-bold flex items-center gap-2">
+    <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 md:p-6 flex flex-col gap-6">
+      <h2 className="headline-lg flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-primary" /> 결과가 완성되었습니다
       </h2>
 
@@ -626,29 +626,29 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
             return (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-card border p-4">
-                    <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">긍정적 반응</div>
+                  <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="tech-label text-muted-foreground mb-1">긍정적 반응</div>
                     <div className="text-xl font-bold text-emerald-500">{pct(positive)}%</div>
                   </div>
-                  <div className="bg-card border p-4">
-                    <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">부정적 반응</div>
+                  <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="tech-label text-muted-foreground mb-1">부정적 반응</div>
                     <div className="text-xl font-bold text-red-500">{pct(negative)}%</div>
                   </div>
-                  <div className="bg-card border p-4">
-                    <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">중립</div>
+                  <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="tech-label text-muted-foreground mb-1">중립</div>
                     <div className="text-xl font-bold">{pct(neutral)}%</div>
                   </div>
-                  <div className="bg-card border p-4">
-                    <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">최종 합의</div>
+                  <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="tech-label text-muted-foreground mb-1">최종 합의</div>
                     <div className="text-xl font-bold">{simulation.outcome?.agreementReached ? "합의 도출" : "결렬"}</div>
                   </div>
                 </div>
-                <div className="bg-card border p-4 text-sm leading-relaxed">
+                <div className="bg-card border border-border rounded-xl p-4 text-sm leading-relaxed">
                   {simulation.outcome?.summary}
                 </div>
                 {(coop !== null || activity !== null || volatility !== null) && (
-                  <div className="bg-card border p-4">
-                    <div className="text-xs font-mono text-muted-foreground mb-3 uppercase">주요 동인과 우려</div>
+                  <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="tech-label text-muted-foreground mb-3">주요 동인과 우려</div>
                     <ul className="text-sm space-y-1.5">
                       {coop !== null && (
                         <li>
@@ -669,8 +669,8 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
                   </div>
                 )}
                 {values.length > 0 && (
-                  <div className="bg-card border p-4">
-                    <div className="text-xs font-mono text-muted-foreground mb-3 uppercase">가상 고객별 반응 비교</div>
+                  <div className="bg-card border border-border rounded-xl p-4">
+                    <div className="tech-label text-muted-foreground mb-3">가상 고객별 반응 비교</div>
                     <div className="space-y-2">
                       {Object.entries(positions).map(([agentId, v]) => (
                         <div key={agentId} className="flex items-center gap-3 text-sm">
@@ -704,8 +704,8 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
 
       {isNarrative && narrative && (
         <div className="space-y-4">
-          <div className="bg-card border p-6">
-            <h3 className="text-2xl font-bold mb-2" data-testid="text-result-title">{narrative.title}</h3>
+          <div className="bg-card border border-border rounded-xl p-4 md:p-6">
+            <h3 className="headline-lg mb-2" data-testid="text-result-title">{narrative.title}</h3>
             {narrative.kind === 'novel' && (
               <>
                 {narrative.subtitle && (
@@ -713,10 +713,10 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
                 )}
                 {narrative.characters.length > 0 && (
                   <div className="mb-6">
-                    <div className="text-xs font-mono text-muted-foreground mb-2 uppercase">등장인물</div>
+                    <div className="tech-label text-muted-foreground mb-2">등장인물</div>
                     <div className="flex flex-wrap gap-2">
                       {narrative.characters.map((c, i) => (
-                        <div key={i} className="border bg-muted/20 px-3 py-1.5 text-sm">
+                        <div key={i} className="border border-border rounded-full bg-muted/20 px-3 py-1.5 text-sm">
                           <span className="font-semibold">{c.name}</span>
                           {c.arc && <span className="text-muted-foreground"> — {c.arc}</span>}
                         </div>
@@ -737,18 +737,18 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
             {narrative.kind === 'roleplay' && (
               <div className="space-y-5" data-testid="section-result-roleplay">
                 <div>
-                  <div className="text-xs font-mono text-muted-foreground mb-1.5 uppercase">배경 상황</div>
+                  <div className="tech-label text-muted-foreground mb-1.5">배경 상황</div>
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{narrative.context}</p>
                 </div>
                 {narrative.playerRole && (
                   <div>
-                    <div className="text-xs font-mono text-muted-foreground mb-1.5 uppercase">당신의 역할</div>
+                    <div className="tech-label text-muted-foreground mb-1.5">당신의 역할</div>
                     <p className="text-sm">{narrative.playerRole}</p>
                   </div>
                 )}
                 {narrative.objectives.length > 0 && (
                   <div>
-                    <div className="text-xs font-mono text-muted-foreground mb-1.5 uppercase">목표</div>
+                    <div className="tech-label text-muted-foreground mb-1.5">목표</div>
                     <ul className="text-sm list-disc pl-5 space-y-1">
                       {narrative.objectives.map((o, i) => <li key={i}>{o}</li>)}
                     </ul>
@@ -756,10 +756,10 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
                 )}
                 {narrative.personas.length > 0 && (
                   <div>
-                    <div className="text-xs font-mono text-muted-foreground mb-2 uppercase">함께 등장하는 인물</div>
-                    <div className="grid sm:grid-cols-2 gap-2">
+                    <div className="tech-label text-muted-foreground mb-2">함께 등장하는 인물</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {narrative.personas.map((p, i) => (
-                        <div key={i} className="border bg-muted/20 p-3 text-sm">
+                        <div key={i} className="border border-border rounded-lg bg-muted/20 p-3 text-sm">
                           <div className="font-semibold">{p.name} <span className="font-normal text-muted-foreground">· {p.role}</span></div>
                           {p.background && <p className="text-xs text-muted-foreground mt-1">{p.background}</p>}
                           {p.traits.length > 0 && (
@@ -772,7 +772,7 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
                 )}
                 {narrative.recommendedFlow.length > 0 && (
                   <div>
-                    <div className="text-xs font-mono text-muted-foreground mb-1.5 uppercase">추천 진행 흐름</div>
+                    <div className="tech-label text-muted-foreground mb-1.5">추천 진행 흐름</div>
                     <ol className="text-sm list-decimal pl-5 space-y-1">
                       {narrative.recommendedFlow.map((f, i) => <li key={i}>{f}</li>)}
                     </ol>
@@ -794,7 +794,7 @@ function WorkflowResultSection({ workflow }: { workflow: WorkflowRecord }) {
       {!isProductReaction && !isNarrative && (
         <div>
           <p className="text-muted-foreground mb-4">워크플로 실행이 완료되었습니다.</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {workflow.artifacts.simulationId && (
               <Button asChild variant="outline">
                 <Link href={`/simulations/${workflow.artifacts.simulationId}`}>
@@ -930,17 +930,17 @@ function StepCard({
 
       {/* Card */}
       <div className={cn(
-        "flex-1 border bg-card relative shadow-sm transition-all",
+        "flex-1 border rounded-xl bg-card relative shadow-sm transition-all overflow-hidden",
         isReady ? "border-primary/50 shadow-primary/5" : "border-border",
         isStepRunning && "border-primary ring-1 ring-primary/30"
       )}>
         {!isEditing ? (
-          <div className="p-4 flex items-start justify-between border-b border-border/50">
+          <div className="p-4 flex flex-wrap items-start justify-between gap-2 border-b border-border/50">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className={cn("text-[10px] font-mono px-1.5 py-0.5 border uppercase tracking-wider cursor-help", badge.color)}>
+                    <span className={cn("text-[10px] font-mono px-2 py-0.5 rounded-full border uppercase tracking-wider cursor-help", badge.color)}>
                       {badge.label}
                     </span>
                   </TooltipTrigger>
@@ -966,7 +966,7 @@ function StepCard({
                 </div>
               )}
               {!step.binding && (
-                <div className="mt-2 text-xs font-mono text-muted-foreground inline-flex items-center bg-muted px-2 py-0.5 rounded-sm">
+                <div className="mt-2 text-xs font-mono text-muted-foreground inline-flex items-center bg-muted px-2 py-0.5 rounded-full">
                   자동 실행 없음
                 </div>
               )}
@@ -993,11 +993,11 @@ function StepCard({
           <div className="p-4 border-b border-border/50 bg-muted/10 space-y-4">
             <div className="grid grid-cols-[1fr_120px] gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-mono text-muted-foreground uppercase">단계 제목</label>
+                <label className="tech-label text-muted-foreground">단계 제목</label>
                 <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-background" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-mono text-muted-foreground uppercase">중요도</label>
+                <label className="tech-label text-muted-foreground">중요도</label>
                 <Select value={importance} onValueChange={(v) => setImportance(v as any)}>
                   <SelectTrigger className="bg-background">
                     <SelectValue />
@@ -1013,7 +1013,7 @@ function StepCard({
             
             {step.binding && (
               <div className="space-y-1">
-                <label className="text-xs font-mono text-muted-foreground uppercase tracking-widest">파라미터 (JSON)</label>
+                <label className="tech-label text-muted-foreground">파라미터 (JSON)</label>
                 <Textarea 
                   value={params} 
                   onChange={(e) => setParams(e.target.value)}
@@ -1094,7 +1094,7 @@ function StepCard({
         )}
 
         {isFailed && step.error && (
-          <div className="px-4 py-3 bg-destructive/10 text-destructive text-sm font-mono border-b border-border/50">
+          <div className="px-4 py-3 bg-destructive/10 text-destructive text-sm font-mono border-b border-border/50 overflow-x-auto">
             Error: {step.error}
           </div>
         )}

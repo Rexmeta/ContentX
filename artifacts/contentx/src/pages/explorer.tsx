@@ -18,7 +18,7 @@ import { StableGraph, GraphLegend } from "@/components/stable-graph";
 import { computePopulationLayout, computeLineageLayout, computeWorldLayout, computeCharacterLayout, computeSimulationLayout } from "@/lib/graph-layout";
 import { useState, useMemo, useEffect } from "react";
 import { formatDisplayName } from "@/lib/display-name";
-import { Network, Database, Users, UserCircle, PlayCircle, GitMerge } from "lucide-react";
+import { Network, Database, Users, UserCircle, PlayCircle, GitMerge, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 type Perspective = "world" | "population" | "character" | "simulation" | "lineage";
 
@@ -45,6 +45,9 @@ export default function Explorer() {
   const [perspective, setPerspective] = useState<Perspective>(initialPerspective);
   const [targetId, setTargetId] = useState<string>(initialId);
   const [selectionId, setSelectionId] = useState<string | null>(null);
+  // On mobile the inspector stacks below the graph and can be toggled so both
+  // the graph and the panel remain usable on a narrow (390px) viewport.
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
   // List queries for selectors
   const { data: allContents } = useListContent({ query: { queryKey: getListContentQueryKey() } });
@@ -160,6 +163,11 @@ export default function Explorer() {
   const selectedNode = nodes.find(n => n.id === selectionId);
   const selectedEdge = edges.find(e => e.id === selectionId);
 
+  // Auto-reveal the inspector (mobile stacked panel) whenever something is selected.
+  useEffect(() => {
+    if (selectionId) setIsInspectorOpen(true);
+  }, [selectionId]);
+
   // Dynamic legends
   const legendConfig = useMemo(() => {
     if (perspective === 'world') {
@@ -233,52 +241,62 @@ export default function Explorer() {
       <div className="h-full flex flex-col overflow-hidden">
         
         {/* Perspectives Toggle & Selector */}
-        <div className="h-14 border-b border-border bg-muted/20 flex items-center justify-between px-4 shrink-0">
-          <div className="flex gap-2">
-            <button onClick={() => { setPerspective("world"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-widest border transition-colors ${perspective === 'world' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
+        <div className="border-b border-border bg-muted/20 flex flex-wrap items-center justify-between gap-3 p-3 md:px-4 shrink-0">
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => { setPerspective("world"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 min-h-[36px] text-xs font-mono font-bold uppercase tracking-widest rounded-full border transition-colors ${perspective === 'world' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
               <Database className="h-3.5 w-3.5" /> World
             </button>
-            <button onClick={() => { setPerspective("population"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-widest border transition-colors ${perspective === 'population' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
+            <button onClick={() => { setPerspective("population"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 min-h-[36px] text-xs font-mono font-bold uppercase tracking-widest rounded-full border transition-colors ${perspective === 'population' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
               <Users className="h-3.5 w-3.5" /> Population
             </button>
-            <button onClick={() => { setPerspective("character"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-widest border transition-colors ${perspective === 'character' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
+            <button onClick={() => { setPerspective("character"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 min-h-[36px] text-xs font-mono font-bold uppercase tracking-widest rounded-full border transition-colors ${perspective === 'character' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
               <UserCircle className="h-3.5 w-3.5" /> Character
             </button>
-            <button onClick={() => { setPerspective("simulation"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-widest border transition-colors ${perspective === 'simulation' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
+            <button onClick={() => { setPerspective("simulation"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 min-h-[36px] text-xs font-mono font-bold uppercase tracking-widest rounded-full border transition-colors ${perspective === 'simulation' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
               <PlayCircle className="h-3.5 w-3.5" /> Simulation
             </button>
-            <button onClick={() => { setPerspective("lineage"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono font-bold uppercase tracking-widest border transition-colors ${perspective === 'lineage' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
+            <button onClick={() => { setPerspective("lineage"); setTargetId(""); setSelectionId(null); }} className={`flex items-center gap-1.5 px-4 py-1.5 min-h-[36px] text-xs font-mono font-bold uppercase tracking-widest rounded-full border transition-colors ${perspective === 'lineage' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-muted'}`}>
               <GitMerge className="h-3.5 w-3.5" /> Lineage
             </button>
           </div>
 
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end items-center gap-2">
             {perspective === 'world' && allContents && (
-              <select className="bg-background border border-border px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
+              <select className="max-w-[60vw] md:max-w-none bg-background border border-border rounded-full px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
                 {allContents.map(c => <option key={c.id} value={c.id}>{c.title} (v{c.version})</option>)}
               </select>
             )}
             {perspective === 'population' && allPopulations && (
-              <select className="bg-background border border-border px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
+              <select className="max-w-[60vw] md:max-w-none bg-background border border-border rounded-full px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
                 {allPopulations.map(p => <option key={p.id} value={p.id} title={p.name}>{formatDisplayName(p.name)} (v{p.version})</option>)}
               </select>
             )}
             {(perspective === 'character' || perspective === 'lineage') && allCharacters && (
-              <select className="bg-background border border-border px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
+              <select className="max-w-[60vw] md:max-w-none bg-background border border-border rounded-full px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
                 {allCharacters.map(c => <option key={c.id} value={c.id} title={c.name}>{formatDisplayName(c.name)}</option>)}
               </select>
             )}
             {perspective === 'simulation' && allSimulations && (
-              <select className="bg-background border border-border px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
+              <select className="max-w-[60vw] md:max-w-none bg-background border border-border rounded-full px-3 py-1.5 text-sm font-mono focus:outline-none" value={activeTargetId} onChange={e => setTargetId(e.target.value)}>
                 {allSimulations.map(s => <option key={s.id} value={s.id} title={s.name}>{formatDisplayName(s.name)}</option>)}
               </select>
             )}
+            {/* Mobile-only inspector toggle */}
+            <button
+              onClick={() => setIsInspectorOpen(o => !o)}
+              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-mono font-bold uppercase tracking-widest rounded-full border border-border bg-card hover:bg-muted transition-colors shrink-0"
+              aria-label="Toggle inspector"
+              data-testid="button-toggle-inspector"
+            >
+              {isInspectorOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
+              Inspector
+            </button>
           </div>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          {/* Main Graph Area */}
-          <div className="flex-1 relative border-r border-border bg-background">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          {/* Main Graph Area — on mobile, hidden while the inspector is open (mutually exclusive panes) */}
+          <div data-testid="pane-graph" className={`${isInspectorOpen ? 'hidden' : 'flex'} md:flex flex-col flex-1 relative border-b md:border-b-0 md:border-r border-border bg-background`}>
             <StableGraph 
               nodes={nodes}
               edges={edges}
@@ -293,23 +311,31 @@ export default function Explorer() {
             />
           </div>
 
-          {/* Right Inspector */}
-          <div className="w-[400px] bg-card flex flex-col shrink-0">
-            <div className="h-14 border-b border-border bg-muted/30 flex items-center px-4 shrink-0">
-              <h2 className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground">Inspector</h2>
+          {/* Right Inspector — full-width stacked panel on mobile (toggleable), fixed side panel on desktop */}
+          <div data-testid="pane-inspector" className={`${isInspectorOpen ? 'flex' : 'hidden'} md:flex flex-1 md:flex-none w-full md:w-[400px] min-h-0 bg-card flex-col md:shrink-0`}>
+            <div className="h-14 border-b border-border bg-muted/30 flex items-center justify-between px-4 shrink-0">
+              <h2 className="tech-label text-muted-foreground">Inspector</h2>
+              <button
+                onClick={() => setIsInspectorOpen(false)}
+                className="md:hidden text-muted-foreground hover:text-foreground p-1"
+                aria-label="Close inspector"
+                data-testid="button-close-inspector"
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </button>
             </div>
-            <div className="flex-1 overflow-auto p-6 custom-scrollbar">
+            <div className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
               {selectedNode ? (
                 <div className="space-y-4 animate-in fade-in">
-                  <div className="border border-border p-4 bg-muted/10">
-                    <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest mb-1">Selected Node</div>
+                  <div className="border border-border rounded-xl p-4 bg-muted/10">
+                    <div className="tech-label text-muted-foreground mb-1">Selected Node</div>
                     <div className="text-lg font-bold uppercase tracking-wider">{selectedNode.kind}</div>
                     {KIND_MEANINGS[selectedNode.kind] && (
                       <div className="text-xs text-muted-foreground mt-1" data-testid="text-kind-meaning">
                         {KIND_MEANINGS[selectedNode.kind]}
                       </div>
                     )}
-                    <div className="text-2xl font-serif mt-2" title={selectedNode.fullLabel || selectedNode.label}>{selectedNode.label}</div>
+                    <div className="headline-lg mt-2" title={selectedNode.fullLabel || selectedNode.label}>{selectedNode.label}</div>
                     {selectedNode.fullLabel && (
                       <div className="text-[10px] font-mono text-muted-foreground break-all mt-2">
                         Full name: {selectedNode.fullLabel}
@@ -341,7 +367,7 @@ export default function Explorer() {
                           }
                           if (changes.length === 0) return null;
                           return (
-                            <div key={category} className="text-xs bg-muted/20 p-2 border border-border">
+                            <div key={category} className="text-xs bg-muted/20 p-2 rounded-lg border border-border">
                               <div className="font-bold mb-1 capitalize">{category}</div>
                               {changes.map(c => (
                                 <div key={c.key} className="flex items-center gap-2 font-mono text-[10px]">
@@ -390,8 +416,8 @@ export default function Explorer() {
                 </div>
               ) : selectedEdge ? (
                 <div className="space-y-4 animate-in fade-in">
-                  <div className="border border-border p-4 bg-muted/10">
-                    <div className="text-[10px] font-mono uppercase text-muted-foreground tracking-widest mb-1">Relationship</div>
+                  <div className="border border-border rounded-xl p-4 bg-muted/10">
+                    <div className="tech-label text-muted-foreground mb-1">Relationship</div>
                     <div className="text-lg font-bold uppercase tracking-wider">{selectedEdge.type}</div>
                     <div className="text-xs text-muted-foreground mt-1" data-testid="text-relationship-meaning">
                       {KIND_MEANINGS.relationship}

@@ -38,13 +38,13 @@ export default function SimulationDetail() {
 
   const contextHeader = (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-serif" title={sim.name}>{formatDisplayName(sim.name)}</h1>
-        <Link href={`/explorer?perspective=simulation&id=${id}`} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-1.5 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="headline-lg" title={sim.name}>{formatDisplayName(sim.name)}</h1>
+        <Link href={`/explorer?perspective=simulation&id=${id}`} className="flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-bold font-mono tracking-widest hover:bg-primary/90 transition-colors">
           <Network className="h-4 w-4" /> View Runtime Graph
         </Link>
       </div>
-      <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono text-muted-foreground uppercase tracking-widest">
         <span>Topic: {sim.config.topic}</span>
         <span>Seed: {sim.seed}</span>
         <span>{sim.turnsExecuted} Turns</span>
@@ -59,25 +59,25 @@ export default function SimulationDetail() {
       breadcrumbs={[{ label: "ContentX" }, { label: "Simulations", href: "/simulations" }, { label: formatDisplayName(sim.name) }]}
       contextHeader={contextHeader}
     >
-      <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="p-4 md:p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Col: Setup & Outcome */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="border border-border bg-card p-5">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest border-b border-border pb-2 mb-4 text-muted-foreground">Participants</h3>
+          <div className="border border-border rounded-xl bg-card p-5">
+            <h3 className="tech-label border-b border-border pb-2 mb-4 text-muted-foreground">Participants</h3>
             <div className="space-y-3">
               {sim.participants.map(p => (
-                <div key={p.agentId} className="bg-muted/20 border border-border p-3">
+                <div key={p.agentId} className="bg-muted/20 border border-border rounded-lg p-3">
                   <div className="font-bold text-sm" title={p.name}>{formatDisplayName(p.name)}</div>
-                  <div className="text-[10px] font-mono text-secondary uppercase mt-1">{p.role}</div>
+                  <div className="tech-label text-primary mt-1">{p.role}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {sim.outcome && (
-            <div className="border border-border bg-card p-5">
-              <h3 className="text-xs font-mono font-bold uppercase tracking-widest border-b border-border pb-2 mb-4 text-muted-foreground">Simulation Outcome</h3>
+            <div className="border border-border rounded-xl bg-card p-5">
+              <h3 className="tech-label border-b border-border pb-2 mb-4 text-muted-foreground">Simulation Outcome</h3>
               <div className="space-y-3 text-sm">
                 <p className="leading-relaxed">{sim.outcome.summary}</p>
                 <div className="flex justify-between items-center py-2 border-y border-border">
@@ -95,12 +95,12 @@ export default function SimulationDetail() {
 
         {/* Right Col: Event Trace */}
         <div className="lg:col-span-8">
-          <div className="border border-border bg-card h-full max-h-[800px] flex flex-col">
+          <div className="border border-border rounded-xl bg-card h-full max-h-[800px] flex flex-col overflow-hidden">
             <div className="p-4 border-b border-border bg-muted/30">
-              <h3 className="text-xs font-mono font-bold uppercase tracking-widest">Behavior Trace</h3>
+              <h3 className="tech-label">Behavior Trace</h3>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar">
               {events?.map((ev) => {
                 const actor = sim.participants.find(p => p.agentId === ev.actorId);
                 
@@ -113,15 +113,15 @@ export default function SimulationDetail() {
                     <div className="w-12 pt-1 font-mono text-[10px] text-muted-foreground text-right shrink-0">
                       T{ev.turn}.{ev.sequence}
                     </div>
-                    <div className="flex-1 border border-border bg-background p-4 relative group">
+                    <div className="flex-1 border border-border rounded-lg bg-background p-4 relative group">
                       <div className="flex items-center gap-2 mb-2">
                         {icon}
                         <span className="font-bold text-sm" title={actor?.name}>{actor ? formatDisplayName(actor.name) : "System"}</span>
-                        <span className="text-[9px] font-mono bg-muted px-1 border uppercase text-muted-foreground">{ev.type}</span>
+                        <span className="text-[9px] font-mono bg-muted rounded-full px-2 border border-border uppercase text-muted-foreground">{ev.type}</span>
                       </div>
                       
                       {ev.type === 'utterance' && Boolean(ev.payload.text) && (
-                        <div className="text-sm font-serif italic border-l-2 border-secondary pl-3 text-muted-foreground">
+                        <div className="text-sm font-serif italic border-l-2 border-primary pl-3 text-muted-foreground">
                           "{String(ev.payload.text)}"
                         </div>
                       )}
@@ -133,14 +133,14 @@ export default function SimulationDetail() {
                       )}
                       
                       {ev.type === 'decision' && (
-                        <div className="bg-primary/5 border border-primary/20 p-2 text-xs font-mono">
+                        <div className="bg-primary/5 border border-primary/20 rounded-lg p-2 text-xs font-mono overflow-x-auto">
                           <span className="text-primary font-bold">DECISION:</span> {JSON.stringify(ev.payload)}
                         </div>
                       )}
                       
                       {ev.stateBefore && ev.stateAfter && (
                         <div className="mt-4 pt-3 border-t border-border grid gap-2">
-                          <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-primary flex items-center gap-1">
+                          <div className="tech-label text-primary flex items-center gap-1">
                             <Activity className="h-3 w-3" /> State Changes ({actor?.name || "Agent"})
                           </div>
                           {Object.entries(ev.stateBefore).map(([category, keys]) => {
@@ -153,7 +153,7 @@ export default function SimulationDetail() {
                             }
                             if (changes.length === 0) return null;
                             return (
-                              <div key={category} className="text-xs bg-muted/20 p-2 border border-border">
+                              <div key={category} className="text-xs bg-muted/20 rounded-lg p-2 border border-border">
                                 <div className="font-bold mb-1 capitalize text-[10px]">{category}</div>
                                 {changes.map(c => (
                                   <div key={c.key} className="flex items-center gap-2 font-mono text-[10px]">

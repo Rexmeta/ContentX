@@ -12,9 +12,9 @@ export default function SimulationsList() {
   return (
     <Layout 
       breadcrumbs={[{ label: "ContentX" }, { label: "Simulations" }]}
-      title={<div className="font-bold text-lg">Simulations</div>}
+      title={<div className="font-serif text-xl">Simulations</div>}
     >
-      <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
         <p className="text-muted-foreground text-sm">
           A Simulation is an execution environment where runtime Agents (derived from CharacterSnapshots) 
           interact according to policies, taking turns and producing a Behavior Trace.
@@ -30,17 +30,17 @@ export default function SimulationsList() {
               <Link 
                 key={sim.id} 
                 href={`/simulations/${sim.id}`}
-                className="block border border-border bg-card hover:border-primary transition-colors cursor-pointer flex flex-col group"
+                className="block border border-border bg-card rounded-xl overflow-hidden hover:border-primary transition-colors cursor-pointer flex flex-col group"
               >
                 <div className="p-4 border-b border-border">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start gap-2 mb-2">
                     <div className="font-bold text-lg group-hover:text-primary transition-colors" title={sim.name}>{formatDisplayName(sim.name)}</div>
                     {sim.status === 'completed' ? (
-                      <span className="flex items-center gap-1 bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest">
+                      <span className="flex items-center gap-1 bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest shrink-0">
                         <CheckCircle className="h-3 w-3" /> Completed
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest">
+                      <span className="flex items-center gap-1 bg-destructive/10 text-destructive border border-destructive/20 rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest shrink-0">
                         <XCircle className="h-3 w-3" /> Failed
                       </span>
                     )}

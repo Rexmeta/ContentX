@@ -34,13 +34,13 @@ export default function EvaluationDetail() {
 
   const contextHeader = (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold font-serif uppercase tracking-wider">{evaluation.kind} Evaluation</h1>
-        <div className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 font-mono font-bold">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="headline-lg">{evaluation.kind} Evaluation</h1>
+        <div className="bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 font-mono font-bold">
           {evaluation.provenance.evaluator} v{evaluation.provenance.evaluatorVersion}
         </div>
       </div>
-      <div className="flex gap-4 text-xs font-mono text-muted-foreground uppercase tracking-widest">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono text-muted-foreground uppercase tracking-widest">
         <span>Simulation: {evaluation.simulationId}</span>
         <span>Events Analysed: {evaluation.provenance.traceEventCount}</span>
         {/* Origin label — derived from a real evaluation record. */}
@@ -54,11 +54,11 @@ export default function EvaluationDetail() {
       breadcrumbs={[{ label: "ContentX" }, { label: "Evaluations", href: "/evaluations" }, { label: evaluation.id }]}
       contextHeader={contextHeader}
     >
-      <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
         
         {/* Subject Context */}
-        <div className="border border-border bg-card p-4 flex items-center gap-3">
-          <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Subject:</span>
+        <div className="border border-border rounded-xl bg-card p-4 flex items-center gap-3">
+          <span className="tech-label text-muted-foreground">Subject:</span>
           {evaluation.subjectType === 'simulation' ? (
             <Link href={`/simulations/${evaluation.subjectId}`} className="text-sm font-bold flex items-center gap-1.5 hover:text-primary transition-colors">
               <PlayCircle className="h-4 w-4" /> {evaluation.subjectId}
@@ -73,9 +73,9 @@ export default function EvaluationDetail() {
         {/* Scores Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(evaluation.scores).map(([dimension, score]) => (
-            <div key={dimension} className="border border-border bg-card p-4 text-center">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3 truncate">{dimension}</div>
-              <div className={`text-4xl font-mono font-bold ${(score as number) > 0.7 ? 'text-primary' : 'text-orange-500'}`}>
+            <div key={dimension} className="border border-border rounded-xl bg-card p-4 text-center">
+              <div className="tech-label text-muted-foreground mb-3 truncate">{dimension}</div>
+              <div className={`text-4xl font-mono font-bold ${(score as number) > 0.7 ? 'text-primary' : 'text-amber-500'}`}>
                 {(score as number).toFixed(2)}
               </div>
             </div>
@@ -86,12 +86,12 @@ export default function EvaluationDetail() {
         <LineageSection evaluationId={id} />
 
         {/* Findings Log */}
-        <div className="border border-border bg-card">
+        <div className="border border-border rounded-xl bg-card overflow-hidden">
           <div className="p-4 border-b border-border bg-muted/30">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest">Evaluation Findings</h3>
+            <h3 className="tech-label">Evaluation Findings</h3>
           </div>
-          <div className="p-6">
-            <pre className="text-xs font-mono bg-background border border-border p-4 overflow-auto max-h-[400px] text-muted-foreground leading-relaxed custom-scrollbar">
+          <div className="p-4 md:p-6">
+            <pre className="text-xs font-mono bg-background border border-border rounded-lg p-4 overflow-auto max-h-[400px] text-muted-foreground leading-relaxed custom-scrollbar">
               {JSON.stringify(evaluation.findings, null, 2)}
             </pre>
           </div>
@@ -114,8 +114,8 @@ interface LineageHopProps {
 
 function LineageHop({ label, value, sub, href, testId }: LineageHopProps) {
   const inner = (
-    <div className="border border-border bg-card px-3 py-2 min-w-[140px] hover:border-primary transition-colors">
-      <div className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">{label}</div>
+    <div className="border border-border rounded-lg bg-card px-3 py-2 min-w-[140px] hover:border-primary transition-colors">
+      <div className="tech-label text-[9px] text-muted-foreground">{label}</div>
       <div className="text-sm font-semibold truncate max-w-[200px]" title={value}>{value}</div>
       {sub && <div className="text-[10px] font-mono text-primary mt-0.5">{sub}</div>}
     </div>
@@ -198,14 +198,14 @@ function AgentLineageChain({ agent, simulationId, simulationSeed, evaluationId, 
   const visibleHops = hops.filter((h): h is LineageHopProps => h !== null);
 
   return (
-    <div className="border border-border bg-muted/10 p-4 space-y-3" data-testid={`lineage-agent-${index}`}>
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-mono font-bold uppercase tracking-widest text-muted-foreground">
+    <div className="border border-border rounded-xl bg-muted/10 p-4 space-y-3" data-testid={`lineage-agent-${index}`}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="tech-label text-muted-foreground truncate">
           Agent {agent.agentId}
         </div>
         {reproducible && (
           <span
-            className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-widest text-green-600 dark:text-green-500 border border-green-600/40 dark:border-green-500/40 px-2 py-0.5"
+            className="flex items-center gap-1 tech-label text-[10px] text-green-600 dark:text-green-500 border border-green-600/40 dark:border-green-500/40 rounded-full px-2 py-0.5 shrink-0"
             data-testid={`badge-reproducible-${index}`}
           >
             <CheckCircle2 className="h-3 w-3" /> Reproducible
@@ -232,21 +232,21 @@ function LineageSection({ evaluationId }: { evaluationId: string }) {
   });
 
   return (
-    <div className="border border-border bg-card" data-testid="section-lineage">
-      <div className="p-4 border-b border-border bg-muted/30 flex items-center gap-2">
+    <div className="border border-border rounded-xl bg-card overflow-hidden" data-testid="section-lineage">
+      <div className="p-4 border-b border-border bg-muted/30 flex flex-wrap items-center gap-2">
         <GitMerge className="h-4 w-4 text-primary" />
-        <h3 className="text-xs font-mono font-bold uppercase tracking-widest">Lineage</h3>
+        <h3 className="tech-label">Lineage</h3>
         <span className="text-[10px] text-muted-foreground font-mono ml-2">
           Real persisted provenance — source to evaluation
         </span>
       </div>
-      <div className="p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-4">
         {isLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <Loader2 className="h-4 w-4 animate-spin" /> Resolving lineage...
           </div>
         ) : error ? (
-          <div className="border border-destructive/50 bg-destructive/5 p-4 text-sm" data-testid="text-lineage-error">
+          <div className="border border-destructive/50 bg-destructive/5 rounded-lg p-4 text-sm" data-testid="text-lineage-error">
             <div className="font-bold text-destructive mb-1">
               {(error as { status?: number }).status === 409 ? "Lineage broken" : "Lineage unavailable"}
             </div>

@@ -14,9 +14,9 @@ export default function CharactersList() {
   return (
     <Layout 
       breadcrumbs={[{ label: "ContentX" }, { label: "Characters" }]}
-      title={<div className="font-bold text-lg">Characters</div>}
+      title={<div className="font-serif text-xl">Characters</div>}
     >
-      <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
         <p className="text-muted-foreground text-sm">
           A Character represents a persistent identity sampled from a Population. 
           When a simulation runs, it uses an immutable CharacterSnapshot to instantiate a runtime Agent.
@@ -32,13 +32,13 @@ export default function CharactersList() {
               <Link 
                 key={char.id} 
                 href={`/characters/${char.id}`}
-                className="block border border-border bg-card hover:border-primary transition-colors cursor-pointer group flex flex-col"
+                className="block border border-border bg-card rounded-xl overflow-hidden hover:border-primary transition-colors cursor-pointer group flex flex-col"
               >
                 <div className="p-4 border-b border-border flex-1">
                   <div className="font-bold text-lg group-hover:text-primary transition-colors mb-2" title={char.name}>{formatDisplayName(char.name)}</div>
                   
                   {char.provenance?.populationId && (
-                    <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                    <div className="tech-label text-muted-foreground flex items-center gap-1.5">
                       <UserCircle className="h-3 w-3" />
                       <span title={popMap.get(char.provenance.populationId)}>POP: {formatDisplayName(popMap.get(char.provenance.populationId)) || "Unknown"}</span>
                     </div>
