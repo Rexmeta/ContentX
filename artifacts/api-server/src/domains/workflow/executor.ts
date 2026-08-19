@@ -533,6 +533,46 @@ function overallStatus(steps: WorkflowStep[]): Workflow["status"] {
 }
 
 /**
+ * A step is persisted as "running" while its action executes in the request
+ * handler. If the server restarts (or the process dies) mid-action, nothing
+ * ever flips it back, leaving the workflow stuck in "running" forever. Reads
+ * repair this lazily: a workflow still marked running whose row has not been
+ * touched for STALE_RUNNING_MS is interrupted — its running steps are marked
+ * failed (with an explanatory error so the user can retry) and the overall
+ * status is recomputed.
+ */
+export const STALE_RUNNING_MS = 10 * 60 * 1000;
+/** How often a live action touches its workflow row (see runStep heartbeat). */
+export const HEARTBEAT_MS = 60 * 1000;
+
+export async function recoverStaleRun(row: {
+  id: string;
+  updatedAt: Date;
+  status: string;
+  steps: unknown;
+}): Promise<boolean> {
+  if (row.status !== "running") return false;
+  if (Date.now() - row.updatedAt.getTime() < STALE_RUNNING_MS) return false;
+  const steps = row.steps as WorkflowStep[];
+  const runningSteps = steps.filter((s) => s.status === "running");
+  if (runningSteps.length === 0) return false;
+  for (const step of runningSteps) {
+    step.status = "failed";
+    step.error =
+      "실행이 중단되었습니다(서버가 재시작되었거나 요청이 끊겼어요). 다시 실행해 주세요.";
+  }
+  refreshReadiness(steps);
+  // Conditional on the observed updatedAt: a live action heartbeats the row
+  // every HEARTBEAT_MS, and completion/failure also touch it, so this write
+  // only lands when the run really is dead. A lost race is a no-op.
+  const updated = await repo.updateWorkflowIfUntouched(row.id, row.updatedAt, {
+    steps,
+    status: overallStatus(steps),
+  });
+  return updated !== null;
+}
+
+/**
  * Execute one step. The workflow row is re-read and re-written around the
  * action; a failed action records status=failed + error on the step instead
  * of leaving the workflow in a phantom running state.
@@ -579,6 +619,15 @@ export async function runStep(input: {
     status: "running",
   });
 
+  // Heartbeat: touch the row while the action runs so stale-run recovery
+  // (STALE_RUNNING_MS since last touch) never mistakes a legitimately slow
+  // action for a dead one. updatedAt refreshes automatically on update.
+  const heartbeat = setInterval(() => {
+    void repo.updateWorkflow(workflow.id, { status: "running" }).catch(() => {
+      /* best-effort; next beat or completion will touch the row */
+    });
+  }, HEARTBEAT_MS);
+
   let failed = false;
   try {
     const outcome = await action({ workflow, step, params });
@@ -591,6 +640,7 @@ export async function runStep(input: {
       workflow.artifacts = { ...workflow.artifacts, ...outcome.artifacts };
     }
   } catch (err) {
+    clearInterval(heartbeat);
     failed = true;
     step.status = "failed";
     step.error = err instanceof Error ? err.message : String(err);
@@ -601,6 +651,7 @@ export async function runStep(input: {
     });
     throw err;
   }
+  clearInterval(heartbeat);
 
   refreshReadiness(workflow.steps);
   const updated = await repo.updateWorkflow(workflow.id, {

@@ -13,7 +13,7 @@ import {
 } from "@workspace/api-zod";
 import * as repo from "../domains/workflow/repository";
 import { planWorkflow, IntentInterpretationError } from "../domains/workflow/planner";
-import { runStep } from "../domains/workflow/executor";
+import { runStep, recoverStaleRun } from "../domains/workflow/executor";
 import {
   InvalidWorkflowError,
   StepDependencyError,
@@ -33,7 +33,10 @@ function pathParam(value: string | string[] | undefined): string {
 }
 
 router.get("/v1/workflows", async (_req, res): Promise<void> => {
-  const rows = await repo.listWorkflows();
+  let rows = await repo.listWorkflows();
+  // Repair workflows stuck in "running" after a mid-execution interruption.
+  const recovered = await Promise.all(rows.map((r) => recoverStaleRun(r)));
+  if (recovered.some(Boolean)) rows = await repo.listWorkflows();
   res.json(ListWorkflowsResponse.parse(rows.map(repo.toWorkflow)));
 });
 
@@ -90,10 +93,14 @@ router.post("/v1/workflows/plan", async (req, res): Promise<void> => {
 });
 
 router.get("/v1/workflows/:id", async (req, res): Promise<void> => {
-  const row = await repo.getWorkflow(pathParam(req.params.id));
+  let row = await repo.getWorkflow(pathParam(req.params.id));
   if (!row) {
     res.status(404).json({ error: "Workflow not found" });
     return;
+  }
+  // Repair a workflow stuck in "running" after a mid-execution interruption.
+  if (await recoverStaleRun(row)) {
+    row = (await repo.getWorkflow(row.id))!;
   }
   res.json(GetWorkflowResponse.parse(repo.toWorkflow(row)));
 });

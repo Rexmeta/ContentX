@@ -38,23 +38,33 @@ export default function WorkflowsList() {
     });
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
+  // A workflow whose stored status is "running" is only ACTIVELY executing
+  // when one of its steps is currently running; otherwise it is simply
+  // in progress and waiting for the user to continue. Showing a spinner for
+  // the latter makes an idle workflow look stuck.
+  const isActivelyExecuting = (workflow: { status: string; steps: { status: string }[] }) =>
+    workflow.status === 'running' && workflow.steps.some(s => s.status === 'running');
+
+  const getStatusIcon = (workflow: { status: string; steps: { status: string }[] }) => {
+    switch (workflow.status) {
       case 'complete': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
       case 'failed': return <AlertCircle className="h-4 w-4 text-destructive" />;
-      case 'running': return <Loader2 className="h-4 w-4 text-primary animate-spin" />;
+      case 'running':
+        return isActivelyExecuting(workflow)
+          ? <Loader2 className="h-4 w-4 text-primary animate-spin" />
+          : <Clock className="h-4 w-4 text-primary" />;
       case 'draft': return <Clock className="h-4 w-4 text-muted-foreground" />;
       default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
+  const getStatusText = (workflow: { status: string; steps: { status: string }[] }) => {
+    switch (workflow.status) {
       case 'complete': return "완료됨";
       case 'failed': return "실패";
-      case 'running': return "진행 중";
+      case 'running': return isActivelyExecuting(workflow) ? "실행 중" : "이어서 진행";
       case 'draft': return "대기 중";
-      default: return status;
+      default: return workflow.status;
     }
   };
 
@@ -122,8 +132,8 @@ export default function WorkflowsList() {
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {getStatusIcon(workflow.status)}
-                        <span className="text-sm">{getStatusText(workflow.status)}</span>
+                        {getStatusIcon(workflow)}
+                        <span className="text-sm">{getStatusText(workflow)}</span>
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{workflow.title}</TableCell>

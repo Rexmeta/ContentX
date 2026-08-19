@@ -1,5 +1,5 @@
 import { db, workflowsTable, type WorkflowRow } from "@workspace/db";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type {
   OutputIntent,
   Workflow,
@@ -70,6 +70,30 @@ export async function updateWorkflow(
     .update(workflowsTable)
     .set(patch)
     .where(eq(workflowsTable.id, id))
+    .returning();
+  return row ?? null;
+}
+
+/**
+ * Conditional update used by stale-run recovery: only applies the patch when
+ * the row's updatedAt still equals the value the caller observed. If a
+ * concurrently completing action (or another reader's recovery) has touched
+ * the row in the meantime, no write happens and null is returned.
+ */
+export async function updateWorkflowIfUntouched(
+  id: string,
+  observedUpdatedAt: Date,
+  patch: Partial<{ steps: WorkflowStep[]; status: WorkflowStatus }>,
+): Promise<WorkflowRow | null> {
+  const [row] = await db
+    .update(workflowsTable)
+    .set(patch)
+    .where(
+      and(
+        eq(workflowsTable.id, id),
+        eq(workflowsTable.updatedAt, observedUpdatedAt),
+      ),
+    )
     .returning();
   return row ?? null;
 }
