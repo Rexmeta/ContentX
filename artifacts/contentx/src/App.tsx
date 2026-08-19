@@ -41,7 +41,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/create" component={Create} />
+      <Route path="/create" component={Home} />
       <Route path="/workflows" component={WorkflowsList} />
       <Route path="/workflows/:id" component={WorkflowDetail} />
       <Route path="/examples" component={Examples} />

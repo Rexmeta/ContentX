@@ -1,9 +1,9 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
-  Terminal, Globe, Users, UserCircle, PlayCircle, BarChart, Network, 
-  ChevronRight, Box, LayoutGrid, PlusSquare, ListTodo, Settings2,
-  ChevronDown, Lightbulb
+  Terminal, Users, UserCircle, PlayCircle, BarChart, Network, 
+  ChevronRight, Box, ListTodo, Settings2,
+  ChevronDown, Lightbulb, PlusCircle, Library
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,14 +22,13 @@ interface LayoutProps {
 }
 
 const primaryItems = [
-  { href: "/", label: "홈", icon: LayoutGrid },
-  { href: "/create", label: "만들기", icon: PlusSquare },
+  { href: "/", label: "만들기", icon: PlusCircle },
   { href: "/workflows", label: "내 작업", icon: ListTodo },
+  { href: "/world", label: "라이브러리", icon: Library },
   { href: "/examples", label: "예시", icon: Lightbulb },
 ];
 
 const advancedItems = [
-  { href: "/world", label: "이야기 세계", icon: Globe },
   { href: "/populations", label: "가상 인구", icon: Users },
   { href: "/characters", label: "캐릭터", icon: UserCircle },
   { href: "/agents", label: "에이전트", icon: Terminal },

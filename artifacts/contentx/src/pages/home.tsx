@@ -13,7 +13,7 @@ export default function Home() {
   const activeWorkflows = workflows?.filter(w => w.status === 'running' || w.status === 'draft').slice(0, 3) || [];
 
   return (
-    <Layout breadcrumbs={[{ label: "홈", href: "/" }]}>
+    <Layout breadcrumbs={[{ label: "만들기" }]}>
       <div className="min-h-full flex flex-col">
         <IntentSelector isHome />
 
