@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/contentx-workflow-deck/"
+title = "ContentX Workflow"
+description = "A six-slide Korean presentation explaining how ContentX makes AI generation workflows transparent, reviewable, resumable, and safe to intervene in."
+version = "1.0.0"
+id = "artifacts/contentx-workflow-deck"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/contentx-workflow-deck/" ]
+localPort = 20235
+
+[services.development]
+run = "pnpm --filter @workspace/contentx-workflow-deck run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/contentx-workflow-deck", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/contentx-workflow-deck/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20235"
+BASE_PATH = "/contentx-workflow-deck/"
