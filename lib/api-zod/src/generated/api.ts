@@ -3992,3 +3992,215 @@ export const GetDashboardSummaryResponse = zod.object({
 })
 
 
+export const ListJsonFormatsResponseItem = zod.object({
+  "formatId": zod.string(),
+  "version": zod.int(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['draft', 'active', 'superseded']),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown(),
+  "mapping": zod.unknown(),
+  "mappingHash": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListJsonFormatsResponse = zod.array(ListJsonFormatsResponseItem)
+
+
+
+
+
+export const CreateJsonFormatBody = zod.union([zod.unknown(),zod.unknown()]).and(zod.object({
+  "name": zod.string().min(1),
+  "description": zod.string().optional(),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown().optional()
+}))
+
+export const CreateJsonFormatResponse = zod.object({
+  "formatId": zod.string(),
+  "version": zod.int(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['draft', 'active', 'superseded']),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown(),
+  "mapping": zod.unknown(),
+  "mappingHash": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+
+
+
+export const InferJsonFormatBody = zod.union([zod.unknown(),zod.unknown()]).and(zod.object({
+  "name": zod.string().min(1),
+  "description": zod.string().optional(),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown().optional()
+}))
+
+export const InferJsonFormatResponse = zod.object({
+  "jsonSchema": zod.unknown(),
+  "mapping": zod.unknown(),
+  "unresolvedPaths": zod.array(zod.string()),
+  "sourceCatalog": zod.array(zod.string())
+})
+
+
+export const GetJsonFormatVersionParams = zod.object({
+  "formatId": zod.coerce.string(),
+  "version": zod.coerce.number().int()
+})
+
+export const GetJsonFormatVersionResponse = zod.object({
+  "formatId": zod.string(),
+  "version": zod.int(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['draft', 'active', 'superseded']),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown(),
+  "mapping": zod.unknown(),
+  "mappingHash": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const UpdateJsonFormatVersionParams = zod.object({
+  "formatId": zod.coerce.string(),
+  "version": zod.coerce.number().int()
+})
+
+
+
+
+export const UpdateJsonFormatVersionBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "description": zod.string().nullish(),
+  "mapping": zod.unknown().optional()
+})
+
+export const UpdateJsonFormatVersionResponse = zod.object({
+  "formatId": zod.string(),
+  "version": zod.int(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['draft', 'active', 'superseded']),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown(),
+  "mapping": zod.unknown(),
+  "mappingHash": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const CreateJsonFormatVersionParams = zod.object({
+  "formatId": zod.coerce.string()
+})
+
+
+
+
+export const CreateJsonFormatVersionBody = zod.object({
+  "sourceVersion": zod.int().min(1)
+})
+
+export const CreateJsonFormatVersionResponse = zod.object({
+  "formatId": zod.string(),
+  "version": zod.int(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['draft', 'active', 'superseded']),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown(),
+  "mapping": zod.unknown(),
+  "mappingHash": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const ActivateJsonFormatVersionParams = zod.object({
+  "formatId": zod.coerce.string(),
+  "version": zod.coerce.number().int()
+})
+
+export const ActivateJsonFormatVersionResponse = zod.object({
+  "formatId": zod.string(),
+  "version": zod.int(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['draft', 'active', 'superseded']),
+  "example": zod.unknown().optional(),
+  "jsonSchema": zod.unknown(),
+  "mapping": zod.unknown(),
+  "mappingHash": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+
+
+
+export const PreviewJsonExportBody = zod.union([zod.unknown(),zod.unknown()]).and(zod.object({
+  "formatId": zod.string(),
+  "formatVersion": zod.int().optional(),
+  "contentId": zod.string().optional(),
+  "contentVersion": zod.int().min(1).optional(),
+  "simulationId": zod.string().optional()
+}))
+
+export const PreviewJsonExportResponse = zod.object({
+  "payload": zod.unknown(),
+  "validation": zod.object({
+  "valid": zod.boolean(),
+  "issues": zod.array(zod.unknown())
+}),
+  "provenance": zod.object({
+  "formatId": zod.string(),
+  "formatVersion": zod.int(),
+  "mappingHash": zod.string(),
+  "contentId": zod.string().optional(),
+  "contentVersion": zod.int().optional(),
+  "simulationId": zod.string().optional(),
+  "sourceHash": zod.string()
+})
+})
+
+
+
+
+
+export const CreateJsonExportBody = zod.union([zod.unknown(),zod.unknown()]).and(zod.object({
+  "formatId": zod.string(),
+  "formatVersion": zod.int().optional(),
+  "contentId": zod.string().optional(),
+  "contentVersion": zod.int().min(1).optional(),
+  "simulationId": zod.string().optional()
+}))
+
+export const CreateJsonExportResponse = zod.object({
+  "payload": zod.unknown(),
+  "validation": zod.object({
+  "valid": zod.boolean(),
+  "issues": zod.array(zod.unknown())
+}),
+  "provenance": zod.object({
+  "formatId": zod.string(),
+  "formatVersion": zod.int(),
+  "mappingHash": zod.string(),
+  "contentId": zod.string().optional(),
+  "contentVersion": zod.int().optional(),
+  "simulationId": zod.string().optional(),
+  "sourceHash": zod.string()
+})
+})
+
+

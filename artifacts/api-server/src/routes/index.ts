@@ -8,6 +8,7 @@ import populationsRouter from "./populations";
 import agentsRouter from "./agents";
 import simulationsRouter from "./simulations";
 import workflowsRouter from "./workflows";
+import jsonFormatsRouter from "./jsonFormats";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(populationsRouter);
 router.use(agentsRouter);
 router.use(simulationsRouter);
 router.use(workflowsRouter);
+router.use(jsonFormatsRouter);
 
 export default router;

@@ -266,6 +266,22 @@ export async function listVersions(
     .orderBy(asc(contentVersionsTable.version));
 }
 
+export async function getVersion(
+  contentId: string,
+  version: number,
+): Promise<ContentVersionRow | undefined> {
+  const [row] = await db
+    .select()
+    .from(contentVersionsTable)
+    .where(
+      and(
+        eq(contentVersionsTable.contentId, contentId),
+        eq(contentVersionsTable.version, version),
+      ),
+    );
+  return row;
+}
+
 /**
  * Atomically snapshot the current graph as the next version and bump the
  * content's version counter. Uses SELECT ... FOR UPDATE so concurrent

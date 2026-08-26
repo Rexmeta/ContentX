@@ -54,6 +54,13 @@ import type {
   GetPopulationDefinitionParams,
   HealthStatus,
   InteractionEvent,
+  JsonExport,
+  JsonExportInput,
+  JsonFormat,
+  JsonFormatInference,
+  JsonFormatInput,
+  JsonFormatUpdate,
+  JsonFormatVersionInput,
   ListEvaluationsParams,
   MatraixImportInput,
   MatraixImportResult,
@@ -5607,4 +5614,612 @@ export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDash
 
 
 
+
+export const getListJsonFormatsUrl = () => {
+
+
+
+
+  return `/api/v1/json-formats`
+}
+
+export const listJsonFormats = async ( options?: Parameters<typeof customFetch>[1]): Promise<JsonFormat[]> => {
+
+  return customFetch<JsonFormat[]>(getListJsonFormatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListJsonFormatsQueryKey = () => {
+    return [
+    `/api/v1/json-formats`
+    ] as const;
+    }
+
+
+export const getListJsonFormatsQueryOptions = <TData = Awaited<ReturnType<typeof listJsonFormats>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listJsonFormats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListJsonFormatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJsonFormats>>> = ({ signal }) => listJsonFormats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJsonFormats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListJsonFormatsQueryResult = NonNullable<Awaited<ReturnType<typeof listJsonFormats>>>
+export type ListJsonFormatsQueryError = ErrorType<unknown>
+
+
+
+export function useListJsonFormats<TData = Awaited<ReturnType<typeof listJsonFormats>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listJsonFormats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListJsonFormatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateJsonFormatUrl = () => {
+
+
+
+
+  return `/api/v1/json-formats`
+}
+
+export const createJsonFormat = async (jsonFormatInput: JsonFormatInput, options?: Parameters<typeof customFetch>[1]): Promise<JsonFormat> => {
+
+  return customFetch<JsonFormat>(getCreateJsonFormatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(jsonFormatInput)
+  }
+);}
+
+
+
+
+
+export const getCreateJsonFormatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJsonFormat>>, TError,{data: BodyType<JsonFormatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJsonFormat>>, TError,{data: BodyType<JsonFormatInput>}, TContext> => {
+
+const mutationKey = ['createJsonFormat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJsonFormat>>, {data: BodyType<JsonFormatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createJsonFormat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateJsonFormatMutationResult = NonNullable<Awaited<ReturnType<typeof createJsonFormat>>>
+    export type CreateJsonFormatMutationBody = BodyType<JsonFormatInput>
+    export type CreateJsonFormatMutationError = ErrorType<unknown>
+
+    export const useCreateJsonFormat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJsonFormat>>, TError,{data: BodyType<JsonFormatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createJsonFormat>>,
+        TError,
+        {data: BodyType<JsonFormatInput>},
+        TContext
+      > => {
+      return useMutation(getCreateJsonFormatMutationOptions(options));
+    }
+
+export const getInferJsonFormatUrl = () => {
+
+
+
+
+  return `/api/v1/json-formats/infer`
+}
+
+export const inferJsonFormat = async (jsonFormatInput: JsonFormatInput, options?: Parameters<typeof customFetch>[1]): Promise<JsonFormatInference> => {
+
+  return customFetch<JsonFormatInference>(getInferJsonFormatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(jsonFormatInput)
+  }
+);}
+
+
+
+
+
+export const getInferJsonFormatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inferJsonFormat>>, TError,{data: BodyType<JsonFormatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inferJsonFormat>>, TError,{data: BodyType<JsonFormatInput>}, TContext> => {
+
+const mutationKey = ['inferJsonFormat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inferJsonFormat>>, {data: BodyType<JsonFormatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  inferJsonFormat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InferJsonFormatMutationResult = NonNullable<Awaited<ReturnType<typeof inferJsonFormat>>>
+    export type InferJsonFormatMutationBody = BodyType<JsonFormatInput>
+    export type InferJsonFormatMutationError = ErrorType<unknown>
+
+    export const useInferJsonFormat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inferJsonFormat>>, TError,{data: BodyType<JsonFormatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inferJsonFormat>>,
+        TError,
+        {data: BodyType<JsonFormatInput>},
+        TContext
+      > => {
+      return useMutation(getInferJsonFormatMutationOptions(options));
+    }
+
+export const getGetJsonFormatVersionUrl = (formatId: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/json-formats/${formatId}/versions/${version}`
+}
+
+export const getJsonFormatVersion = async (formatId: string,
+    version: number, options?: Parameters<typeof customFetch>[1]): Promise<JsonFormat> => {
+
+  return customFetch<JsonFormat>(getGetJsonFormatVersionUrl(formatId,version),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetJsonFormatVersionQueryKey = (formatId: string,
+    version: number,) => {
+    return [
+    `/api/v1/json-formats/${formatId}/versions/${version}`
+    ] as const;
+    }
+
+
+export const getGetJsonFormatVersionQueryOptions = <TData = Awaited<ReturnType<typeof getJsonFormatVersion>>, TError = ErrorType<unknown>>(formatId: string,
+    version: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getJsonFormatVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJsonFormatVersionQueryKey(formatId,version);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJsonFormatVersion>>> = ({ signal }) => getJsonFormatVersion(formatId,version, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: formatId !== null && formatId !== undefined && version !== null && version !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJsonFormatVersion>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetJsonFormatVersionQueryResult = NonNullable<Awaited<ReturnType<typeof getJsonFormatVersion>>>
+export type GetJsonFormatVersionQueryError = ErrorType<unknown>
+
+
+
+export function useGetJsonFormatVersion<TData = Awaited<ReturnType<typeof getJsonFormatVersion>>, TError = ErrorType<unknown>>(
+ formatId: string,
+    version: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getJsonFormatVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetJsonFormatVersionQueryOptions(formatId,version,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateJsonFormatVersionUrl = (formatId: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/json-formats/${formatId}/versions/${version}`
+}
+
+export const updateJsonFormatVersion = async (formatId: string,
+    version: number,
+    jsonFormatUpdate: JsonFormatUpdate, options?: Parameters<typeof customFetch>[1]): Promise<JsonFormat> => {
+
+  return customFetch<JsonFormat>(getUpdateJsonFormatVersionUrl(formatId,version),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(jsonFormatUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateJsonFormatVersionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJsonFormatVersion>>, TError,{formatId: string;version: number;data: BodyType<JsonFormatUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateJsonFormatVersion>>, TError,{formatId: string;version: number;data: BodyType<JsonFormatUpdate>}, TContext> => {
+
+const mutationKey = ['updateJsonFormatVersion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateJsonFormatVersion>>, {formatId: string;version: number;data: BodyType<JsonFormatUpdate>}> = (props) => {
+          const {formatId,version,data} = props ?? {};
+
+          return  updateJsonFormatVersion(formatId,version,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateJsonFormatVersionMutationResult = NonNullable<Awaited<ReturnType<typeof updateJsonFormatVersion>>>
+    export type UpdateJsonFormatVersionMutationBody = BodyType<JsonFormatUpdate>
+    export type UpdateJsonFormatVersionMutationError = ErrorType<unknown>
+
+    export const useUpdateJsonFormatVersion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJsonFormatVersion>>, TError,{formatId: string;version: number;data: BodyType<JsonFormatUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateJsonFormatVersion>>,
+        TError,
+        {formatId: string;version: number;data: BodyType<JsonFormatUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateJsonFormatVersionMutationOptions(options));
+    }
+
+export const getCreateJsonFormatVersionUrl = (formatId: string,) => {
+
+
+
+
+  return `/api/v1/json-formats/${formatId}/versions`
+}
+
+export const createJsonFormatVersion = async (formatId: string,
+    jsonFormatVersionInput: JsonFormatVersionInput, options?: Parameters<typeof customFetch>[1]): Promise<JsonFormat> => {
+
+  return customFetch<JsonFormat>(getCreateJsonFormatVersionUrl(formatId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(jsonFormatVersionInput)
+  }
+);}
+
+
+
+
+
+export const getCreateJsonFormatVersionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJsonFormatVersion>>, TError,{formatId: string;data: BodyType<JsonFormatVersionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJsonFormatVersion>>, TError,{formatId: string;data: BodyType<JsonFormatVersionInput>}, TContext> => {
+
+const mutationKey = ['createJsonFormatVersion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJsonFormatVersion>>, {formatId: string;data: BodyType<JsonFormatVersionInput>}> = (props) => {
+          const {formatId,data} = props ?? {};
+
+          return  createJsonFormatVersion(formatId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateJsonFormatVersionMutationResult = NonNullable<Awaited<ReturnType<typeof createJsonFormatVersion>>>
+    export type CreateJsonFormatVersionMutationBody = BodyType<JsonFormatVersionInput>
+    export type CreateJsonFormatVersionMutationError = ErrorType<unknown>
+
+    export const useCreateJsonFormatVersion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJsonFormatVersion>>, TError,{formatId: string;data: BodyType<JsonFormatVersionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createJsonFormatVersion>>,
+        TError,
+        {formatId: string;data: BodyType<JsonFormatVersionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateJsonFormatVersionMutationOptions(options));
+    }
+
+export const getActivateJsonFormatVersionUrl = (formatId: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/json-formats/${formatId}/versions/${version}/activate`
+}
+
+export const activateJsonFormatVersion = async (formatId: string,
+    version: number, options?: Parameters<typeof customFetch>[1]): Promise<JsonFormat> => {
+
+  return customFetch<JsonFormat>(getActivateJsonFormatVersionUrl(formatId,version),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getActivateJsonFormatVersionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateJsonFormatVersion>>, TError,{formatId: string;version: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof activateJsonFormatVersion>>, TError,{formatId: string;version: number}, TContext> => {
+
+const mutationKey = ['activateJsonFormatVersion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activateJsonFormatVersion>>, {formatId: string;version: number}> = (props) => {
+          const {formatId,version} = props ?? {};
+
+          return  activateJsonFormatVersion(formatId,version,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivateJsonFormatVersionMutationResult = NonNullable<Awaited<ReturnType<typeof activateJsonFormatVersion>>>
+
+    export type ActivateJsonFormatVersionMutationError = ErrorType<unknown>
+
+    export const useActivateJsonFormatVersion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateJsonFormatVersion>>, TError,{formatId: string;version: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof activateJsonFormatVersion>>,
+        TError,
+        {formatId: string;version: number},
+        TContext
+      > => {
+      return useMutation(getActivateJsonFormatVersionMutationOptions(options));
+    }
+
+export const getPreviewJsonExportUrl = () => {
+
+
+
+
+  return `/api/v1/json-exports/preview`
+}
+
+export const previewJsonExport = async (jsonExportInput: JsonExportInput, options?: Parameters<typeof customFetch>[1]): Promise<JsonExport> => {
+
+  return customFetch<JsonExport>(getPreviewJsonExportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(jsonExportInput)
+  }
+);}
+
+
+
+
+
+export const getPreviewJsonExportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewJsonExport>>, TError,{data: BodyType<JsonExportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewJsonExport>>, TError,{data: BodyType<JsonExportInput>}, TContext> => {
+
+const mutationKey = ['previewJsonExport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewJsonExport>>, {data: BodyType<JsonExportInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewJsonExport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewJsonExportMutationResult = NonNullable<Awaited<ReturnType<typeof previewJsonExport>>>
+    export type PreviewJsonExportMutationBody = BodyType<JsonExportInput>
+    export type PreviewJsonExportMutationError = ErrorType<unknown>
+
+    export const usePreviewJsonExport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewJsonExport>>, TError,{data: BodyType<JsonExportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof previewJsonExport>>,
+        TError,
+        {data: BodyType<JsonExportInput>},
+        TContext
+      > => {
+      return useMutation(getPreviewJsonExportMutationOptions(options));
+    }
+
+export const getCreateJsonExportUrl = () => {
+
+
+
+
+  return `/api/v1/json-exports`
+}
+
+export const createJsonExport = async (jsonExportInput: JsonExportInput, options?: Parameters<typeof customFetch>[1]): Promise<JsonExport> => {
+
+  return customFetch<JsonExport>(getCreateJsonExportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(jsonExportInput)
+  }
+);}
+
+
+
+
+
+export const getCreateJsonExportMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJsonExport>>, TError,{data: BodyType<JsonExportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJsonExport>>, TError,{data: BodyType<JsonExportInput>}, TContext> => {
+
+const mutationKey = ['createJsonExport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJsonExport>>, {data: BodyType<JsonExportInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createJsonExport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateJsonExportMutationResult = NonNullable<Awaited<ReturnType<typeof createJsonExport>>>
+    export type CreateJsonExportMutationBody = BodyType<JsonExportInput>
+    export type CreateJsonExportMutationError = ErrorType<ApiMessage>
+
+    export const useCreateJsonExport = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJsonExport>>, TError,{data: BodyType<JsonExportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createJsonExport>>,
+        TError,
+        {data: BodyType<JsonExportInput>},
+        TContext
+      > => {
+      return useMutation(getCreateJsonExportMutationOptions(options));
+    }
 

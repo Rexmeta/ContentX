@@ -5,6 +5,88 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+export type JsonFormatInput = (unknown & {
+  /** @minLength 1 */
+  name: string;
+  description?: string;
+  example?: unknown;
+  jsonSchema?: unknown;
+});
+
+export interface JsonFormatUpdate {
+  /** @minLength 1 */
+  name?: string;
+  /** @nullable */
+  description?: string | null;
+  mapping?: unknown;
+}
+
+export interface JsonFormatVersionInput {
+  /** @minimum 1 */
+  sourceVersion: number;
+}
+
+export type JsonFormatStatus = typeof JsonFormatStatus[keyof typeof JsonFormatStatus];
+
+
+export const JsonFormatStatus = {
+  draft: 'draft',
+  active: 'active',
+  superseded: 'superseded',
+} as const;
+
+export interface JsonFormat {
+  formatId: string;
+  version: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  status: JsonFormatStatus;
+  example?: unknown;
+  jsonSchema: unknown;
+  mapping: unknown;
+  mappingHash: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JsonFormatInference {
+  jsonSchema: unknown;
+  mapping: unknown;
+  unresolvedPaths: string[];
+  sourceCatalog: string[];
+}
+
+export type JsonExportInput = (unknown & {
+  formatId: string;
+  formatVersion?: number;
+  contentId?: string;
+  /** @minimum 1 */
+  contentVersion?: number;
+  simulationId?: string;
+});
+
+export type JsonExportValidation = {
+  valid: boolean;
+  issues: unknown[];
+};
+
+export type JsonExportProvenance = {
+  formatId: string;
+  formatVersion: number;
+  mappingHash: string;
+  contentId?: string;
+  contentVersion?: number;
+  simulationId?: string;
+  sourceHash: string;
+};
+
+export interface JsonExport {
+  payload: unknown;
+  validation: JsonExportValidation;
+  provenance: JsonExportProvenance;
+}
+
 export interface HealthStatus {
   status: string;
 }

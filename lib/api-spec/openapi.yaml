@@ -1849,8 +1849,137 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
+  /v1/json-formats:
+    get:
+      operationId: listJsonFormats
+      tags: [projection]
+      responses: { "200": { description: Formats, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/JsonFormat" } } } } } }
+    post:
+      operationId: createJsonFormat
+      tags: [projection]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormatInput" } } } }
+      responses: { "201": { description: Draft format, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormat" } } } } }
+  /v1/json-formats/infer:
+    post:
+      operationId: inferJsonFormat
+      tags: [projection]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormatInput" } } } }
+      responses: { "200": { description: Inferred format, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormatInference" } } } } }
+  /v1/json-formats/{formatId}/versions/{version}:
+    get:
+      operationId: getJsonFormatVersion
+      tags: [projection]
+      parameters: [{ name: formatId, in: path, required: true, schema: { type: string } }, { name: version, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Format version, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormat" } } } } }
+    patch:
+      operationId: updateJsonFormatVersion
+      tags: [projection]
+      parameters: [{ name: formatId, in: path, required: true, schema: { type: string } }, { name: version, in: path, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormatUpdate" } } } }
+      responses: { "200": { description: Updated draft, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormat" } } } } }
+  /v1/json-formats/{formatId}/versions:
+    post:
+      operationId: createJsonFormatVersion
+      tags: [projection]
+      parameters: [{ name: formatId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormatVersionInput" } } } }
+      responses: { "201": { description: Copied draft, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormat" } } } } }
+  /v1/json-formats/{formatId}/versions/{version}/activate:
+    post:
+      operationId: activateJsonFormatVersion
+      tags: [projection]
+      parameters: [{ name: formatId, in: path, required: true, schema: { type: string } }, { name: version, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Activated format, content: { application/json: { schema: { $ref: "#/components/schemas/JsonFormat" } } } } }
+  /v1/json-exports/preview:
+    post:
+      operationId: previewJsonExport
+      tags: [projection]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/JsonExportInput" } } } }
+      responses: { "200": { description: Export preview, content: { application/json: { schema: { $ref: "#/components/schemas/JsonExport" } } } } }
+  /v1/json-exports:
+    post:
+      operationId: createJsonExport
+      tags: [projection]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/JsonExportInput" } } } }
+      responses:
+        "200": { description: Export, content: { application/json: { schema: { $ref: "#/components/schemas/JsonExport" } } } }
+        "422": { description: Mapping or output validation failed, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
 components:
   schemas:
+    JsonFormatInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        example: {}
+        jsonSchema: {}
+      oneOf:
+        - required: [example]
+        - required: [jsonSchema]
+    JsonFormatUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: ["string", "null"] }
+        mapping: {}
+    JsonFormatVersionInput:
+      type: object
+      required: [sourceVersion]
+      properties: { sourceVersion: { type: integer, minimum: 1 } }
+    JsonFormat:
+      type: object
+      required: [formatId, version, name, status, jsonSchema, mapping, mappingHash, createdAt, updatedAt]
+      properties:
+        formatId: { type: string }
+        version: { type: integer }
+        name: { type: string }
+        description: { type: ["string", "null"] }
+        status: { type: string, enum: [draft, active, superseded] }
+        example: {}
+        jsonSchema: {}
+        mapping: {}
+        mappingHash: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    JsonFormatInference:
+      type: object
+      required: [jsonSchema, mapping, unresolvedPaths, sourceCatalog]
+      properties:
+        jsonSchema: {}
+        mapping: {}
+        unresolvedPaths: { type: array, items: { type: string } }
+        sourceCatalog: { type: array, items: { type: string } }
+    JsonExportInput:
+      type: object
+      required: [formatId]
+      properties:
+        formatId: { type: string }
+        formatVersion: { type: integer }
+        contentId: { type: string }
+        contentVersion: { type: integer, minimum: 1 }
+        simulationId: { type: string }
+      anyOf: [{ required: [contentId] }, { required: [simulationId] }]
+    JsonExport:
+      type: object
+      required: [payload, validation, provenance]
+      properties:
+        payload: {}
+        validation:
+          type: object
+          required: [valid, issues]
+          properties: { valid: { type: boolean }, issues: { type: array, items: {} } }
+        provenance:
+          type: object
+          required: [formatId, formatVersion, mappingHash, sourceHash]
+          properties:
+            formatId: { type: string }
+            formatVersion: { type: integer }
+            mappingHash: { type: string }
+            contentId: { type: string }
+            contentVersion: { type: integer }
+            simulationId: { type: string }
+            sourceHash: { type: string }
     HealthStatus:
       type: object
       properties:

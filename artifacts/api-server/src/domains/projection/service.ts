@@ -39,6 +39,7 @@ export class ContentNotFoundError extends Error {
 /** Resolves canonical/runtime sources for a projection. Read-only. */
 export async function resolveSource(input: {
   contentId?: string | undefined;
+  contentVersion?: number | undefined;
   simulationId?: string | undefined;
 }): Promise<ProjectionSource> {
   if (!input.contentId && !input.simulationId) {
@@ -52,7 +53,22 @@ export async function resolveSource(input: {
   if (input.contentId) {
     const row = await contentRepo.getContent(input.contentId);
     if (!row) throw new ContentNotFoundError(input.contentId);
-    source.graph = toContentGraph(row);
+    if (input.contentVersion !== undefined && input.contentVersion !== row.version) {
+      const version = await contentRepo.getVersion(input.contentId, input.contentVersion);
+      if (!version) {
+        throw new ContentNotFoundError(
+          `${input.contentId}" version "${input.contentVersion}`,
+        );
+      }
+      source.graph = toContentGraph({
+        ...row,
+        version: version.version,
+        graph: version.snapshot,
+        updatedAt: version.createdAt,
+      });
+    } else {
+      source.graph = toContentGraph(row);
+    }
   }
 
   if (input.simulationId) {
