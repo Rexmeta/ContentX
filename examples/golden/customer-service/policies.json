@@ -1,0 +1,16 @@
+[
+  {
+    "id": "policy_escalate_after_two_denials",
+    "actorId": "actor_customer_kim",
+    "trigger": {
+      "condition": "frustration >= 0.7 AND denial_count >= 2"
+    },
+    "response": {
+      "action": "escalate_to_manager",
+      "reasonCode": "refund_denied_twice",
+      "stateDeltas": {
+        "affective": { "frustration": 0.1 }
+      }
+    }
+  }
+]

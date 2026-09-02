@@ -1,0 +1,13 @@
+{
+  "type": "customer_service",
+  "config": {
+    "orderId": "ORD-98214",
+    "daysElapsed": 14,
+    "policyReturnDays": 7,
+    "channel": "chat"
+  },
+  "termination": {
+    "maxTurns": 8,
+    "successCondition": "issue_resolved_or_escalated"
+  }
+}

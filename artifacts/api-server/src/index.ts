@@ -2,14 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureSeedDimensions } from "./domains/population/dimensionService";
 
-const rawPort = process.env["PORT"];
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
+const rawPort = process.env["PORT"] || "3000";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
@@ -18,15 +11,9 @@ if (Number.isNaN(port) || port <= 0) {
 
 // Idempotent registration of the seed dimension set (unique on name).
 await ensureSeedDimensions().catch((err) => {
-  logger.error({ err }, "Failed to seed dimension registry");
-  process.exit(1);
+  logger.warn({ err: err?.message || err }, "Database not reachable or dimension seeding skipped; starting server in standalone/in-memory mode");
 });
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
-  logger.info({ port }, "Server listening");
+app.listen(port, () => {
+  logger.info({ port }, `RoleplayX & ContentX API Server listening on port ${port}`);
 });
