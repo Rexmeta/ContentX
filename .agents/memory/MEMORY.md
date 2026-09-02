@@ -7,3 +7,4 @@
 - [Parallel subagents vs git stash](parallel-subagent-git-stash.md) — a subagent's `git stash` can revert the parent's uncommitted edits; forbid stashing in briefs and re-verify own edits after joins.
 - [Import dedup must be atomic](import-dedup-atomicity.md) — dedup on JSONB provenance needs a pg advisory xact lock around lookup+write; NUL bytes are illegal in lock key text.
 - [Postgres timestamp CAS precision](postgres-timestamp-cas.md) — JS Date loses PostgreSQL microseconds; timestamp equality alone is unsafe for optimistic ownership claims.
+- [Commercial validation persistence](commercial-validation-persistence.md) — canonicalize JSONB before checksumming and never generate tenant IDs from Date.now() alone.
