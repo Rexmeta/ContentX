@@ -36,12 +36,17 @@ router.get("/v1/external-agents", (req, res) => {
 
 // GET /v1/external-agents/:id — Get agent registration
 router.get("/v1/external-agents/:id", (req, res) => {
-  const agent = agentGatewayManager.getPublicAgent(req.params.id);
+  const agent = agentGatewayManager.getAgent(req.params.id);
   if (!agent) {
     res.status(404).json({ error: `Agent "${req.params.id}" not found` });
     return;
   }
-  res.json(agent);
+  const callerTenantId = (req.headers["x-organization-id"] || req.headers["x-tenant-id"]) as string | undefined;
+  if (callerTenantId && agent.tenantId && agent.tenantId !== callerTenantId) {
+    res.status(403).json({ error: "Forbidden: Cross-tenant agent access is prohibited", code: "TENANT_ISOLATION_VIOLATION" });
+    return;
+  }
+  res.json(publicRegistration(agent));
 });
 
 // POST /v1/external-agents/:id/health — Check agent connectivity health
@@ -58,6 +63,12 @@ router.post("/v1/external-agents/:id/contract-check", async (req, res) => {
     return;
   }
 
+  const callerTenantId = (req.headers["x-organization-id"] || req.headers["x-tenant-id"]) as string | undefined;
+  if (callerTenantId && agent.tenantId && agent.tenantId !== callerTenantId) {
+    res.status(403).json({ error: "Forbidden: Cross-tenant agent access is prohibited", code: "TENANT_ISOLATION_VIOLATION" });
+    return;
+  }
+
   const checkResult = await agentContractChecker.verifyContract(agent);
   res.json(checkResult);
 });
@@ -68,6 +79,12 @@ router.post("/v1/external-agents/:id/stress-test", async (req, res) => {
     const agent = agentGatewayManager.getAgent(req.params.id);
     if (!agent) {
       res.status(404).json({ error: `Agent "${req.params.id}" not found` });
+      return;
+    }
+
+    const callerTenantId = (req.headers["x-organization-id"] || req.headers["x-tenant-id"]) as string | undefined;
+    if (callerTenantId && agent.tenantId && agent.tenantId !== callerTenantId) {
+      res.status(403).json({ error: "Forbidden: Cross-tenant agent access is prohibited", code: "TENANT_ISOLATION_VIOLATION" });
       return;
     }
 

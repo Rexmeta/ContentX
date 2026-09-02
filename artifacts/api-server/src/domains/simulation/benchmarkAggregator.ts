@@ -85,7 +85,9 @@ export class BenchmarkAggregator {
       // Failure Analysis
       const failurePatterns: FailurePattern[] = [];
       const lowEmpathyRuns = entries.filter((e) => {
-        const m = e.runResult.evaluation.metrics.find((x) => x.metric === "empathy");
+        const m = e.runResult.evaluation.metrics.find((x) =>
+          x.metric.toLowerCase().includes("empath") || x.metric.toLowerCase().includes("emotion")
+        );
         return m && m.score < 75;
       });
       if (lowEmpathyRuns.length > 0) {
@@ -99,7 +101,9 @@ export class BenchmarkAggregator {
       }
 
       const escalationDelayRuns = entries.filter((e) => {
-        const m = e.runResult.evaluation.metrics.find((x) => x.metric === "escalation_control");
+        const m = e.runResult.evaluation.metrics.find((x) =>
+          x.metric.toLowerCase().includes("escalat")
+        );
         return m && m.score < 80;
       });
       if (escalationDelayRuns.length > 0) {
@@ -109,6 +113,34 @@ export class BenchmarkAggregator {
           frequency: escalationDelayRuns.length,
           rate: Number((escalationDelayRuns.length / entries.length).toFixed(2)),
           evidenceTraceIds: escalationDelayRuns.map((e) => e.runResult.runId),
+        });
+      }
+
+      const boundaryFailureRuns = entries.filter((e) => {
+        const m = e.runResult.evaluation.metrics.find((x) =>
+          x.metric.toLowerCase().includes("boundar") || x.metric.toLowerCase().includes("policy")
+        );
+        return m && m.score < 85;
+      });
+      if (boundaryFailureRuns.length > 0) {
+        failurePatterns.push({
+          patternType: "boundary_violation_guard",
+          description: "Agent failed to guard policy or concession boundaries under customer pressure.",
+          frequency: boundaryFailureRuns.length,
+          rate: Number((boundaryFailureRuns.length / entries.length).toFixed(2)),
+          evidenceTraceIds: boundaryFailureRuns.map((e) => e.runResult.runId),
+        });
+      }
+
+      // If no specific metric patterns triggered, check for non-100% scores
+      const generalFailureRuns = entries.filter((e) => e.runResult.evaluation.overallScore < 90);
+      if (failurePatterns.length === 0 && generalFailureRuns.length > 0) {
+        failurePatterns.push({
+          patternType: "general_dialogue_divergence",
+          description: "Agent exhibited sub-optimal adherence to expected goal trajectories.",
+          frequency: generalFailureRuns.length,
+          rate: Number((generalFailureRuns.length / entries.length).toFixed(2)),
+          evidenceTraceIds: generalFailureRuns.map((e) => e.runResult.runId),
         });
       }
 
@@ -123,7 +155,7 @@ export class BenchmarkAggregator {
 
         const current = personaCohortMap.get(personaCohort) ?? { scores: [], failures: 0 };
         current.scores.push(entry.runResult.evaluation.overallScore);
-        if (entry.runResult.evaluation.overallScore < 80) {
+        if (entry.runResult.evaluation.overallScore < 85) {
           current.failures++;
         }
         personaCohortMap.set(personaCohort, current);
