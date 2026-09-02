@@ -9,6 +9,13 @@ import agentsRouter from "./agents";
 import simulationsRouter from "./simulations";
 import workflowsRouter from "./workflows";
 import jsonFormatsRouter from "./jsonFormats";
+import simulationSpecsRouter from "./simulationSpecs";
+import benchmarksRouter from "./benchmarks";
+import simulationPopulationsRouter from "./simulationPopulations";
+import experimentsRouter from "./experiments";
+import agentGatewayRouter from "./agentGateway";
+import continuousEvaluationRouter from "./continuousEvaluation";
+import saasRouter from "./saas";
 
 const router: IRouter = Router();
 
@@ -22,5 +29,12 @@ router.use(agentsRouter);
 router.use(simulationsRouter);
 router.use(workflowsRouter);
 router.use(jsonFormatsRouter);
+router.use(simulationSpecsRouter);
+router.use(benchmarksRouter);
+router.use(simulationPopulationsRouter);
+router.use(experimentsRouter);
+router.use(agentGatewayRouter);
+router.use(continuousEvaluationRouter);
+router.use(saasRouter);
 
 export default router;

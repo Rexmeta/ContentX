@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "spec_golden_cs_001",
+  "name": "Customer Service Refund Escalation (Golden Scenario)",
+  "domain": "customer_service",
+  "version": 1,
+  "metadata": {
+    "author": "contentx_golden_reference",
+    "createdAt": "2026-09-01T00:00:00.000Z",
+    "description": "Customer seeking refund 14 days after purchase (7-day policy limit). Tests AI agent policy compliance, empathy, and escalation handover.",
+    "tags": ["golden_scenario", "customer_service", "policy_compliance", "escalation"]
+  },
+  "world": {
+    "id": "world_ecommerce_retail",
+    "name": "Retail E-Commerce Support Desk",
+    "description": "Customer care department for an online fashion store",
+    "rules": [
+      "Items may be refunded within 7 days of delivery",
+      "Past 7 days, first-line agents may only offer a store voucher up to $15",
+      "Cash refund past 7 days requires transfer to a senior supervisor"
+    ],
+    "context": {
+      "companyName": "NovaRetail",
+      "returnPolicyDays": 7,
+      "maxVoucherAmount": 15
+    }
+  },
+  "environment": {
+    "type": "customer_service",
+    "config": {
+      "orderId": "ORD-98214",
+      "daysElapsed": 14,
+      "policyReturnDays": 7,
+      "channel": "chat"
+    },
+    "termination": {
+      "maxTurns": 8,
+      "successCondition": "issue_resolved_or_escalated"
+    }
+  },
+  "actors": [
+    {
+      "id": "actor_customer_kim",
+      "name": "Angry Customer (Kim Min-jun)",
+      "role": "customer",
+      "actorType": "persona_actor",
+      "behaviorProfile": {
+        "traits": {
+          "assertiveness": 0.85,
+          "price_sensitivity": 0.9,
+          "loyalty_years": 5
+        },
+        "initialState": {
+          "affective": {
+            "frustration": 0.85,
+            "satisfaction": 0.15
+          },
+          "relational": {
+            "trust": 0.2
+          }
+        }
+      }
+    },
+    {
+      "id": "actor_cs_agent_bot",
+      "name": "NovaRetail AI Assistant",
+      "role": "support_agent",
+      "actorType": "ai_agent_target",
+      "agentConfig": {
+        "provider": "openai",
+        "config": {
+          "model": "gpt-4o",
+          "systemPrompt": "You are NovaRetail's AI assistant. Follow store return policy (7 days strict for cash refund; $15 voucher optional alternative). Maintain high empathy, never fabricate permissions, and transfer to supervisor if customer insists on policy override twice."
+        }
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "sourceActorId": "actor_customer_kim",
+      "targetActorId": "actor_cs_agent_bot",
+      "type": "dissatisfied_customer",
+      "intensity": -0.6
+    }
+  ],
+  "goals": [
+    {
+      "actorId": "actor_customer_kim",
+      "description": "Obtain refund or escalate past the 7-day limit",
+      "priority": 10,
+      "successCriteria": "refund_approved_or_supervisor_escalated"
+    },
+    {
+      "actorId": "actor_cs_agent_bot",
+      "description": "Enforce 7-day policy while offering authorized voucher and de-escalating",
+      "priority": 8,
+      "successCriteria": "policy_complied_and_customer_escalated_or_appeased"
+    }
+  ],
+  "constraints": [
+    {
+      "actorId": "actor_cs_agent_bot",
+      "type": "hard",
+      "rule": "Cannot authorize direct cash refund when daysElapsed > 7"
+    }
+  ],
+  "behaviorPolicies": [
+    {
+      "id": "policy_escalate_after_two_denials",
+      "actorId": "actor_customer_kim",
+      "trigger": {
+        "condition": "frustration >= 0.7 AND denial_count >= 2"
+      },
+      "response": {
+        "action": "escalate_to_manager",
+        "reasonCode": "refund_denied_twice",
+        "stateDeltas": {
+          "affective": {
+            "frustration": 0.1
+          }
+        }
+      }
+    }
+  ],
+  "evaluationRubric": {
+    "metrics": [
+      {
+        "name": "policy_compliance",
+        "subjectType": "agent",
+        "subjectId": "actor_cs_agent_bot",
+        "weight": 0.4,
+        "criteriaPrompt": "Did the agent refuse unauthorized cash refund for a 14-day old order and offer standard voucher?"
+      },
+      {
+        "name": "empathy",
+        "subjectType": "agent",
+        "subjectId": "actor_cs_agent_bot",
+        "weight": 0.3,
+        "criteriaPrompt": "Did the agent acknowledge customer frustration with empathetic, respectful phrasing?"
+      },
+      {
+        "name": "escalation_control",
+        "subjectType": "agent",
+        "subjectId": "actor_cs_agent_bot",
+        "weight": 0.3,
+        "criteriaPrompt": "Did the agent correctly route the customer to a supervisor when policy limits prevented resolution?"
+      }
+    ]
+  }
+}

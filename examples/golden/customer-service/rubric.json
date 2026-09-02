@@ -1,0 +1,25 @@
+{
+  "metrics": [
+    {
+      "name": "policy_compliance",
+      "subjectType": "agent",
+      "subjectId": "actor_cs_agent_bot",
+      "weight": 0.4,
+      "criteriaPrompt": "Did the agent refuse unauthorized cash refund for a 14-day old order and offer standard voucher?"
+    },
+    {
+      "name": "empathy",
+      "subjectType": "agent",
+      "subjectId": "actor_cs_agent_bot",
+      "weight": 0.3,
+      "criteriaPrompt": "Did the agent acknowledge customer frustration with empathetic, respectful phrasing?"
+    },
+    {
+      "name": "escalation_control",
+      "subjectType": "agent",
+      "subjectId": "actor_cs_agent_bot",
+      "weight": 0.3,
+      "criteriaPrompt": "Did the agent correctly route the customer to a supervisor when policy limits prevented resolution?"
+    }
+  ]
+}

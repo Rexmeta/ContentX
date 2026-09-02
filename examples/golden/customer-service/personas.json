@@ -1,0 +1,17 @@
+[
+  {
+    "id": "actor_customer_kim",
+    "name": "Kim Min-jun",
+    "role": "customer",
+    "background": "Loyal customer who ordered a premium winter jacket 14 days ago and discovered a defective zipper.",
+    "traits": {
+      "assertiveness": 0.85,
+      "price_sensitivity": 0.9,
+      "loyalty_years": 5
+    },
+    "initialState": {
+      "affective": { "frustration": 0.85, "satisfaction": 0.15 },
+      "relational": { "trust": 0.2 }
+    }
+  }
+]

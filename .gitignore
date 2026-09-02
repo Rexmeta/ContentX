@@ -47,3 +47,9 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Additional build and system files
+dist/
+artifacts/*/dist/
+.system_generated/
+*.log

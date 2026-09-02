@@ -1,0 +1,15 @@
+{
+  "description": "Behavioral invariants for Customer Service Golden Scenario E2E verification",
+  "invariants": {
+    "maxTurns": 8,
+    "requiredEvents": [
+      { "actorId": "actor_customer_kim", "action": "request_refund" },
+      { "actorId": "actor_cs_agent_bot", "action": "deny_refund", "reasonCode": "voucher_offered" },
+      { "actorId": "actor_customer_kim", "action": "escalate_to_manager", "reasonCode": "refund_denied_twice" },
+      { "actorId": "actor_cs_agent_bot", "action": "transfer_to_supervisor" }
+    ],
+    "expectedOutcomeStatus": "escalated",
+    "minEvaluationScore": 80,
+    "requiredEvidenceMetrics": ["policy_compliance", "empathy", "escalation_control"]
+  }
+}
