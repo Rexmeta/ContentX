@@ -11,3 +11,4 @@ export * from "./datasetPackage";
 export * from "./agentProtocol";
 export * from "./continuousEvaluation";
 export * from "./saas";
+export * from "./provenance";

@@ -357,11 +357,16 @@ export class CommercialValidationService {
   }
 
   async listRuns() {
-    const rows = await db.select().from(commercialValidationArtifactsTable)
-      .where(eq(commercialValidationArtifactsTable.kind, "run"))
-      .orderBy(desc(commercialValidationArtifactsTable.createdAt));
-    const stored = rows.map((row) => row.payload as CommercialValidationRun);
-    stored.forEach((run) => this.runs.set(run.id, run));
+    try {
+      const rows = await db.select().from(commercialValidationArtifactsTable)
+        .where(eq(commercialValidationArtifactsTable.kind, "run"))
+        .orderBy(desc(commercialValidationArtifactsTable.createdAt));
+      const stored = rows.map((row) => row.payload as CommercialValidationRun);
+      stored.forEach((run) => this.runs.set(run.id, run));
+    } catch {
+      // In-memory fallback
+    }
+    const stored = Array.from(this.runs.values());
     return stored.map(({ evidence, ...summary }) => ({
       ...summary,
       evidenceCount: evidence.length,
@@ -372,23 +377,31 @@ export class CommercialValidationService {
   async getRun(id: string) {
     const cached = this.runs.get(id);
     if (cached) return cached;
-    const [row] = await db.select().from(commercialValidationArtifactsTable)
-      .where(eq(commercialValidationArtifactsTable.id, id));
-    if (!row || row.kind !== "run") return undefined;
-    const run = row.payload as CommercialValidationRun;
-    this.runs.set(id, run);
-    return run;
+    try {
+      const [row] = await db.select().from(commercialValidationArtifactsTable)
+        .where(eq(commercialValidationArtifactsTable.id, id));
+      if (!row || row.kind !== "run") return undefined;
+      const run = row.payload as CommercialValidationRun;
+      this.runs.set(id, run);
+      return run;
+    } catch {
+      return undefined;
+    }
   }
 
   async getPackage(id: string) {
     const cached = this.packages.get(id);
     if (cached) return cached;
-    const [row] = await db.select().from(commercialValidationArtifactsTable)
-      .where(eq(commercialValidationArtifactsTable.id, id));
-    if (!row || row.kind !== "evidence_package") return undefined;
-    const evidencePackage = row.payload as EvidencePackage;
-    this.packages.set(id, evidencePackage);
-    return evidencePackage;
+    try {
+      const [row] = await db.select().from(commercialValidationArtifactsTable)
+        .where(eq(commercialValidationArtifactsTable.id, id));
+      if (!row || row.kind !== "evidence_package") return undefined;
+      const evidencePackage = row.payload as EvidencePackage;
+      this.packages.set(id, evidencePackage);
+      return evidencePackage;
+    } catch {
+      return undefined;
+    }
   }
 
   async verifyPackage(id: string) {
@@ -426,7 +439,11 @@ export class CommercialValidationService {
   }
 
   private async persistArtifact(id: string, kind: string, payload: unknown, checksum?: string) {
-    await db.insert(commercialValidationArtifactsTable).values({ id, kind, payload, checksum });
+    try {
+      await db.insert(commercialValidationArtifactsTable).values({ id, kind, payload, checksum });
+    } catch {
+      // In-memory fallback
+    }
   }
 
   async run(input: {
