@@ -149,7 +149,8 @@ export class HttpGatewayAdapter implements GatewayAgentAdapter {
 function isFixtureEndpoint(endpointUrl: string): boolean {
   return endpointUrl.startsWith("mock://") ||
     endpointUrl.includes(".example.com") ||
-    endpointUrl === "http://localhost/mock-agent";
+    endpointUrl.startsWith("http://localhost") ||
+    endpointUrl.startsWith("http://127.0.0.1");
 }
 
 function healthUrl(endpointUrl: string): string {
