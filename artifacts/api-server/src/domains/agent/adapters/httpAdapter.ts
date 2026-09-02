@@ -13,6 +13,7 @@ export class HttpAgentAdapter implements AgentAdapter {
     const recentEvents = observation.recentEvents;
     const conversation = recentEvents.map((ev: any) => ({
       role: (ev.actorId?.includes("customer") ? "user" : "assistant") as any,
+      timestamp: new Date().toISOString(),
       content: ev.action?.utterance || ev.action?.action || "user interaction",
     }));
 

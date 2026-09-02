@@ -1904,8 +1904,201 @@ paths:
       responses:
         "200": { description: Export, content: { application/json: { schema: { $ref: "#/components/schemas/JsonExport" } } } }
         "422": { description: Mapping or output validation failed, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+  /v1/reference-benchmark:
+    get:
+      tags: [Commercial Validation]
+      summary: Get the fixed Reference Benchmark v1 definition
+      responses:
+        "200":
+          description: Reference benchmark definition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferenceBenchmarkDefinition"
+  /v1/commercial-validation/runs:
+    get:
+      tags: [Commercial Validation]
+      summary: List commercial validation runs
+      responses:
+        "200":
+          description: Validation run summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CommercialValidationRun"
+    post:
+      tags: [Commercial Validation]
+      summary: Run baseline and stress validation against a registered Agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommercialValidationRunInput"
+      responses:
+        "201":
+          description: Completed validation run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommercialValidationRun"
+        "422":
+          description: Contract or benchmark execution failed
+  /v1/commercial-validation/runs/{id}:
+    get:
+      tags: [Commercial Validation]
+      summary: Get a validation run with evidence references
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Validation run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommercialValidationRun"
+        "404": { description: Validation run not found }
+  /v1/commercial-validation/compare:
+    post:
+      tags: [Commercial Validation]
+      summary: Compare two runs and produce a deployment gate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [baselineRunId, candidateRunId]
+              properties:
+                baselineRunId: { type: string }
+                candidateRunId: { type: string }
+      responses:
+        "201":
+          description: Comparison and deployment decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommercialComparison"
+  /v1/commercial-validation/packages/{id}:
+    get:
+      tags: [Commercial Validation]
+      summary: Download an immutable evidence package
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Evidence package JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidencePackage"
+        "404": { description: Evidence package not found }
+  /v1/commercial-validation/packages/{id}/verify:
+    post:
+      tags: [Commercial Validation]
+      summary: Verify the checksum of an immutable evidence package
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Checksum verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [packageId, valid, storedChecksum, calculatedChecksum]
+                properties:
+                  packageId: { type: string }
+                  valid: { type: boolean }
+                  storedChecksum: { type: string }
+                  calculatedChecksum: { type: string }
+        "404": { description: Evidence package not found }
 components:
   schemas:
+    ReferenceBenchmarkDefinition:
+      type: object
+      required: [id, version, title, purpose, scenario, cohorts, metrics, seedPolicy]
+      properties:
+        id: { type: string }
+        version: { type: string }
+        title: { type: string }
+        purpose: { type: string }
+        scenario:
+          type: object
+          required: [title, policy, expectedActions]
+          properties:
+            title: { type: string }
+            policy: { type: string }
+            expectedActions: { type: array, items: { type: string } }
+        cohorts:
+          type: array
+          items:
+            type: object
+            required: [id, label, description]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              description: { type: string }
+        metrics: { type: array, items: { type: string } }
+        seedPolicy: { type: string }
+    CommercialValidationRunInput:
+      type: object
+      required: [agentId]
+      properties:
+        agentId: { type: string }
+        sampleSizePerCohort: { type: integer, minimum: 1, maximum: 250, default: 2 }
+        repetitions: { type: integer, minimum: 1, maximum: 250, default: 1 }
+        baseSeed: { type: integer, default: 20260902 }
+        calibrationData: { type: array, items: { type: object, additionalProperties: true } }
+    CommercialValidationRun:
+      type: object
+      required: [id, requestId, agent, status, interactionCount, baseline, stress, failureExplorer, evidencePackageId, correlation]
+      properties:
+        id: { type: string }
+        requestId: { type: string }
+        agent: { type: object, additionalProperties: true }
+        status: { type: string, enum: [completed, failed] }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        sampleSizePerCohort: { type: integer }
+        repetitions: { type: integer }
+        interactionCount: { type: integer }
+        baseline: { type: object, additionalProperties: true }
+        stress: { type: object, additionalProperties: true }
+        calibrationStatus: { type: string, enum: [CALIBRATED, PROVISIONAL] }
+        failureExplorer: { type: array, items: { type: object, additionalProperties: true } }
+        evidencePackageId: { type: string }
+        correlation: { type: object, additionalProperties: true }
+    CommercialComparison:
+      type: object
+      required: [id, baselineRunId, candidateRunId, deploymentDecision, report]
+      properties:
+        id: { type: string }
+        baselineRunId: { type: string }
+        candidateRunId: { type: string }
+        deploymentDecision: { type: string, enum: [APPROVED, BLOCKED, WARNING] }
+        report: { type: object, additionalProperties: true }
+    EvidencePackage:
+      type: object
+      required: [id, manifest, baseline, stress, failureExplorer, evidence]
+      properties:
+        id: { type: string }
+        manifest: { type: object, additionalProperties: true }
+        baseline: { type: object, additionalProperties: true }
+        stress: { type: object, additionalProperties: true }
+        failureExplorer: { type: array, items: { type: object, additionalProperties: true } }
+        evidence: { type: array, items: { type: object, additionalProperties: true } }
     JsonFormatInput:
       type: object
       required: [name]

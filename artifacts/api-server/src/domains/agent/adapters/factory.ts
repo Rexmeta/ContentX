@@ -4,6 +4,7 @@ import { AnthropicAgentAdapter } from "./anthropicAdapter";
 import { GoogleAgentAdapter } from "./googleAdapter";
 import { HttpAgentAdapter } from "./httpAdapter";
 import { MockAgentAdapter } from "./mockAdapter";
+import { GatewayRuntimeAdapter } from "../gateway/runtimeAdapter";
 
 export class AgentAdapterFactory {
   private static registry: Map<string, AgentAdapter> = new Map([
@@ -12,6 +13,9 @@ export class AgentAdapterFactory {
     ["google", new GoogleAgentAdapter()],
     ["http", new HttpAgentAdapter()],
     ["mock", new MockAgentAdapter()],
+    ["mcp", new GatewayRuntimeAdapter("mcp")],
+    ["sdk", new GatewayRuntimeAdapter("sdk")],
+    ["webhook", new GatewayRuntimeAdapter("webhook")],
   ]);
 
   static getAdapter(provider: string): AgentAdapter {

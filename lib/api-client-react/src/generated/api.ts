@@ -37,6 +37,9 @@ import type {
   CharacterInput,
   CharacterSnapshot,
   CharacterUpdate,
+  CommercialComparison,
+  CommercialValidationRun,
+  CommercialValidationRunInput,
   ContentGraph,
   ContentInput,
   ContentSummary,
@@ -51,6 +54,7 @@ import type {
   Evaluation,
   EvaluationInput,
   EvaluationLineage,
+  EvidencePackage,
   GetPopulationDefinitionParams,
   HealthStatus,
   InteractionEvent,
@@ -68,9 +72,12 @@ import type {
   PopulationDefinitionAt,
   PopulationInput,
   PopulationUpdate,
+  PostV1CommercialValidationCompareBody,
+  PostV1CommercialValidationPackagesIdVerify200,
   ProjectionInput,
   ProjectionResult,
   ReclassifyResult,
+  ReferenceBenchmarkDefinition,
   RelationshipUpdate,
   RoleplayXScenario,
   SamplingInput,
@@ -6221,5 +6228,526 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateJsonExportMutationOptions(options));
+    }
+
+export const getGetV1ReferenceBenchmarkUrl = () => {
+
+
+
+
+  return `/api/v1/reference-benchmark`
+}
+
+/**
+ * @summary Get the fixed Reference Benchmark v1 definition
+ */
+export const getV1ReferenceBenchmark = async ( options?: Parameters<typeof customFetch>[1]): Promise<ReferenceBenchmarkDefinition> => {
+
+  return customFetch<ReferenceBenchmarkDefinition>(getGetV1ReferenceBenchmarkUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetV1ReferenceBenchmarkQueryKey = () => {
+    return [
+    `/api/v1/reference-benchmark`
+    ] as const;
+    }
+
+
+export const getGetV1ReferenceBenchmarkQueryOptions = <TData = Awaited<ReturnType<typeof getV1ReferenceBenchmark>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1ReferenceBenchmark>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetV1ReferenceBenchmarkQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getV1ReferenceBenchmark>>> = ({ signal }) => getV1ReferenceBenchmark({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getV1ReferenceBenchmark>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetV1ReferenceBenchmarkQueryResult = NonNullable<Awaited<ReturnType<typeof getV1ReferenceBenchmark>>>
+export type GetV1ReferenceBenchmarkQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the fixed Reference Benchmark v1 definition
+ */
+
+export function useGetV1ReferenceBenchmark<TData = Awaited<ReturnType<typeof getV1ReferenceBenchmark>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1ReferenceBenchmark>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetV1ReferenceBenchmarkQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetV1CommercialValidationRunsUrl = () => {
+
+
+
+
+  return `/api/v1/commercial-validation/runs`
+}
+
+/**
+ * @summary List commercial validation runs
+ */
+export const getV1CommercialValidationRuns = async ( options?: Parameters<typeof customFetch>[1]): Promise<CommercialValidationRun[]> => {
+
+  return customFetch<CommercialValidationRun[]>(getGetV1CommercialValidationRunsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetV1CommercialValidationRunsQueryKey = () => {
+    return [
+    `/api/v1/commercial-validation/runs`
+    ] as const;
+    }
+
+
+export const getGetV1CommercialValidationRunsQueryOptions = <TData = Awaited<ReturnType<typeof getV1CommercialValidationRuns>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetV1CommercialValidationRunsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getV1CommercialValidationRuns>>> = ({ signal }) => getV1CommercialValidationRuns({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationRuns>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetV1CommercialValidationRunsQueryResult = NonNullable<Awaited<ReturnType<typeof getV1CommercialValidationRuns>>>
+export type GetV1CommercialValidationRunsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List commercial validation runs
+ */
+
+export function useGetV1CommercialValidationRuns<TData = Awaited<ReturnType<typeof getV1CommercialValidationRuns>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetV1CommercialValidationRunsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostV1CommercialValidationRunsUrl = () => {
+
+
+
+
+  return `/api/v1/commercial-validation/runs`
+}
+
+/**
+ * @summary Run baseline and stress validation against a registered Agent
+ */
+export const postV1CommercialValidationRuns = async (commercialValidationRunInput: CommercialValidationRunInput, options?: Parameters<typeof customFetch>[1]): Promise<CommercialValidationRun> => {
+
+  return customFetch<CommercialValidationRun>(getPostV1CommercialValidationRunsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(commercialValidationRunInput)
+  }
+);}
+
+
+
+
+
+export const getPostV1CommercialValidationRunsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationRuns>>, TError,{data: BodyType<CommercialValidationRunInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationRuns>>, TError,{data: BodyType<CommercialValidationRunInput>}, TContext> => {
+
+const mutationKey = ['postV1CommercialValidationRuns'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postV1CommercialValidationRuns>>, {data: BodyType<CommercialValidationRunInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postV1CommercialValidationRuns(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostV1CommercialValidationRunsMutationResult = NonNullable<Awaited<ReturnType<typeof postV1CommercialValidationRuns>>>
+    export type PostV1CommercialValidationRunsMutationBody = BodyType<CommercialValidationRunInput>
+    export type PostV1CommercialValidationRunsMutationError = ErrorType<void>
+
+    /**
+ * @summary Run baseline and stress validation against a registered Agent
+ */
+export const usePostV1CommercialValidationRuns = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationRuns>>, TError,{data: BodyType<CommercialValidationRunInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postV1CommercialValidationRuns>>,
+        TError,
+        {data: BodyType<CommercialValidationRunInput>},
+        TContext
+      > => {
+      return useMutation(getPostV1CommercialValidationRunsMutationOptions(options));
+    }
+
+export const getGetV1CommercialValidationRunsIdUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/commercial-validation/runs/${id}`
+}
+
+/**
+ * @summary Get a validation run with evidence references
+ */
+export const getV1CommercialValidationRunsId = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<CommercialValidationRun> => {
+
+  return customFetch<CommercialValidationRun>(getGetV1CommercialValidationRunsIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetV1CommercialValidationRunsIdQueryKey = (id: string,) => {
+    return [
+    `/api/v1/commercial-validation/runs/${id}`
+    ] as const;
+    }
+
+
+export const getGetV1CommercialValidationRunsIdQueryOptions = <TData = Awaited<ReturnType<typeof getV1CommercialValidationRunsId>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationRunsId>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetV1CommercialValidationRunsIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getV1CommercialValidationRunsId>>> = ({ signal }) => getV1CommercialValidationRunsId(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationRunsId>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetV1CommercialValidationRunsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getV1CommercialValidationRunsId>>>
+export type GetV1CommercialValidationRunsIdQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a validation run with evidence references
+ */
+
+export function useGetV1CommercialValidationRunsId<TData = Awaited<ReturnType<typeof getV1CommercialValidationRunsId>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationRunsId>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetV1CommercialValidationRunsIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostV1CommercialValidationCompareUrl = () => {
+
+
+
+
+  return `/api/v1/commercial-validation/compare`
+}
+
+/**
+ * @summary Compare two runs and produce a deployment gate
+ */
+export const postV1CommercialValidationCompare = async (postV1CommercialValidationCompareBody: PostV1CommercialValidationCompareBody, options?: Parameters<typeof customFetch>[1]): Promise<CommercialComparison> => {
+
+  return customFetch<CommercialComparison>(getPostV1CommercialValidationCompareUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(postV1CommercialValidationCompareBody)
+  }
+);}
+
+
+
+
+
+export const getPostV1CommercialValidationCompareMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationCompare>>, TError,{data: BodyType<PostV1CommercialValidationCompareBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationCompare>>, TError,{data: BodyType<PostV1CommercialValidationCompareBody>}, TContext> => {
+
+const mutationKey = ['postV1CommercialValidationCompare'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postV1CommercialValidationCompare>>, {data: BodyType<PostV1CommercialValidationCompareBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postV1CommercialValidationCompare(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostV1CommercialValidationCompareMutationResult = NonNullable<Awaited<ReturnType<typeof postV1CommercialValidationCompare>>>
+    export type PostV1CommercialValidationCompareMutationBody = BodyType<PostV1CommercialValidationCompareBody>
+    export type PostV1CommercialValidationCompareMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Compare two runs and produce a deployment gate
+ */
+export const usePostV1CommercialValidationCompare = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationCompare>>, TError,{data: BodyType<PostV1CommercialValidationCompareBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postV1CommercialValidationCompare>>,
+        TError,
+        {data: BodyType<PostV1CommercialValidationCompareBody>},
+        TContext
+      > => {
+      return useMutation(getPostV1CommercialValidationCompareMutationOptions(options));
+    }
+
+export const getGetV1CommercialValidationPackagesIdUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/commercial-validation/packages/${id}`
+}
+
+/**
+ * @summary Download an immutable evidence package
+ */
+export const getV1CommercialValidationPackagesId = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<EvidencePackage> => {
+
+  return customFetch<EvidencePackage>(getGetV1CommercialValidationPackagesIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetV1CommercialValidationPackagesIdQueryKey = (id: string,) => {
+    return [
+    `/api/v1/commercial-validation/packages/${id}`
+    ] as const;
+    }
+
+
+export const getGetV1CommercialValidationPackagesIdQueryOptions = <TData = Awaited<ReturnType<typeof getV1CommercialValidationPackagesId>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationPackagesId>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetV1CommercialValidationPackagesIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getV1CommercialValidationPackagesId>>> = ({ signal }) => getV1CommercialValidationPackagesId(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationPackagesId>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetV1CommercialValidationPackagesIdQueryResult = NonNullable<Awaited<ReturnType<typeof getV1CommercialValidationPackagesId>>>
+export type GetV1CommercialValidationPackagesIdQueryError = ErrorType<void>
+
+
+/**
+ * @summary Download an immutable evidence package
+ */
+
+export function useGetV1CommercialValidationPackagesId<TData = Awaited<ReturnType<typeof getV1CommercialValidationPackagesId>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV1CommercialValidationPackagesId>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetV1CommercialValidationPackagesIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostV1CommercialValidationPackagesIdVerifyUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/commercial-validation/packages/${id}/verify`
+}
+
+/**
+ * @summary Verify the checksum of an immutable evidence package
+ */
+export const postV1CommercialValidationPackagesIdVerify = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<PostV1CommercialValidationPackagesIdVerify200> => {
+
+  return customFetch<PostV1CommercialValidationPackagesIdVerify200>(getPostV1CommercialValidationPackagesIdVerifyUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPostV1CommercialValidationPackagesIdVerifyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationPackagesIdVerify>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationPackagesIdVerify>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['postV1CommercialValidationPackagesIdVerify'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postV1CommercialValidationPackagesIdVerify>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  postV1CommercialValidationPackagesIdVerify(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostV1CommercialValidationPackagesIdVerifyMutationResult = NonNullable<Awaited<ReturnType<typeof postV1CommercialValidationPackagesIdVerify>>>
+
+    export type PostV1CommercialValidationPackagesIdVerifyMutationError = ErrorType<void>
+
+    /**
+ * @summary Verify the checksum of an immutable evidence package
+ */
+export const usePostV1CommercialValidationPackagesIdVerify = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1CommercialValidationPackagesIdVerify>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postV1CommercialValidationPackagesIdVerify>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPostV1CommercialValidationPackagesIdVerifyMutationOptions(options));
     }
 

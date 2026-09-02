@@ -5,6 +5,129 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+export type ReferenceBenchmarkDefinitionScenario = {
+  title: string;
+  policy: string;
+  expectedActions: string[];
+};
+
+export type ReferenceBenchmarkDefinitionCohortsItem = {
+  id: string;
+  label: string;
+  description: string;
+};
+
+export interface ReferenceBenchmarkDefinition {
+  id: string;
+  version: string;
+  title: string;
+  purpose: string;
+  scenario: ReferenceBenchmarkDefinitionScenario;
+  cohorts: ReferenceBenchmarkDefinitionCohortsItem[];
+  metrics: string[];
+  seedPolicy: string;
+}
+
+export type CommercialValidationRunInputCalibrationDataItem = { [key: string]: unknown };
+
+export interface CommercialValidationRunInput {
+  agentId: string;
+  /**
+     * @minimum 1
+     * @maximum 250
+     */
+  sampleSizePerCohort?: number;
+  /**
+     * @minimum 1
+     * @maximum 250
+     */
+  repetitions?: number;
+  baseSeed?: number;
+  calibrationData?: CommercialValidationRunInputCalibrationDataItem[];
+}
+
+export type CommercialValidationRunAgent = { [key: string]: unknown };
+
+export type CommercialValidationRunStatus = typeof CommercialValidationRunStatus[keyof typeof CommercialValidationRunStatus];
+
+
+export const CommercialValidationRunStatus = {
+  completed: 'completed',
+  failed: 'failed',
+} as const;
+
+export type CommercialValidationRunBaseline = { [key: string]: unknown };
+
+export type CommercialValidationRunStress = { [key: string]: unknown };
+
+export type CommercialValidationRunCalibrationStatus = typeof CommercialValidationRunCalibrationStatus[keyof typeof CommercialValidationRunCalibrationStatus];
+
+
+export const CommercialValidationRunCalibrationStatus = {
+  CALIBRATED: 'CALIBRATED',
+  PROVISIONAL: 'PROVISIONAL',
+} as const;
+
+export type CommercialValidationRunFailureExplorerItem = { [key: string]: unknown };
+
+export type CommercialValidationRunCorrelation = { [key: string]: unknown };
+
+export interface CommercialValidationRun {
+  id: string;
+  requestId: string;
+  agent: CommercialValidationRunAgent;
+  status: CommercialValidationRunStatus;
+  startedAt?: string;
+  completedAt?: string;
+  sampleSizePerCohort?: number;
+  repetitions?: number;
+  interactionCount: number;
+  baseline: CommercialValidationRunBaseline;
+  stress: CommercialValidationRunStress;
+  calibrationStatus?: CommercialValidationRunCalibrationStatus;
+  failureExplorer: CommercialValidationRunFailureExplorerItem[];
+  evidencePackageId: string;
+  correlation: CommercialValidationRunCorrelation;
+}
+
+export type CommercialComparisonDeploymentDecision = typeof CommercialComparisonDeploymentDecision[keyof typeof CommercialComparisonDeploymentDecision];
+
+
+export const CommercialComparisonDeploymentDecision = {
+  APPROVED: 'APPROVED',
+  BLOCKED: 'BLOCKED',
+  WARNING: 'WARNING',
+} as const;
+
+export type CommercialComparisonReport = { [key: string]: unknown };
+
+export interface CommercialComparison {
+  id: string;
+  baselineRunId: string;
+  candidateRunId: string;
+  deploymentDecision: CommercialComparisonDeploymentDecision;
+  report: CommercialComparisonReport;
+}
+
+export type EvidencePackageManifest = { [key: string]: unknown };
+
+export type EvidencePackageBaseline = { [key: string]: unknown };
+
+export type EvidencePackageStress = { [key: string]: unknown };
+
+export type EvidencePackageFailureExplorerItem = { [key: string]: unknown };
+
+export type EvidencePackageEvidenceItem = { [key: string]: unknown };
+
+export interface EvidencePackage {
+  id: string;
+  manifest: EvidencePackageManifest;
+  baseline: EvidencePackageBaseline;
+  stress: EvidencePackageStress;
+  failureExplorer: EvidencePackageFailureExplorerItem[];
+  evidence: EvidencePackageEvidenceItem[];
+}
+
 export type JsonFormatInput = (unknown & {
   /** @minLength 1 */
   name: string;
@@ -1859,5 +1982,17 @@ dependencyGraphVersion: string;
 
 export type ListEvaluationsParams = {
 simulationId?: string;
+};
+
+export type PostV1CommercialValidationCompareBody = {
+  baselineRunId: string;
+  candidateRunId: string;
+};
+
+export type PostV1CommercialValidationPackagesIdVerify200 = {
+  packageId: string;
+  valid: boolean;
+  storedChecksum: string;
+  calculatedChecksum: string;
 };
 

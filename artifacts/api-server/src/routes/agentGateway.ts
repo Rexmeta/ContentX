@@ -4,7 +4,7 @@ import {
   type SimulationActorSpec,
   type SimulationSpec,
 } from "@workspace/simulation-contract";
-import { agentGatewayManager } from "../domains/agent/gateway/agentGateway";
+import { agentGatewayManager, publicRegistration } from "../domains/agent/gateway/agentGateway";
 import { agentContractChecker } from "../domains/agent/contractChecker";
 import { adaptiveLoopService } from "../domains/simulation/adaptiveLoopService";
 import { simulationSpecService } from "../domains/simulation/specService";
@@ -21,7 +21,7 @@ router.post("/v1/external-agents/register", (req, res) => {
     }
 
     const registered = agentGatewayManager.registerAgent(parsed.data);
-    res.status(201).json(registered);
+    res.status(201).json(publicRegistration(registered));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Registration failed";
     res.status(500).json({ error: message });
@@ -31,12 +31,12 @@ router.post("/v1/external-agents/register", (req, res) => {
 // GET /v1/external-agents — List registered agents
 router.get("/v1/external-agents", (req, res) => {
   const tenantId = req.query.tenantId as string;
-  res.json(agentGatewayManager.listAgents(tenantId));
+  res.json(agentGatewayManager.listPublicAgents(tenantId));
 });
 
 // GET /v1/external-agents/:id — Get agent registration
 router.get("/v1/external-agents/:id", (req, res) => {
-  const agent = agentGatewayManager.getAgent(req.params.id);
+  const agent = agentGatewayManager.getPublicAgent(req.params.id);
   if (!agent) {
     res.status(404).json({ error: `Agent "${req.params.id}" not found` });
     return;

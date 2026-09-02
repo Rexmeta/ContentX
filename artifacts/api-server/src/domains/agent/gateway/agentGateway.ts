@@ -13,7 +13,7 @@ import { PIIRedactor } from "../../security/piiRedactor";
 
 export class AgentGatewayManager {
   private registrations: Map<string, ExternalAgentRegistration> = new Map();
-  private adapters: Map<string, GatewayAgentAdapter> = new Map([
+  private adapters: Map<string, GatewayAgentAdapter> = new Map<string, GatewayAgentAdapter>([
     ["http", new HttpGatewayAdapter()],
     ["webhook", new HttpGatewayAdapter()],
     ["mcp", new McpGatewayAdapter()],
@@ -50,6 +50,15 @@ export class AgentGatewayManager {
       return all.filter((a) => a.tenantId === tenantId);
     }
     return all;
+  }
+
+  getPublicAgent(id: string): ReturnType<typeof publicRegistration> | undefined {
+    const registration = this.registrations.get(id);
+    return registration ? publicRegistration(registration) : undefined;
+  }
+
+  listPublicAgents(tenantId?: string) {
+    return this.listAgents(tenantId).map(publicRegistration);
   }
 
   async checkHealth(agentId: string): Promise<AgentHealth> {
@@ -100,3 +109,18 @@ export class AgentGatewayManager {
 }
 
 export const agentGatewayManager = new AgentGatewayManager();
+
+/**
+ * Registration responses must never contain bearer/API-key/HMAC material.
+ * The secret remains process-local and is only read by the protocol adapter.
+ */
+export function publicRegistration(registration: ExternalAgentRegistration) {
+  const { authConfig, ...rest } = registration;
+  return {
+    ...rest,
+    authConfig: {
+      type: authConfig.type,
+      ...(authConfig.headerName ? { headerName: authConfig.headerName } : {}),
+    },
+  };
+}

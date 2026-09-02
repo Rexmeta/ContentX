@@ -6,6 +6,7 @@ import type {
   ExternalAgentRegistration,
 } from "@workspace/simulation-contract";
 import type { GatewayAgentAdapter } from "../gatewayAdapter";
+import { AgentResponseSchema } from "@workspace/simulation-contract";
 
 export class HttpGatewayAdapter implements GatewayAgentAdapter {
   readonly protocol = "http";
@@ -22,13 +23,28 @@ export class HttpGatewayAdapter implements GatewayAgentAdapter {
     }
 
     try {
-      // Mock / Local loopback check
+      if (isFixtureEndpoint(registration.endpointUrl)) {
+        return {
+          status: "healthy",
+          latencyMs: Date.now() - startTime,
+          checkedAt: new Date().toISOString(),
+          details: "Deterministic fixture endpoint verified.",
+        };
+      }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const response = await fetch(healthUrl(registration.endpointUrl), {
+        method: "GET",
+        headers: authHeaders(registration),
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeout));
+      if (!response.ok) throw new Error(`Health endpoint returned ${response.status}`);
       const latencyMs = Date.now() - startTime;
       return {
         status: "healthy",
         latencyMs,
         checkedAt: new Date().toISOString(),
-        details: `Endpoint verified at ${registration.endpointUrl}`,
+        details: `Endpoint verified at ${healthUrl(registration.endpointUrl)}`,
       };
     } catch (err: unknown) {
       return {
@@ -48,7 +64,32 @@ export class HttpGatewayAdapter implements GatewayAgentAdapter {
       throw new Error(`HTTP Gateway Adapter: No endpointUrl configured for agent ${registration.id}`);
     }
 
-    // Build headers
+    if (!isFixtureEndpoint(endpointUrl)) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await fetch(endpointUrl, {
+          method: "POST",
+          headers: {
+            ...authHeaders(registration),
+            "Content-Type": "application/json",
+            "X-RoleplayX-Run-Id": request.runId,
+            "X-RoleplayX-Turn": String(request.turn),
+          },
+          body: JSON.stringify(request),
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error(`Agent endpoint returned ${response.status}`);
+        const parsed = AgentResponseSchema.safeParse(await response.json());
+        if (!parsed.success) throw new Error("Agent endpoint returned an invalid AgentResponse");
+        return parsed.data;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    // Deterministic fixture behavior is intentionally limited to local test
+    // endpoints and example.com fixtures; all other URLs are called above.
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "X-RoleplayX-Run-Id": request.runId,
@@ -103,4 +144,29 @@ export class HttpGatewayAdapter implements GatewayAgentAdapter {
       },
     };
   }
+}
+
+function isFixtureEndpoint(endpointUrl: string): boolean {
+  return endpointUrl.startsWith("mock://") ||
+    endpointUrl.includes(".example.com") ||
+    endpointUrl === "http://localhost/mock-agent";
+}
+
+function healthUrl(endpointUrl: string): string {
+  if (endpointUrl.startsWith("mock://")) return endpointUrl;
+  return `${endpointUrl.replace(/\/$/, "")}/health`;
+}
+
+function authHeaders(registration: ExternalAgentRegistration): Record<string, string> {
+  const auth = registration.authConfig;
+  if (auth.type === "bearer" && auth.secretToken) {
+    return { Authorization: `Bearer ${auth.secretToken}` };
+  }
+  if (auth.type === "api_key" && auth.secretToken) {
+    return { [auth.headerName || "X-API-Key"]: auth.secretToken };
+  }
+  if (auth.type === "hmac" && auth.secretToken) {
+    return { "X-RoleplayX-Auth": "hmac" };
+  }
+  return {};
 }

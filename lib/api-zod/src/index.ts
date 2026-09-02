@@ -4,3 +4,6 @@ export * from "./generated/types";
 // explicit re-exports resolve the star-export ambiguity.
 export { GetPopulationDefinitionParams } from "./generated/api";
 export type { GetPopulationDefinitionParams as GetPopulationDefinitionParamsType } from "./generated/types";
+// OpenAPI body schemas and generated TypeScript body aliases can share a name.
+export { PostV1CommercialValidationCompareBody } from "./generated/api";
+export type { PostV1CommercialValidationCompareBody as PostV1CommercialValidationCompareBodyType } from "./generated/types";

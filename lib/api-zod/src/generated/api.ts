@@ -4204,3 +4204,162 @@ export const CreateJsonExportResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the fixed Reference Benchmark v1 definition
+ */
+export const GetV1ReferenceBenchmarkResponse = zod.object({
+  "id": zod.string(),
+  "version": zod.string(),
+  "title": zod.string(),
+  "purpose": zod.string(),
+  "scenario": zod.object({
+  "title": zod.string(),
+  "policy": zod.string(),
+  "expectedActions": zod.array(zod.string())
+}),
+  "cohorts": zod.array(zod.object({
+  "id": zod.string(),
+  "label": zod.string(),
+  "description": zod.string()
+})),
+  "metrics": zod.array(zod.string()),
+  "seedPolicy": zod.string()
+})
+
+
+/**
+ * @summary List commercial validation runs
+ */
+export const GetV1CommercialValidationRunsResponseItem = zod.object({
+  "id": zod.string(),
+  "requestId": zod.string(),
+  "agent": zod.record(zod.string(), zod.unknown()),
+  "status": zod.enum(['completed', 'failed']),
+  "startedAt": zod.coerce.date().optional(),
+  "completedAt": zod.coerce.date().optional(),
+  "sampleSizePerCohort": zod.int().optional(),
+  "repetitions": zod.int().optional(),
+  "interactionCount": zod.int(),
+  "baseline": zod.record(zod.string(), zod.unknown()),
+  "stress": zod.record(zod.string(), zod.unknown()),
+  "calibrationStatus": zod.enum(['CALIBRATED', 'PROVISIONAL']).optional(),
+  "failureExplorer": zod.array(zod.record(zod.string(), zod.unknown())),
+  "evidencePackageId": zod.string(),
+  "correlation": zod.record(zod.string(), zod.unknown())
+})
+export const GetV1CommercialValidationRunsResponse = zod.array(GetV1CommercialValidationRunsResponseItem)
+
+
+/**
+ * @summary Run baseline and stress validation against a registered Agent
+ */
+export const postV1CommercialValidationRunsBodySampleSizePerCohortDefault = 2;
+export const postV1CommercialValidationRunsBodySampleSizePerCohortMax = 250;
+
+export const postV1CommercialValidationRunsBodyRepetitionsDefault = 1;
+export const postV1CommercialValidationRunsBodyRepetitionsMax = 250;
+
+export const postV1CommercialValidationRunsBodyBaseSeedDefault = 20260902;
+
+export const PostV1CommercialValidationRunsBody = zod.object({
+  "agentId": zod.string(),
+  "sampleSizePerCohort": zod.int().min(1).max(postV1CommercialValidationRunsBodySampleSizePerCohortMax).default(postV1CommercialValidationRunsBodySampleSizePerCohortDefault),
+  "repetitions": zod.int().min(1).max(postV1CommercialValidationRunsBodyRepetitionsMax).default(postV1CommercialValidationRunsBodyRepetitionsDefault),
+  "baseSeed": zod.int().default(postV1CommercialValidationRunsBodyBaseSeedDefault),
+  "calibrationData": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+export const PostV1CommercialValidationRunsResponse = zod.object({
+  "id": zod.string(),
+  "requestId": zod.string(),
+  "agent": zod.record(zod.string(), zod.unknown()),
+  "status": zod.enum(['completed', 'failed']),
+  "startedAt": zod.coerce.date().optional(),
+  "completedAt": zod.coerce.date().optional(),
+  "sampleSizePerCohort": zod.int().optional(),
+  "repetitions": zod.int().optional(),
+  "interactionCount": zod.int(),
+  "baseline": zod.record(zod.string(), zod.unknown()),
+  "stress": zod.record(zod.string(), zod.unknown()),
+  "calibrationStatus": zod.enum(['CALIBRATED', 'PROVISIONAL']).optional(),
+  "failureExplorer": zod.array(zod.record(zod.string(), zod.unknown())),
+  "evidencePackageId": zod.string(),
+  "correlation": zod.record(zod.string(), zod.unknown())
+})
+
+
+/**
+ * @summary Get a validation run with evidence references
+ */
+export const GetV1CommercialValidationRunsIdParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetV1CommercialValidationRunsIdResponse = zod.object({
+  "id": zod.string(),
+  "requestId": zod.string(),
+  "agent": zod.record(zod.string(), zod.unknown()),
+  "status": zod.enum(['completed', 'failed']),
+  "startedAt": zod.coerce.date().optional(),
+  "completedAt": zod.coerce.date().optional(),
+  "sampleSizePerCohort": zod.int().optional(),
+  "repetitions": zod.int().optional(),
+  "interactionCount": zod.int(),
+  "baseline": zod.record(zod.string(), zod.unknown()),
+  "stress": zod.record(zod.string(), zod.unknown()),
+  "calibrationStatus": zod.enum(['CALIBRATED', 'PROVISIONAL']).optional(),
+  "failureExplorer": zod.array(zod.record(zod.string(), zod.unknown())),
+  "evidencePackageId": zod.string(),
+  "correlation": zod.record(zod.string(), zod.unknown())
+})
+
+
+/**
+ * @summary Compare two runs and produce a deployment gate
+ */
+export const PostV1CommercialValidationCompareBody = zod.object({
+  "baselineRunId": zod.string(),
+  "candidateRunId": zod.string()
+})
+
+export const PostV1CommercialValidationCompareResponse = zod.object({
+  "id": zod.string(),
+  "baselineRunId": zod.string(),
+  "candidateRunId": zod.string(),
+  "deploymentDecision": zod.enum(['APPROVED', 'BLOCKED', 'WARNING']),
+  "report": zod.record(zod.string(), zod.unknown())
+})
+
+
+/**
+ * @summary Download an immutable evidence package
+ */
+export const GetV1CommercialValidationPackagesIdParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetV1CommercialValidationPackagesIdResponse = zod.object({
+  "id": zod.string(),
+  "manifest": zod.record(zod.string(), zod.unknown()),
+  "baseline": zod.record(zod.string(), zod.unknown()),
+  "stress": zod.record(zod.string(), zod.unknown()),
+  "failureExplorer": zod.array(zod.record(zod.string(), zod.unknown())),
+  "evidence": zod.array(zod.record(zod.string(), zod.unknown()))
+})
+
+
+/**
+ * @summary Verify the checksum of an immutable evidence package
+ */
+export const PostV1CommercialValidationPackagesIdVerifyParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const PostV1CommercialValidationPackagesIdVerifyResponse = zod.object({
+  "packageId": zod.string(),
+  "valid": zod.boolean(),
+  "storedChecksum": zod.string(),
+  "calculatedChecksum": zod.string()
+})
+
+

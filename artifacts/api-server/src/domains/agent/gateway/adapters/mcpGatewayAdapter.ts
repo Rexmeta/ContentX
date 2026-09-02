@@ -5,6 +5,7 @@ import type {
   ExternalAgentRegistration,
 } from "@workspace/simulation-contract";
 import type { GatewayAgentAdapter } from "../gatewayAdapter";
+import { AgentResponseSchema } from "@workspace/simulation-contract";
 
 /**
  * Model Context Protocol (MCP) Adapter:
@@ -14,6 +15,23 @@ export class McpGatewayAdapter implements GatewayAgentAdapter {
   readonly protocol = "mcp";
 
   async checkHealth(registration: ExternalAgentRegistration): Promise<AgentHealth> {
+    if (registration.endpointUrl && !registration.endpointUrl.startsWith("mock://")) {
+      try {
+        const response = await fetch(registration.endpointUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: "health", method: "tools/list", params: {} }),
+        });
+        if (!response.ok) throw new Error(`MCP endpoint returned ${response.status}`);
+      } catch (error) {
+        return {
+          status: "unreachable",
+          latencyMs: 0,
+          checkedAt: new Date().toISOString(),
+          details: error instanceof Error ? error.message : "MCP health check failed",
+        };
+      }
+    }
     return {
       status: "healthy",
       latencyMs: 5,
@@ -23,6 +41,23 @@ export class McpGatewayAdapter implements GatewayAgentAdapter {
   }
 
   async dispatch(request: AgentRequest, registration: ExternalAgentRegistration): Promise<AgentResponse> {
+    if (registration.endpointUrl && !registration.endpointUrl.startsWith("mock://")) {
+      const response = await fetch(registration.endpointUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: request.runId,
+          method: "agent/respond",
+          params: { request },
+        }),
+      });
+      if (!response.ok) throw new Error(`MCP endpoint returned ${response.status}`);
+      const body = await response.json() as { result?: unknown };
+      const parsed = AgentResponseSchema.safeParse(body.result ?? body);
+      if (!parsed.success) throw new Error("MCP endpoint returned an invalid AgentResponse");
+      return parsed.data;
+    }
     const startTime = Date.now();
     const lastMessage = request.conversation[request.conversation.length - 1];
     const userUtterance = lastMessage?.content ?? "";

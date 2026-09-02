@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   Terminal, Users, UserCircle, PlayCircle, BarChart, Network, 
-  ChevronRight, Box, ListTodo, Settings2, Code,
+  ChevronRight, Box, ListTodo, Settings2, Code, FlaskConical,
   ChevronDown, Lightbulb, PlusCircle, Library, Layers, Menu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,7 @@ const primaryItems = [
 
 const advancedItems = [
   { href: "/benchmark", label: "벤치마크", icon: Layers },
+  { href: "/commercial-validation", label: "상용 검증", icon: FlaskConical },
   { href: "/formats", label: "JSON 포맷", icon: Code },
   { href: "/populations", label: "가상 인구", icon: Users },
   { href: "/characters", label: "캐릭터", icon: UserCircle },

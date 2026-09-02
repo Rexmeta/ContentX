@@ -23,6 +23,7 @@ import Explorer from '@/pages/explorer';
 import Examples from '@/pages/examples';
 import Benchmark from '@/pages/benchmark';
 import Formats from '@/pages/formats/index';
+import CommercialValidation from '@/pages/commercial-validation';
 import {
   Route,
   Switch,
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/explorer" component={Explorer} />
       <Route path="/benchmark" component={Benchmark} />
       <Route path="/formats" component={Formats} />
+      <Route path="/commercial-validation" component={CommercialValidation} />
       
       <Route component={NotFound} />
     </Switch>
