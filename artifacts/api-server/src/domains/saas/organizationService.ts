@@ -9,9 +9,15 @@ export class OrganizationService {
   private orgs: Map<string, Organization> = new Map();
   private projects: Map<string, Project> = new Map();
   private members: Map<string, Member> = new Map();
+  private idSequence = 0;
+
+  private nextId(prefix: string): string {
+    this.idSequence += 1;
+    return `${prefix}_${Date.now()}_${this.idSequence}`;
+  }
 
   createOrganization(input: { id?: string; name: string; slug: string; plan?: Organization["plan"] }): Organization {
-    const id = input.id ?? `org_${Date.now()}`;
+    const id = input.id ?? this.nextId("org");
     const org: Organization = {
       id,
       name: input.name,
@@ -37,7 +43,7 @@ export class OrganizationService {
       throw new Error(`Organization "${input.organizationId}" not found`);
     }
 
-    const id = input.id ?? `proj_${Date.now()}`;
+    const id = input.id ?? this.nextId("proj");
     const project: Project = {
       id,
       organizationId: input.organizationId,
@@ -62,7 +68,7 @@ export class OrganizationService {
   }
 
   addMember(input: { organizationId: string; email: string; name: string; role?: UserRole }): Member {
-    const id = `mem_${Date.now()}`;
+    const id = this.nextId("mem");
     const member: Member = {
       id,
       organizationId: input.organizationId,
