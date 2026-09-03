@@ -44,7 +44,9 @@ const advancedItems = [
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const [location] = useLocation();
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches
+  );
 
   return (
     <div className="flex h-full flex-col bg-[hsl(var(--sidebar))] text-[hsl(var(--sidebar-foreground))]">
@@ -90,6 +92,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             size="icon" 
             className="h-6 w-6 text-[hsl(var(--sidebar-foreground))]/45 hover:text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]"
             onClick={() => setAdvancedOpen(!advancedOpen)}
+            aria-label={advancedOpen ? "고급 도구 접기" : "고급 도구 펼치기"}
+            aria-expanded={advancedOpen}
           >
             <ChevronDown className={cn("h-3 w-3 transition-transform", advancedOpen ? "rotate-180" : "")} />
           </Button>
