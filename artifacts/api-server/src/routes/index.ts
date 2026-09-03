@@ -18,6 +18,7 @@ import continuousEvaluationRouter from "./continuousEvaluation";
 import saasRouter from "./saas";
 import commercialValidationRouter from "./commercialValidation";
 import productionEvidenceRouter from "./productionEvidenceRoutes";
+import customerValidationRouter from "./customerValidationRoutes";
 
 const router: IRouter = Router();
 
@@ -40,6 +41,8 @@ router.use(continuousEvaluationRouter);
 router.use(saasRouter);
 router.use(commercialValidationRouter);
 router.use(productionEvidenceRouter);
+router.use(customerValidationRouter);
 
 export default router;
+
 

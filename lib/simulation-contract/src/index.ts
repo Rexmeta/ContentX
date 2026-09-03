@@ -14,4 +14,5 @@ export * from "./saas";
 export * from "./provenance";
 export * from "./failureDiscovery";
 export * from "./productionEvidence";
+export * from "./customerValidationV4";
 
