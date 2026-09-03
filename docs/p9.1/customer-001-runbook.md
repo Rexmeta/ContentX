@@ -1,7 +1,7 @@
 # Customer #001 Validation Runbook (SOP)
 
 > **Baseline Version**: `P9.1-FROZEN (Commit: 4698b6b)`  
-> **Objective**: Execute the first end-to-end commercial validation on an external enterprise AI agent and obtain empirical Level 3 Production Evidence.
+> **Objective**: Execute the first end-to-end customer validation on an independently connected enterprise AI agent and produce customer-validation evidence suitable for subsequent Production Evidence assessment.
 
 ---
 
@@ -48,7 +48,7 @@
 
 ### Stage 1: Onboarding & Identity
 - **Step 1 (Customer Identity)**: Collect corporate legal name, primary domain expert contacts, and contract reference (`contractReference`).
-- **Step 2 (Agent Connection)**: Configure agent profile with `secretRef` vault pointers. Run the 8-Step Preflight Check (Schema, Latency SLA, Tool Calling, PII Redaction). Server generates `independenceStatus: "verified"`.
+- **Step 2 (Agent Connection)**: Configure agent profile with `secretRef` vault pointers. Run the 8-Step Preflight Check (Schema, Latency SLA, Tool Calling, PII Redaction). Server verifies and records `independenceStatus: "verified"` only when the required attestation and identity evidence satisfy the P9.1 verification policy.
 
 ### Stage 2: Ground Truth & Calibration
 - **Step 3 (Human Gold Set)**: Ingest at least 50 distinct trajectories rated by $\ge 3$ domain experts. Verify `multiRaterCoverage >= 90%` and `consensusCoverage >= 90%`.
@@ -67,7 +67,10 @@
 - **Step 11 (Regression Gate)**: Run RoleplayX Canonical Regression Corpus (R01~R08) to verify accuracy $\ge 85\%$ and FPR $\le 10\%$.
 
 ### Stage 5: Sealing & Non-Repudiation
-- **Step 12 (Evidence Sealing)**: Compile 22 standardized sub-artifacts into Evidence Package v4 (`contentx.evidence.v4`). Generate `22_SHA256SUMS` and root checksum. Issue `AI Agent Quality Certificate` (Scope: `customer_pilot`).
+- **Step 12 (Evidence Sealing & Certificate Eligibility)**: Compile 22 standardized sub-artifacts into Evidence Package v4 (`contentx.evidence.v4`). Generate `22_SHA256SUMS` and root checksum. Perform certificate eligibility check:
+  - If `validation_fixture` $\implies$ Issue `Validation Certificate`.
+  - If `customer_validation` and all multi-clause customer gates pass ($N \ge 50$, multi-rater $\ge 90\%$, target recurrence = $0.0\%$, regression pass) $\implies$ Issue `AI Agent Quality Certificate` (Scope: `customer_pilot`).
+
 
 ---
 
