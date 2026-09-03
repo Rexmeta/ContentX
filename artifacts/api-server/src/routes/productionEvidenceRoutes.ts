@@ -37,12 +37,13 @@ router.get("/api/p9/status", (_req, res) => {
 // 2. Gate Status
 router.get("/api/p9/gates", (_req, res) => {
   res.json({
-    gate1: { name: "Real Customer Agent Connect", criteria: "preflight pass + verified attestation" },
-    gate2: { name: "Human Gold Set Calibration", criteria: "Pearson r >= 0.90, Kappa >= 0.85, N >= 20" },
-    gate3: { name: "Standard Regression Corpus", criteria: "accuracy >= 0.85, FPR <= 10%, R01~R08 evaluated" },
+    gate1: { name: "External Agent Connect & Validation", criteria: "preflight pass + attestation (Customer Readiness: READY_FOR_CUSTOMER)" },
+    gate2: { name: "Human Gold Set Calibration (under Human Gold Set v1)", criteria: "Pearson r >= 0.90, Kappa (Judge vs Human) >= 0.85, N >= 20" },
+    gate3: { name: "RoleplayX Canonical Regression Corpus v1 (R01~R08)", criteria: "accuracy >= 0.85, FPR <= 10%, R01~R08 evaluated" },
     gate4: { name: "Customer Pilot & Certificate", criteria: "closed loop pass + SHA256 verified package" },
   });
 });
+
 
 // 3. Register Customer Agent (Gate #1)
 router.post("/api/p9/customer-agent", async (req, res) => {
@@ -174,9 +175,10 @@ router.post("/api/p9/pilot", (req, res) => {
 
 // 9. Get Pilot Details (Gate #4)
 router.get("/api/p9/pilot/:id", (req, res) => {
-  const pilot = customerPilotManager.getPilot(req.params.id);
+  const pilotId = typeof req.params.id === "string" ? req.params.id : req.params.id[0];
+  const pilot = customerPilotManager.getPilot(pilotId);
   if (!pilot) {
-    return res.status(404).json({ code: "PILOT_NOT_FOUND", message: `Pilot ${req.params.id} not found.` });
+    return res.status(404).json({ code: "PILOT_NOT_FOUND", message: `Pilot ${pilotId} not found.` });
   }
 
   const callerOrgId = (req.headers["x-organization-id"] as string) || "default";
@@ -184,7 +186,7 @@ router.get("/api/p9/pilot/:id", (req, res) => {
     return res.status(403).json({ code: "FORBIDDEN", message: "Cross-tenant pilot access forbidden." });
   }
 
-  res.json(pilot);
+  return res.json(pilot);
 });
 
 // 10. Issue Quality Certificate
@@ -192,6 +194,7 @@ router.post("/api/p9/certificate", (req, res) => {
   const {
     agentId,
     agentVersion,
+    certificateType,
     benchmarkId,
     benchmarkVersion,
     populationVersion,
@@ -202,6 +205,7 @@ router.post("/api/p9/certificate", (req, res) => {
     gateDecision,
     evidencePackageId,
     evidenceRootHash,
+    certificationScope,
     limitations,
   } = req.body || {};
 
@@ -215,6 +219,7 @@ router.post("/api/p9/certificate", (req, res) => {
       agentId,
       agentVersion,
       organizationId: callerOrgId,
+      certificateType: certificateType ?? "validation_certificate",
       benchmarkId: benchmarkId ?? "bench_v1",
       benchmarkVersion: benchmarkVersion ?? "1.0.0",
       populationVersion: populationVersion ?? "pop_v1",
@@ -225,6 +230,7 @@ router.post("/api/p9/certificate", (req, res) => {
       gateDecision,
       evidencePackageId,
       evidenceRootHash: evidenceRootHash ?? "pending",
+      certificationScope,
       limitations,
     });
     return res.status(201).json(cert);
@@ -236,9 +242,10 @@ router.post("/api/p9/certificate", (req, res) => {
 
 // 11. Get Quality Certificate
 router.get("/api/p9/certificate/:id", (req, res) => {
-  const cert = qualityCertificateService.getCertificate(req.params.id);
+  const certId = typeof req.params.id === "string" ? req.params.id : req.params.id[0];
+  const cert = qualityCertificateService.getCertificate(certId);
   if (!cert) {
-    return res.status(404).json({ code: "CERTIFICATE_NOT_FOUND", message: `Certificate ${req.params.id} not found.` });
+    return res.status(404).json({ code: "CERTIFICATE_NOT_FOUND", message: `Certificate ${certId} not found.` });
   }
 
   const callerOrgId = (req.headers["x-organization-id"] as string) || "default";
@@ -246,7 +253,8 @@ router.get("/api/p9/certificate/:id", (req, res) => {
     return res.status(403).json({ code: "FORBIDDEN", message: "Cross-tenant certificate access forbidden." });
   }
 
-  res.json(cert);
+  return res.json(cert);
 });
+
 
 export default router;

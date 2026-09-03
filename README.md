@@ -173,6 +173,7 @@ $$\text{CONNECT} \longrightarrow \text{SIMULATE} \longrightarrow \text{EVALUATE}
 | **P6: Enterprise SaaS** | `domains/saas/` | Multi-Tenant Organization/Project Hierarchy, RBAC (`owner`, `admin`, `engineer`, `analyst`, `viewer`), and Quota Metering. |
 | **P7: Real-World Proof** | `domains/evaluation/failureDiscoveryEngine.ts` | 80 Benchmark Space cells, MatrAIx Provenance Resolver, 1,000+ simulation failure discovery, adaptive stress loop, and cryptographic Evidence Package. |
 | **P8: Commercial Pilot Simulation**| `domains/evaluation/commercialPilotService.ts` | External Agent Validation Fixture (ApexPay), full Quality Engineering Loop (DISCOVER $\to$ STRESS $\to$ FIX $\to$ VERIFY), and KPI Scorecard. |
+| **P9: Production Evidence & Quality Certification**| `domains/productionEvidence/` | External Agent Connect & Attestation, Multi-Expert Human Gold Set Calibration (`CALIBRATED under Human Gold Set v1`), RoleplayX Canonical Regression Corpus v1 (R01~R08 Confusion Matrix), Evidence Package v3 (20 sub-artifacts), and Quality/Validation Certificates (`READY_FOR_CUSTOMER`). |
 
 ---
 
@@ -197,10 +198,11 @@ pnpm run build
 
 ### Running Automated Test Suite
 ```bash
-# Run all 40 domain & integration test suites (326 tests total)
+# Run all 46 domain & integration test suites (345 tests total, 100% passing)
 pnpm --filter @workspace/simulation-contract test
 AI_INTEGRATIONS_OPENAI_API_KEY=mock-key AI_INTEGRATIONS_OPENAI_BASE_URL=http://mock DATABASE_URL=postgres://mock:mock@localhost:5432/mock pnpm --filter @workspace/api-server test -- --exclude="**/*.db.test.ts"
 ```
+
 
 ---
 

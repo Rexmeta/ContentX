@@ -1,15 +1,19 @@
-# P9 Gate #1: Real Customer Agent Connect
+# P9 Gate #1: External Agent Connect & Validation
 
 ## 1. Objective
-Establish an independent, verifiable onboarding and attestation pipeline for external customer AI agents.
+Establish an independent, verifiable onboarding, contract verification, and attestation pipeline for external AI agents.
 
 ## 2. Agent Ownership Classification
 We strictly enforce three non-conflated ownership types:
 1. `internal`: System-managed test and reference agents.
-2. `validation_fixture`: Deterministic standalone fixtures (e.g. ApexPay) used for infrastructure validation and sales engineering demos (`non_production`).
-3. `third_party_customer`: Independently deployed customer AI agents backed by verified operator attestations and contractual evidence.
+2. `validation_fixture`: Deterministic standalone fixtures (e.g. ApexPay) used for infrastructure validation and sales engineering demos (`non_production`, `independenceStatus: "unverified"`).
+3. `third_party_customer`: Independently deployed customer AI agents backed by verified operator attestations and contractual evidence (`independenceStatus: "verified"`, `productionStatus: "staging" | "production"`).
 
-## 3. 8-Step Preflight Check
+## 3. Customer Readiness Status
+- **Current Status**: `READY_FOR_CUSTOMER`
+- **Promotion Rule**: When an actual third-party customer agent connects with contract verification in P9.1, status elevates to `CUSTOMER_VALIDATED`.
+
+## 4. 8-Step Preflight Check
 - Step 1: Health Handshake (`/health` ping and network availability)
 - Step 2: Response Schema Conformance (standard `AgentResponse` format)
 - Step 3: Turn Continuity & Context Persistence
@@ -18,6 +22,3 @@ We strictly enforce three non-conflated ownership types:
 - Step 6: Malformed Input Graceful Handling
 - Step 7: Automated PII Redaction Audit
 - Step 8: Network Error Recovery & Fallback
-
-## 4. Attestation & Evidence
-Customer agent registrations generate an immutable `CustomerAgentAttestation` containing declaration metadata, verification method (`operator_verified` / `contract_verified`), and environment tags (`staging` / `production`).

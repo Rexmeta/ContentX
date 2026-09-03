@@ -196,10 +196,16 @@ export class P9MasterValidationEngine {
       blockingReasons.push(`Gate #4 Blocked: Deployment gate evaluated as ${gateDecision.decision}.`);
     }
 
+    const certificateType =
+      ownershipType === "third_party_customer" && gate1Exec.gate1Result.independenceStatus === "verified"
+        ? "customer_quality_certificate"
+        : "validation_certificate";
+
     const certificate = qualityCertificateService.issueCertificate({
       agentId: agent.id,
       agentVersion: agent.version,
       organizationId: agent.tenantId || "default",
+      certificateType,
       benchmarkId: "bench_p9_cs_v1",
       benchmarkVersion: "1.0.0",
       populationVersion: "pop_v3",
@@ -210,6 +216,9 @@ export class P9MasterValidationEngine {
       gateDecision: gateDecision.decision,
       evidencePackageId: `evid_pkg_v3_${agent.id}`,
       evidenceRootHash: "pending_hash",
+      certificationScope: {
+        environment: input.environment ?? "staging",
+      },
     });
 
     const evidencePackageV3 = evidencePackageV3Builder.buildPackage({
@@ -260,19 +269,19 @@ export class P9MasterValidationEngine {
       overallStatus,
       gate1: {
         status: gate1Passed ? "PASS" : "FAIL",
-        summary: `Preflight passed ${gate1Exec.gate1Result.checks.filter((c) => c.passed).length}/${gate1Exec.gate1Result.checks.length} checks (${ownershipType})`,
+        summary: `Preflight passed ${gate1Exec.gate1Result.checks.filter((c) => c.passed).length}/${gate1Exec.gate1Result.checks.length} checks (External Agent Connect & Validation, Readiness: ${gate1Exec.gate1Result.customerReadiness})`,
       },
       gate2: {
         status: gate2Passed ? "PASS" : "FAIL",
-        summary: `Calibration status: ${calibrationResult.calibrationStatus} (Pearson r: ${calibrationResult.pearsonR}, Kappa: ${calibrationResult.cohensKappa}, MAE: ${calibrationResult.mae})`,
+        summary: `Calibration status: ${calibrationResult.calibrationStatus} under Human Gold Set v1 (Pearson r: ${calibrationResult.pearsonR}, Cohen's kappa (Judge vs Human): ${calibrationResult.cohensKappa}, MAE: ${calibrationResult.mae})`,
       },
       gate3: {
         status: gate3Passed ? "PASS" : "FAIL",
-        summary: `Regression accuracy: ${(cm.accuracy * 100).toFixed(1)}%, Precision: ${(cm.precision * 100).toFixed(1)}%, FPR: ${(cm.falsePositiveRate * 100).toFixed(1)}% (${regressionEval.criticalRegressionSummary})`,
+        summary: `RoleplayX Canonical Regression Corpus v1 (R01~R08) - accuracy: ${(cm.accuracy * 100).toFixed(1)}%, Precision: ${(cm.precision * 100).toFixed(1)}%, FPR: ${(cm.falsePositiveRate * 100).toFixed(1)}% (${regressionEval.criticalRegressionSummary})`,
       },
       gate4: {
         status: gate4Passed ? "PASS" : "FAIL",
-        summary: `Pilot status: completed (${gateDecision.decision}), Certificate ID: ${certificate.certificateId}`,
+        summary: `Pilot status: completed (${gateDecision.decision}), Certificate Type: ${certificate.certificateType}, ID: ${certificate.certificateId}`,
       },
       calibrationStatus: calibrationResult.calibrationStatus,
       regressionStatus: gate3Passed ? "PASS" : "FAIL",
@@ -283,6 +292,7 @@ export class P9MasterValidationEngine {
       warnings,
       generatedAt: new Date().toISOString(),
     };
+
 
     return {
       result: validationResult,

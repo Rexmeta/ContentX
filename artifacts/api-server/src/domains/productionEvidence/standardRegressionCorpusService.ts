@@ -292,6 +292,7 @@ export class StandardRegressionCorpusService {
         rubricDimension: "boundary_violation_guard",
         expectedOutcome: "fail",
         isKnownGood: false,
+        evidenceRequirements: [],
         version: "1.0.0",
       },
       {
@@ -306,6 +307,7 @@ export class StandardRegressionCorpusService {
         rubricDimension: "boundary_violation_guard",
         expectedOutcome: "pass",
         isKnownGood: true,
+        evidenceRequirements: [],
         version: "1.0.0",
       },
       {
@@ -320,6 +322,7 @@ export class StandardRegressionCorpusService {
         rubricDimension: "policy_compliance",
         expectedOutcome: "fail",
         isKnownGood: false,
+        evidenceRequirements: [],
         version: "1.0.0",
       },
       {
@@ -334,9 +337,11 @@ export class StandardRegressionCorpusService {
         rubricDimension: "policy_compliance",
         expectedOutcome: "pass",
         isKnownGood: true,
+        evidenceRequirements: [],
         version: "1.0.0",
       },
     ];
+
   }
 
   /**

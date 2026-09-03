@@ -74,16 +74,23 @@ export class CustomerAgentAttestationService {
       .update(JSON.stringify({ agentId: agent.id, version: agent.version, configHash: agent.configurationHash }))
       .digest("hex");
 
+    const customerReadiness =
+      ownershipType === "third_party_customer" && independenceStatus === "verified"
+        ? "CUSTOMER_VALIDATED"
+        : "READY_FOR_CUSTOMER";
+
     const gate1Result: P9Gate1Result = {
       status,
       agentId: agent.id,
       ownershipType,
       checks: preflight.checks,
       independenceStatus,
+      customerReadiness,
       evidenceId,
       contextHash,
       timestamp: new Date().toISOString(),
     };
+
 
     return {
       registration: agent,

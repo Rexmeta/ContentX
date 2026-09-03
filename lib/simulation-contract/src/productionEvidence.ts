@@ -28,6 +28,7 @@ export const P9Gate1ResultSchema = z.object({
   ownershipType: CustomerAgentOwnershipTypeSchema,
   checks: z.array(ContractCheckItemSchema),
   independenceStatus: z.enum(["verified", "unverified"]),
+  customerReadiness: z.enum(["NOT_READY", "READY_FOR_CUSTOMER", "CUSTOMER_VALIDATED"]).default("READY_FOR_CUSTOMER"),
   evidenceId: z.string(),
   contextHash: z.string(),
   timestamp: z.string().default(() => new Date().toISOString()),
@@ -70,7 +71,7 @@ export const CalibrationResultSchema = z.object({
   sampleSize: z.number().int(),
   expertCount: z.number().int(),
   pearsonR: z.number(),
-  cohensKappa: z.number(),
+  cohensKappa: z.number(), // LLM Judge vs Human Consensus binary pass/fail agreement
   fleissKappa: z.number().optional(),
   mae: z.number(),
   bias: z.number(),
@@ -139,7 +140,7 @@ export const CustomerPilotSchema = z.object({
   pilotId: z.string(),
   organizationId: z.string(),
   agentId: z.string(),
-  environment: z.enum(["staging", "production", "sandbox"]).default("staging"),
+  environment: z.enum(["staging", "production", "sandbox", "non_production"]).default("staging"),
   startAt: z.string().default(() => new Date().toISOString()),
   endAt: z.string().optional(),
   benchmarkVersion: z.string(),
@@ -155,11 +156,33 @@ export const CustomerPilotSchema = z.object({
 });
 export type CustomerPilot = z.infer<typeof CustomerPilotSchema>;
 
+export const CertificationScopeSchema = z.object({
+  agentVersion: z.string(),
+  benchmarkVersion: z.string(),
+  populationVersion: z.string(),
+  rubricVersion: z.string(),
+  evaluatorVersion: z.string(),
+  calibrationDataset: z.string(),
+  regressionCorpus: z.string(),
+  environment: z.string(),
+  evaluationContextHash: z.string(),
+  evidencePackageId: z.string(),
+  validityPeriod: z.string().optional(),
+});
+export type CertificationScope = z.infer<typeof CertificationScopeSchema>;
+
+export const QualityCertificateTypeSchema = z.enum([
+  "validation_certificate", // Issued for testing fixtures / non-production validation
+  "customer_quality_certificate", // Issued for verified third-party customer pilots
+]);
+export type QualityCertificateType = z.infer<typeof QualityCertificateTypeSchema>;
+
 export const QualityCertificateStatusSchema = z.enum(["DRAFT", "ISSUED", "REVOKED"]);
 export type QualityCertificateStatus = z.infer<typeof QualityCertificateStatusSchema>;
 
 export const QualityCertificateSchema = z.object({
   certificateId: z.string(),
+  certificateType: QualityCertificateTypeSchema.default("validation_certificate"),
   agentId: z.string(),
   agentVersion: z.string(),
   organizationId: z.string(),
@@ -175,6 +198,7 @@ export const QualityCertificateSchema = z.object({
   validUntil: z.string().optional(),
   evidencePackageId: z.string(),
   evidenceRootHash: z.string(),
+  certificationScope: CertificationScopeSchema,
   limitations: z.array(z.string()).default([]),
   certificateStatus: QualityCertificateStatusSchema.default("DRAFT"),
 });

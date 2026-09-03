@@ -1,32 +1,70 @@
-# Phase 10 (P9): Production Evidence & Customer Validation Acceptance Report
+# Phase 10 (P9): Production Evidence Infrastructure & Customer Readiness Acceptance Report
 
 ## Executive Summary
-Phase 10 (P9) establishes the complete enterprise customer validation pipeline for ContentX and RoleplayX, incorporating independent customer agent connectivity, multi-expert human gold calibration, canonical R01~R08 regression benchmarking, customer pilot feedback loops, Evidence Package v3 generation, and formal AI Agent Quality Certificate issuance.
+Phase 10 (P9) establishes the complete enterprise Quality Engineering infrastructure for ContentX and RoleplayX, incorporating external agent connectivity, multi-expert human gold calibration, RoleplayX Canonical Regression Corpus v1 (R01~R08), validation pilot feedback loops, Evidence Package v3 generation, and Validation/Quality Certificate issuance.
 
 ---
 
-## Gate #1: Real Customer Agent Connect
-- **Status**: 🟢 **PASS** (`READY_FOR_CUSTOMER`)
-- **Agent Ownership**: Explicitly categorized (`third_party_customer` vs `validation_fixture` vs `internal`)
+## Proof Hierarchy & Project Status
+
+```text
+┌────────────────────────────────────────────┐
+│ P0–P8                                      │
+│ Infrastructure & Simulation Validation     │
+│                                            │
+│ STATUS: VALIDATED                           │
+└──────────────────────┬─────────────────────┘
+                       ↓
+┌────────────────────────────────────────────┐
+│ P9                                         │
+│ Production Evidence Infrastructure        │
+│                                            │
+│ STATUS: TECHNICALLY COMPLETE               │
+│         READY FOR CUSTOMER                 │
+└──────────────────────┬─────────────────────┘
+                       ↓
+┌────────────────────────────────────────────┐
+│ P9.1 (NEXT)                                │
+│ Real Customer Validation                   │
+│                                            │
+│ Customer Agent                             │
+│ Human Gold (N=50~100)                     │
+│ Customer Pilot                             │
+│ AI Agent Quality Certificate               │
+└──────────────────────┬─────────────────────┘
+                       ↓
+┌────────────────────────────────────────────┐
+│ LEVEL 3                                    │
+│ Production Evidence                        │
+│                                            │
+│ STATUS: VALIDATED                           │
+└────────────────────────────────────────────┘
+```
+
+---
+
+## Gate #1: External Agent Connect & Validation
+- **Status**: 🟢 **PASS** (Customer Readiness: `READY_FOR_CUSTOMER`)
+- **Agent Ownership**: Explicitly categorized (`validation_fixture` for ApexPay vs `third_party_customer` for external enterprise clients)
 - **Preflight Outcome**: 8 / 8 checks passed (Health, Schema, Turn Continuity, SLA, Tool Calling, Robustness, PII Redaction, Error Recovery)
 - **Attestation**: Operator-verified with contractual evidence reference
 - **Evidence**: Cryptographic Preflight Manifest recorded
 
 ---
 
-## Gate #2: Human Gold Set Calibration
-- **Status**: 🟢 **PASS** (`CALIBRATED`)
+## Gate #2: Human Gold Set Calibration (under Human Gold Set v1)
+- **Status**: 🟢 **PASS** (`CALIBRATED under Human Gold Set v1`)
 - **Gold Set Sample Size ($N$)**: 20 fully annotated trajectories across balanced scenarios and cohorts
 - **Expert Raters**: 3 pseudonymized domain experts (`exp_01`, `exp_02`, `exp_03`)
 - **Pearson Correlation ($r$)**: **0.94** ($\ge 0.90$ acceptance threshold)
-- **Cohen's $\kappa$**: **0.89** ($\ge 0.85$ acceptance threshold)
+- **Cohen's $\kappa$ (LLM Judge vs Human Consensus)**: **0.89** ($\ge 0.85$ acceptance threshold)
 - **Mean Absolute Error ($MAE$)**: **2.10** ($\le 5.0$ acceptance threshold)
 - **Mean Bias**: **+0.40** points
-- **Calibration Certification**: Evaluator elevated from `PROVISIONAL` to **`CALIBRATED`**
+- **Calibration Certification**: Evaluator elevated from `PROVISIONAL` to **`CALIBRATED`** under Human Gold Set v1
 
 ---
 
-## Gate #3: Standard Regression Corpus (R01 ~ R08)
+## Gate #3: RoleplayX Canonical Regression Corpus v1 (R01 ~ R08)
 - **Status**: 🟢 **PASS**
 - **Canonical Categories**:
   - `R01`: Boundary Violation (Excessive Concession / Legalistic Drift)
@@ -50,49 +88,29 @@ Phase 10 (P9) establishes the complete enterprise customer validation pipeline f
 
 ---
 
-## Gate #4: Customer Pilot & AI Agent Quality Certificate
-- **Status**: 🟢 **PASS** (`ISSUED`)
-- **Pilot Agent**: ApexPay Enterprise Pilot Agent (`agent_client_apexpay_master`)
+## Gate #4: Pilot Infrastructure & Certificate Issuance
+- **Status**: 🟢 **PASS** (`Validation Certificate ISSUED`)
+- **Evaluated Agent**: ApexPay Validation Fixture (`agent_client_apexpay_master`, `ownershipType: "validation_fixture"`)
 - **Environment**: Staging
-- **Customer Review**: Failure reviews verified and confirmed by client QA leadership
-- **Deployment Decision**: `APPROVED`
+- **Deployment Decision**: `APPROVED FOR TEST CONFIGURATION`
 - **Evidence Package**: `contentx.evidence.v3` (20 standardized sub-artifacts, SHA-256 integrity verified)
-- **AI Agent Quality Certificate**:
+- **Issued Certificate**:
   - Certificate ID: `cert_p9_cs_refund_2026`
-  - Certification Status: **`ISSUED`**
+  - Certificate Type: **`Validation Certificate`** (`scope: "non_production / validation_fixture"`)
+  - Status: **`ISSUED`**
   - Statement: *"The evaluated AI agent version passed the defined benchmark, evaluation, regression, and deployment-gate criteria under the documented test configuration."*
 
 ---
 
-## Commercial KPI Scorecard
+## Scientific & Security Boundaries
 
-| KPI | Target SLA | Observed | Denominator / Basis | Evidence Status |
-|:---|:---:|:---:|:---|:---:|
-| **Time to First Benchmark** | $< 60\text{s}$ | **0.24s** | Full agent onboarding & 8-step preflight | ✅ MET |
-| **Preflight Success Rate** | $\ge 95\%$ | **100.0%** | 8 / 8 contract checks passed | ✅ MET |
-| **Hidden Failure Discovery** | $\ge 1.0 / 1\text{K}$ | **1.0 cluster** | Natural boundary compliance drift identified | ✅ MET |
-| **Adaptive Amplification** | $> 2.0\times$ | **6.76x** | Baseline 7.1% $\to$ Targeted Stress 48.0% | ✅ MET |
-| **Critical Regression Detection** | $100.0\%$ | **100.0%** | 8 / 8 tested critical regression cases detected | ✅ MET |
-| **Observed False Positive Rate** | $< 5.0\%$ | **0.0%** | 0 / 10 clean known-good cases falsely blocked | ✅ MET |
-| **Evidence Completeness** | $100.0\%$ | **100.0%** | 20 / 20 sub-artifacts sealed with SHA256SUMS | ✅ MET |
-| **Measured Execution Cost** | $<\$5.00$ | **$4.65** | Infra: $0.85 + Inference: $3.20 + Eval: $0.60 | ✅ MET |
-| **Runtime Latency (p95)** | $< 3000\text{ms}$ | **43ms** | RoleplayX orchestration engine (p50: 42ms, p99: 43ms) | ✅ MET |
-| **Human Judge Calibration** | $r \ge 0.90$ | **r = 0.94** | 20 trajectories annotated by 3 expert raters | ✅ MET |
-| **Customer Pilot Completion**| Completed | **Completed** | Full closed-loop executed with verified certificate | ✅ MET |
-
----
-
-## Scientific & Security Integrity
-- **Scientific Honesty**:
-  - Explicit distinction between synthetic simulations and live production evidence.
-  - Observed behavioral divergence is reported as empirical fact; root cause hypotheses remain provisional.
-  - 100% detection rate is explicitly bounded to the tested canonical regression corpus.
-- **Security & Tenant Isolation**:
-  - All 13 P9 routes enforce strict `x-organization-id` scoping with `403 Forbidden` on cross-tenant access.
-  - Automatic `PIIRedactor` cleans emails, credit card numbers, and phone numbers before persistence.
-  - Zero raw secrets or credentials stored in public evidence packages.
+1. **Synthetic Simulation $\neq$ Production Traffic**: 1,000 runs provide high-fidelity behavioral stress testing, distinct from live unmodeled human traffic.
+2. **Observed FPR = 0.0%**: Grounded strictly in the tested 20-case canonical regression corpus.
+3. **Observed Behavioral Divergence $\neq$ Causal Proof**: Behavioral divergence is factual evidence; root causes remain provisional.
+4. **Validation Fixture $\neq$ Live Third-Party Customer**: ApexPay is an independent validation fixture (`non_production`).
+5. **Certificate Precision**: Validation Certificate documents reproducible proof under `certificationScope`.
 
 ---
 
 ## Final P9 Status
-- **Empirical Status**: **`P9_READY_FOR_CUSTOMER`** (Technical pipeline fully implemented, calibrated, and ready for deployment to external commercial pilots).
+- **Overall Status**: **`P9_READY_FOR_CUSTOMER`** (Technically Complete & Ready for P9.1 Real Customer Validation).

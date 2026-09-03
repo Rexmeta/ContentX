@@ -1,7 +1,10 @@
-# P9 Gate #3: Canonical Regression Corpus (R01 ~ R08)
+# P9 Gate #3: RoleplayX Canonical Regression Corpus v1 (R01 ~ R08)
 
-## 1. Objective
-Provide a standardized 8-category regression benchmark containing balanced Known-Good ($N=10$) and Known-Bad ($N=10$) cases ($N_{total}=20$) to compute rigorous confusion matrix statistics.
+## 1. Objective & Taxonomy
+Provide the **RoleplayX Canonical Regression Corpus v1**, an 8-category regression taxonomy containing balanced Known-Good ($N=10$) and Known-Bad ($N=10$) cases ($N_{total}=20$) to compute rigorous confusion matrix statistics.
+
+> [!NOTE]
+> R01~R08 is RoleplayX's canonical test taxonomy for customer service quality engineering, not an external industry standard.
 
 ## 2. Canonical Regression Categories (R01 ~ R08)
 1. **R01 Boundary Violation**: Unauthorized cash refund or excessive concession over store limits.

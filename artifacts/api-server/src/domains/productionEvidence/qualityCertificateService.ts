@@ -1,14 +1,16 @@
-import { createHash } from "crypto";
 import type {
   QualityCertificate,
   QualityCertificateStatus,
+  QualityCertificateType,
   CalibrationStatus,
+  CertificationScope,
 } from "@workspace/simulation-contract";
 
 export interface IssueCertificateInput {
   agentId: string;
   agentVersion: string;
   organizationId: string;
+  certificateType?: QualityCertificateType;
   benchmarkId: string;
   benchmarkVersion: string;
   populationVersion: string;
@@ -19,6 +21,7 @@ export interface IssueCertificateInput {
   gateDecision: "APPROVED" | "WARNING" | "BLOCKED";
   evidencePackageId: string;
   evidenceRootHash: string;
+  certificationScope?: Partial<CertificationScope>;
   limitations?: string[];
   validityDays?: number;
 }
@@ -27,19 +30,20 @@ export class QualityCertificateService {
   private certificates = new Map<string, QualityCertificate>();
 
   /**
-   * Evaluates issuance criteria and generates formal AI Agent Quality Certificate
+   * Evaluates issuance criteria and generates formal AI Agent Quality Certificate or Validation Certificate
    */
   issueCertificate(input: IssueCertificateInput): QualityCertificate {
     const certificateId = `cert_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const issuedAt = new Date().toISOString();
     const validUntil = new Date(Date.now() + (input.validityDays ?? 90) * 24 * 60 * 60 * 1000).toISOString();
+    const certificateType: QualityCertificateType = input.certificateType ?? "validation_certificate";
 
     const standardLimitations = [
       "Certification reflects agent performance exclusively under the evaluated simulation benchmark scenarios.",
       "Does not guarantee absolute security or safety against unmodeled zero-day jailbreak vectors.",
       input.calibrationStatus === "PROVISIONAL"
         ? "Evaluator calibration is currently PROVISIONAL (Synthetic validation reference)."
-        : "Evaluator is CALIBRATED against Human Gold Standard annotations.",
+        : "Evaluator is CALIBRATED against Human Gold Standard annotations (Human Gold Set v1).",
     ];
 
     if (input.limitations) {
@@ -54,8 +58,23 @@ export class QualityCertificateService {
       certificateStatus = "REVOKED";
     }
 
+    const certificationScope: CertificationScope = {
+      agentVersion: input.agentVersion,
+      benchmarkVersion: input.benchmarkVersion,
+      populationVersion: input.populationVersion,
+      rubricVersion: input.rubricVersion,
+      evaluatorVersion: input.evaluatorVersion,
+      calibrationDataset: input.certificationScope?.calibrationDataset ?? "Human Gold Set v1 (N=20)",
+      regressionCorpus: input.certificationScope?.regressionCorpus ?? "RoleplayX Canonical Regression Corpus v1 (R01~R08)",
+      environment: input.certificationScope?.environment ?? "staging",
+      evaluationContextHash: input.contextHash,
+      evidencePackageId: input.evidencePackageId,
+      validityPeriod: `${issuedAt} to ${validUntil}`,
+    };
+
     const certificate: QualityCertificate = {
       certificateId,
+      certificateType,
       agentId: input.agentId,
       agentVersion: input.agentVersion,
       organizationId: input.organizationId,
@@ -71,6 +90,7 @@ export class QualityCertificateService {
       validUntil,
       evidencePackageId: input.evidencePackageId,
       evidenceRootHash: input.evidenceRootHash,
+      certificationScope,
       limitations: standardLimitations,
       certificateStatus,
     };
