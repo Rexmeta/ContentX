@@ -72,7 +72,7 @@ STATUS: TECHNICALLY COMPLETE / READY_FOR_CUSTOMER
              ↓
 
 LEVEL 2.5: Real Customer Validation Pipeline (P9.1)
-STATUS: EVIDENCE PIPELINE READY (359 Tests All Green)
+STATUS: TECHNICALLY COMPLETE / EVIDENCE PIPELINE READY (359/359 TESTS PASS)
 ──────────────────────────────────────────────────────────────────────────────
 • 13-State Lifecycle Machine & Gating Predicate
 • ValidationMode & Outcome Separation (READY_FOR_CUSTOMER vs CUSTOMER_VALIDATED)
@@ -84,13 +84,23 @@ STATUS: EVIDENCE PIPELINE READY (359 Tests All Green)
 
              ↓
 
-LEVEL 3: Production Evidence & Commercial Pilot
-STATUS: PLANNED / VALIDATED UPON LIVE ENTERPRISE PILOT
+LEVEL 2.5+: LIVE CUSTOMER PILOT EXECUTION
+STATUS: PENDING — REQUIRES LIVE CUSTOMER RUN
 ──────────────────────────────────────────────────────────────────────────────
 • Live Enterprise Third-Party Customer Staging Agent Pilot
 • End-to-End Execution of Closed-Loop Quality Engineering Pipeline
+• Real Customer Gold Set Ingestion & Failure Confirmation
+
+             ↓
+
+LEVEL 3: Production Evidence & Commercial Proof
+STATUS: NOT YET VALIDATED — REQUIRES LIVE CUSTOMER EVIDENCE
+──────────────────────────────────────────────────────────────────────────────
+• Closed-Loop Hardened Fix & 0.0% Target Recurrence Verified on Real Client
 • Formal AI Agent Quality Certificate ISSUED (Scope: customer_pilot)
+• Sealed Evidence Package v4 Cryptographic Proof Delivery
 ```
+
 
 ---
 

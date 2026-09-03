@@ -29,16 +29,23 @@ $$\text{CUSTOMER} \to \text{ATTESTATION} \to \text{AGENT} \to \text{SIMULATION} 
 ┌────────────────────────────────────────────┐
 │ P9.1 (CURRENT MILESTONE)                   │
 │ Real Customer Validation Pipeline          │
-│ STATUS: EVIDENCE PIPELINE READY            │
-│         (359 Tests All Green)              │
+│ STATUS: TECHNICALLY COMPLETE               │
+│         EVIDENCE PIPELINE READY (359 PASS) │
+└──────────────────────┬─────────────────────┘
+                       ↓
+┌────────────────────────────────────────────┐
+│ P9.1 LIVE CUSTOMER RUN                     │
+│ STATUS: PENDING                            │
 └──────────────────────┬─────────────────────┘
                        ↓
 ┌────────────────────────────────────────────┐
 │ LEVEL 3                                    │
 │ Production Evidence & Commercial Trust     │
-│ STATUS: VALIDATED (Upon Live Customer Run) │
+│ STATUS: NOT YET VALIDATED                  │
+│         REQUIRES LIVE CUSTOMER EVIDENCE    │
 └────────────────────────────────────────────┘
 ```
+
 
 ---
 
