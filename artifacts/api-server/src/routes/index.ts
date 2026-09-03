@@ -17,6 +17,7 @@ import agentGatewayRouter from "./agentGateway";
 import continuousEvaluationRouter from "./continuousEvaluation";
 import saasRouter from "./saas";
 import commercialValidationRouter from "./commercialValidation";
+import productionEvidenceRouter from "./productionEvidenceRoutes";
 
 const router: IRouter = Router();
 
@@ -38,5 +39,7 @@ router.use(agentGatewayRouter);
 router.use(continuousEvaluationRouter);
 router.use(saasRouter);
 router.use(commercialValidationRouter);
+router.use(productionEvidenceRouter);
 
 export default router;
+
