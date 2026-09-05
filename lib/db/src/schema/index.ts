@@ -18,3 +18,6 @@ export * from "./interactionEvents";
 export * from "./evaluations";
 export * from "./jsonFormats";
 export * from "./commercialValidationArtifacts";
+export * from "./assessmentPackages";
+export * from "./assessmentPackageVersions";
+export * from "./assessmentPublications";

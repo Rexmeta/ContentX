@@ -25,7 +25,10 @@ export type IdPrefix =
   | "interaction"
   | "evaluation"
   | "workflow"
-  | "step";
+  | "step"
+  | "assessment"
+  | "assessmentversion"
+  | "publication";
 
 /** Stable prefixed identifiers. Never use array indexes as identity. */
 export function newId(prefix: IdPrefix): string {

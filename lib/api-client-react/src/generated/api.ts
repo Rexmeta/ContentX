@@ -26,6 +26,13 @@ import type {
   AgentStateUpdate,
   AgentWithState,
   ApiMessage,
+  AssessmentPackageVersionCreateInput,
+  AssessmentPackageVersionRecord,
+  AssessmentPublicationRecord,
+  AssessmentPublishInput,
+  AssessmentPublishResult,
+  AssessmentScenarioPackageV1,
+  AssessmentValidationReport,
   BenchmarkInput,
   BenchmarkReport,
   BridgeAnalysis,
@@ -6751,3 +6758,374 @@ export const usePostV1CommercialValidationPackagesIdVerify = <TError = ErrorType
       return useMutation(getPostV1CommercialValidationPackagesIdVerifyMutationOptions(options));
     }
 
+export const getCreateAssessmentPackageVersionUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/versions`
+}
+
+/**
+ * @summary Compile saved scenarios into an immutable RoleplayX assessment package version
+ */
+export const createAssessmentPackageVersion = async (id: string,
+    assessmentPackageVersionCreateInput: AssessmentPackageVersionCreateInput, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentPackageVersionRecord> => {
+
+  return customFetch<AssessmentPackageVersionRecord>(getCreateAssessmentPackageVersionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(assessmentPackageVersionCreateInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAssessmentPackageVersionMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentPackageVersion>>, TError,{id: string;data: BodyType<AssessmentPackageVersionCreateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAssessmentPackageVersion>>, TError,{id: string;data: BodyType<AssessmentPackageVersionCreateInput>}, TContext> => {
+
+const mutationKey = ['createAssessmentPackageVersion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAssessmentPackageVersion>>, {id: string;data: BodyType<AssessmentPackageVersionCreateInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createAssessmentPackageVersion(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssessmentPackageVersionMutationResult = NonNullable<Awaited<ReturnType<typeof createAssessmentPackageVersion>>>
+    export type CreateAssessmentPackageVersionMutationBody = BodyType<AssessmentPackageVersionCreateInput>
+    export type CreateAssessmentPackageVersionMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Compile saved scenarios into an immutable RoleplayX assessment package version
+ */
+export const useCreateAssessmentPackageVersion = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentPackageVersion>>, TError,{id: string;data: BodyType<AssessmentPackageVersionCreateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAssessmentPackageVersion>>,
+        TError,
+        {id: string;data: BodyType<AssessmentPackageVersionCreateInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAssessmentPackageVersionMutationOptions(options));
+    }
+
+export const getValidateAssessmentPackageVersionUrl = (id: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/versions/${version}/validate`
+}
+
+/**
+ * @summary Validate a stored immutable assessment package version
+ */
+export const validateAssessmentPackageVersion = async (id: string,
+    version: number, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentValidationReport> => {
+
+  return customFetch<AssessmentValidationReport>(getValidateAssessmentPackageVersionUrl(id,version),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getValidateAssessmentPackageVersionMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateAssessmentPackageVersion>>, TError,{id: string;version: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof validateAssessmentPackageVersion>>, TError,{id: string;version: number}, TContext> => {
+
+const mutationKey = ['validateAssessmentPackageVersion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof validateAssessmentPackageVersion>>, {id: string;version: number}> = (props) => {
+          const {id,version} = props ?? {};
+
+          return  validateAssessmentPackageVersion(id,version,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ValidateAssessmentPackageVersionMutationResult = NonNullable<Awaited<ReturnType<typeof validateAssessmentPackageVersion>>>
+
+    export type ValidateAssessmentPackageVersionMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Validate a stored immutable assessment package version
+ */
+export const useValidateAssessmentPackageVersion = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateAssessmentPackageVersion>>, TError,{id: string;version: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof validateAssessmentPackageVersion>>,
+        TError,
+        {id: string;version: number},
+        TContext
+      > => {
+      return useMutation(getValidateAssessmentPackageVersionMutationOptions(options));
+    }
+
+export const getGetAssessmentPackageVersionUrl = (id: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/versions/${version}/package`
+}
+
+/**
+ * @summary Get the completed immutable RoleplayX package payload
+ */
+export const getAssessmentPackageVersion = async (id: string,
+    version: number, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentScenarioPackageV1> => {
+
+  return customFetch<AssessmentScenarioPackageV1>(getGetAssessmentPackageVersionUrl(id,version),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssessmentPackageVersionQueryKey = (id: string,
+    version: number,) => {
+    return [
+    `/api/v1/assessments/${id}/versions/${version}/package`
+    ] as const;
+    }
+
+
+export const getGetAssessmentPackageVersionQueryOptions = <TData = Awaited<ReturnType<typeof getAssessmentPackageVersion>>, TError = ErrorType<ApiMessage>>(id: string,
+    version: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessmentPackageVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessmentPackageVersionQueryKey(id,version);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessmentPackageVersion>>> = ({ signal }) => getAssessmentPackageVersion(id,version, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && version !== null && version !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessmentPackageVersion>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssessmentPackageVersionQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessmentPackageVersion>>>
+export type GetAssessmentPackageVersionQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get the completed immutable RoleplayX package payload
+ */
+
+export function useGetAssessmentPackageVersion<TData = Awaited<ReturnType<typeof getAssessmentPackageVersion>>, TError = ErrorType<ApiMessage>>(
+ id: string,
+    version: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessmentPackageVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssessmentPackageVersionQueryOptions(id,version,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPublishAssessmentPackageVersionToRoleplayXUrl = (id: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/versions/${version}/publish`
+}
+
+/**
+ * @summary Validate then import one immutable package version into RoleplayX
+ */
+export const publishAssessmentPackageVersionToRoleplayX = async (id: string,
+    version: number,
+    assessmentPublishInput: AssessmentPublishInput, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentPublishResult> => {
+
+  return customFetch<AssessmentPublishResult>(getPublishAssessmentPackageVersionToRoleplayXUrl(id,version),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(assessmentPublishInput)
+  }
+);}
+
+
+
+
+
+export const getPublishAssessmentPackageVersionToRoleplayXMutationOptions = <TError = ErrorType<AssessmentPublishResult | ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishAssessmentPackageVersionToRoleplayX>>, TError,{id: string;version: number;data: BodyType<AssessmentPublishInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof publishAssessmentPackageVersionToRoleplayX>>, TError,{id: string;version: number;data: BodyType<AssessmentPublishInput>}, TContext> => {
+
+const mutationKey = ['publishAssessmentPackageVersionToRoleplayX'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishAssessmentPackageVersionToRoleplayX>>, {id: string;version: number;data: BodyType<AssessmentPublishInput>}> = (props) => {
+          const {id,version,data} = props ?? {};
+
+          return  publishAssessmentPackageVersionToRoleplayX(id,version,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishAssessmentPackageVersionToRoleplayXMutationResult = NonNullable<Awaited<ReturnType<typeof publishAssessmentPackageVersionToRoleplayX>>>
+    export type PublishAssessmentPackageVersionToRoleplayXMutationBody = BodyType<AssessmentPublishInput>
+    export type PublishAssessmentPackageVersionToRoleplayXMutationError = ErrorType<AssessmentPublishResult | ApiMessage>
+
+    /**
+ * @summary Validate then import one immutable package version into RoleplayX
+ */
+export const usePublishAssessmentPackageVersionToRoleplayX = <TError = ErrorType<AssessmentPublishResult | ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishAssessmentPackageVersionToRoleplayX>>, TError,{id: string;version: number;data: BodyType<AssessmentPublishInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof publishAssessmentPackageVersionToRoleplayX>>,
+        TError,
+        {id: string;version: number;data: BodyType<AssessmentPublishInput>},
+        TContext
+      > => {
+      return useMutation(getPublishAssessmentPackageVersionToRoleplayXMutationOptions(options));
+    }
+
+export const getListAssessmentPackagePublicationHistoryUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/publishes`
+}
+
+/**
+ * @summary List RoleplayX publication attempts for a package version
+ */
+export const listAssessmentPackagePublicationHistory = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentPublicationRecord[]> => {
+
+  return customFetch<AssessmentPublicationRecord[]>(getListAssessmentPackagePublicationHistoryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAssessmentPackagePublicationHistoryQueryKey = (id: string,) => {
+    return [
+    `/api/v1/assessments/${id}/publishes`
+    ] as const;
+    }
+
+
+export const getListAssessmentPackagePublicationHistoryQueryOptions = <TData = Awaited<ReturnType<typeof listAssessmentPackagePublicationHistory>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssessmentPackagePublicationHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssessmentPackagePublicationHistoryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssessmentPackagePublicationHistory>>> = ({ signal }) => listAssessmentPackagePublicationHistory(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssessmentPackagePublicationHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAssessmentPackagePublicationHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof listAssessmentPackagePublicationHistory>>>
+export type ListAssessmentPackagePublicationHistoryQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary List RoleplayX publication attempts for a package version
+ */
+
+export function useListAssessmentPackagePublicationHistory<TData = Awaited<ReturnType<typeof listAssessmentPackagePublicationHistory>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssessmentPackagePublicationHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAssessmentPackagePublicationHistoryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

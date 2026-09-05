@@ -22,6 +22,8 @@ tags:
     description: Character snapshots and agent runtime operations
   - name: simulation
     description: Simulation runs, interaction traces, and evaluations
+  - name: assessment
+    description: Immutable RoleplayX assessment package publishing
 paths:
   /healthz:
     get:
@@ -2024,6 +2026,72 @@ paths:
                   storedChecksum: { type: string }
                   calculatedChecksum: { type: string }
         "404": { description: Evidence package not found }
+  /v1/assessments/{id}/versions:
+    post:
+      operationId: createAssessmentPackageVersion
+      tags: [assessment]
+      summary: Compile saved scenarios into an immutable RoleplayX assessment package version
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPackageVersionCreateInput" } } }
+      responses:
+        "201": { description: Immutable package version, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPackageVersionRecord" } } } }
+        "400": { description: Invalid request or compilation diagnostics, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+        "404": { description: Saved scenario not found, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+        "409": { description: Version conflicts with immutable snapshot, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+  /v1/assessments/{id}/versions/{version}/validate:
+    post:
+      operationId: validateAssessmentPackageVersion
+      tags: [assessment]
+      summary: Validate a stored immutable assessment package version
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200": { description: Strict local validation report, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentValidationReport" } } } }
+        "404": { description: Package version not found, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+  /v1/assessments/{id}/versions/{version}/package:
+    get:
+      operationId: getAssessmentPackageVersion
+      tags: [assessment]
+      summary: Get the completed immutable RoleplayX package payload
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200": { description: Completed AssessmentScenarioPackageV1 payload, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentScenarioPackageV1" } } } }
+        "404": { description: Package version not found, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+  /v1/assessments/{id}/versions/{version}/publish:
+    post:
+      operationId: publishAssessmentPackageVersionToRoleplayX
+      tags: [assessment]
+      summary: Validate then import one immutable package version into RoleplayX
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPublishInput" } } }
+      responses:
+        "200": { description: Published or idempotently reused remote import, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPublishResult" } } } }
+        "400": { description: Local or remote validation failure, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPublishResult" } } } }
+        "401": { description: RoleplayX authentication failure, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPublishResult" } } } }
+        "403": { description: RoleplayX permission failure, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPublishResult" } } } }
+        "404": { description: Package version not found, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+        "409": { description: Publication already in progress or RoleplayX conflict, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPublishResult" } } } }
+        "502": { description: RoleplayX transport or server failure, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPublishResult" } } } }
+  /v1/assessments/{id}/publishes:
+    get:
+      operationId: listAssessmentPackagePublicationHistory
+      tags: [assessment]
+      summary: List RoleplayX publication attempts for a package version
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Publication attempt history, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/AssessmentPublicationRecord" } } } } }
+        "404": { description: Assessment package not found, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
 components:
   schemas:
     ReferenceBenchmarkDefinition:
@@ -2182,9 +2250,212 @@ components:
         - status
     ApiMessage:
       type: object
+      additionalProperties: false
       required: [error]
       properties:
         error: { type: string }
+    AssessmentDiagnostic:
+      type: object
+      additionalProperties: false
+      required: [severity, code, path, message]
+      properties:
+        severity: { type: string, enum: [error, warning] }
+        code: { type: string }
+        path: { type: string }
+        message: { type: string }
+    AssessmentCompetency:
+      type: object
+      additionalProperties: false
+      required: [key, name]
+      properties: { key: { type: string, minLength: 1 }, name: { type: string, minLength: 1 }, description: { type: string, minLength: 1 } }
+    AssessmentEvaluationDimension:
+      type: object
+      additionalProperties: false
+      required: [key, label, weight, criteria]
+      properties:
+        key: { type: string, minLength: 1 }
+        label: { type: string, minLength: 1 }
+        weight: { type: number, minimum: 0 }
+        criteria: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        description: { type: string, minLength: 1 }
+    AssessmentScenarioConfiguration:
+      type: object
+      additionalProperties: false
+      required: [scenarioId, scenarioKey, locale, categoryKey, competencyKeys, difficulty, estimatedTime, objectiveType, timeline, playerRole, objectives, successCriteria, primaryPersonaKey, personaSwitchMode, difficultyProfile, evaluation, termination, simulation, analytics, targetDurationMinutes, targetTurns, minValidTurns]
+      properties:
+        scenarioId: { type: string, minLength: 1 }
+        scenarioKey: { type: string, minLength: 1 }
+        locale: { type: string, minLength: 1 }
+        categoryKey: { type: string, minLength: 1 }
+        competencyKeys: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        difficulty: { type: string, enum: [beginner, intermediate, advanced] }
+        estimatedTime: { type: number, exclusiveMinimum: 0 }
+        objectiveType: { type: string, minLength: 1 }
+        timeline: { type: string, minLength: 1 }
+        playerRole: { type: string, minLength: 1 }
+        objectives: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        successCriteria: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        primaryPersonaKey: { type: string, minLength: 1 }
+        personaSwitchMode: { type: string, enum: [manual, automatic, disabled] }
+        personaSwitches: { type: array, items: { type: object, additionalProperties: false, required: [fromPersonaKey, toPersonaKey], properties: { fromPersonaKey: { type: string, minLength: 1 }, toPersonaKey: { type: string, minLength: 1 }, atFlowKey: { type: string, minLength: 1 }, reason: { type: string, minLength: 1 } } } }
+        constraints: { type: array, items: { type: string, minLength: 1 } }
+        difficultyProfile: { type: object, additionalProperties: false, required: [level], properties: { level: { type: string, minLength: 1 }, rationale: { type: string, minLength: 1 } } }
+        evaluation: { type: object, additionalProperties: false, required: [dimensions], properties: { dimensions: { type: array, minItems: 1, items: { $ref: "#/components/schemas/AssessmentEvaluationDimension" } }, passingScore: { type: number, minimum: 0, maximum: 100 } } }
+        termination: { type: object, additionalProperties: false, required: [conditions, maxTurns], properties: { conditions: { type: array, minItems: 1, items: { type: string, minLength: 1 } }, maxTurns: { type: integer, minimum: 1 } } }
+        simulation: { type: object, additionalProperties: false, required: [mode], properties: { mode: { type: string, minLength: 1 }, initialPrompt: { type: string, minLength: 1 }, rules: { type: array, items: { type: string, minLength: 1 } } } }
+        analytics: { type: object, additionalProperties: false, required: [eventTypes, trackPersonaSwitches], properties: { eventTypes: { type: array, items: { type: string, minLength: 1 } }, trackPersonaSwitches: { type: boolean } } }
+        targetDurationMinutes: { type: number, exclusiveMinimum: 0 }
+        targetTurns: { type: integer, minimum: 1 }
+        minValidTurns: { type: integer, minimum: 1 }
+    AssessmentPackageVersionCreateInput:
+      type: object
+      additionalProperties: false
+      required: [packageKey, version, publishedAt, author, metadata, competencies, scenarios]
+      properties:
+        packageId: { type: string, minLength: 1 }
+        packageKey: { type: string, minLength: 1 }
+        version: { type: integer, minimum: 1 }
+        publishedAt: { type: string, format: date-time }
+        author: { type: string, minLength: 1 }
+        metadata: { type: object, additionalProperties: false, required: [title, description, locale, tags], properties: { title: { type: string, minLength: 1 }, description: { type: string, minLength: 1 }, locale: { type: string, minLength: 1 }, tags: { type: array, items: { type: string, minLength: 1 } } } }
+        competencies: { type: array, minItems: 1, items: { $ref: "#/components/schemas/AssessmentCompetency" } }
+        scenarios: { type: array, minItems: 1, items: { $ref: "#/components/schemas/AssessmentScenarioConfiguration" } }
+    AssessmentPackageScenario:
+      type: object
+      additionalProperties: false
+      required: [key, title, description, locale, categoryKey, competencies, difficulty, estimatedTime, objectiveType, context, objectives, successCriteria, personas, recommendedFlow, flow, personaSwitches, personaSwitchMode, constraints, difficultyProfile, evaluation, termination, simulation, analytics, targetDurationMinutes, targetTurns, minValidTurns]
+      properties:
+        key: { type: string, minLength: 1 }
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        locale: { type: string, minLength: 1 }
+        categoryKey: { type: string, minLength: 1 }
+        competencies: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        difficulty: { type: string, enum: [beginner, intermediate, advanced] }
+        estimatedTime: { type: number, exclusiveMinimum: 0 }
+        objectiveType: { type: string, minLength: 1 }
+        context:
+          type: object
+          additionalProperties: false
+          required: [situation, timeline, stakes, playerRole]
+          properties:
+            situation: { type: string, minLength: 1 }
+            timeline: { type: string, minLength: 1 }
+            stakes: { type: string, minLength: 1 }
+            playerRole: { type: string, minLength: 1 }
+        objectives: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        successCriteria: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        personas:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, name, role, background, traits, isPrimary]
+            properties:
+              key: { type: string, minLength: 1 }
+              name: { type: string, minLength: 1 }
+              role: { type: string, minLength: 1 }
+              background: { type: string, minLength: 1 }
+              traits: { type: array, items: { type: string, minLength: 1 } }
+              isPrimary: { type: boolean }
+        recommendedFlow: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+        flow:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, title, description, beats]
+            properties:
+              key: { type: string, minLength: 1 }
+              title: { type: string, minLength: 1 }
+              description: { type: string, minLength: 1 }
+              beats: { type: array, items: { type: string, minLength: 1 } }
+        personaSwitches: { type: array, items: { type: object, additionalProperties: false, required: [fromPersonaKey, toPersonaKey], properties: { fromPersonaKey: { type: string, minLength: 1 }, toPersonaKey: { type: string, minLength: 1 }, atFlowKey: { type: string, minLength: 1 }, reason: { type: string, minLength: 1 } } } }
+        personaSwitchMode: { type: string, enum: [manual, automatic, disabled] }
+        constraints: { type: array, items: { type: string, minLength: 1 } }
+        difficultyProfile: { type: object, additionalProperties: false, required: [level], properties: { level: { type: string, minLength: 1 }, rationale: { type: string, minLength: 1 } } }
+        evaluation: { type: object, additionalProperties: false, required: [dimensions], properties: { dimensions: { type: array, minItems: 1, items: { $ref: "#/components/schemas/AssessmentEvaluationDimension" } }, passingScore: { type: number, minimum: 0, maximum: 100 } } }
+        termination: { type: object, additionalProperties: false, required: [conditions, maxTurns], properties: { conditions: { type: array, minItems: 1, items: { type: string, minLength: 1 } }, maxTurns: { type: integer, minimum: 1 } } }
+        simulation: { type: object, additionalProperties: false, required: [mode], properties: { mode: { type: string, minLength: 1 }, initialPrompt: { type: string, minLength: 1 }, rules: { type: array, items: { type: string, minLength: 1 } } } }
+        analytics: { type: object, additionalProperties: false, required: [eventTypes, trackPersonaSwitches], properties: { eventTypes: { type: array, items: { type: string, minLength: 1 } }, trackPersonaSwitches: { type: boolean } } }
+        targetDurationMinutes: { type: number, exclusiveMinimum: 0 }
+        targetTurns: { type: integer, minimum: 1 }
+        minValidTurns: { type: integer, minimum: 1 }
+    AssessmentScenarioPackageV1:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, packageKey, version, publishedAt, metadata, competencies, scenarios, provenance]
+      properties:
+        schemaVersion: { type: string, enum: ["1.0"] }
+        packageKey: { type: string, minLength: 1 }
+        version: { type: string, minLength: 1 }
+        publishedAt: { type: string, format: date-time }
+        metadata: { type: object, additionalProperties: false, required: [title, description, locale, tags], properties: { title: { type: string, minLength: 1 }, description: { type: string, minLength: 1 }, locale: { type: string, minLength: 1 }, tags: { type: array, items: { type: string, minLength: 1 } } } }
+        competencies: { type: array, minItems: 1, items: { $ref: "#/components/schemas/AssessmentCompetency" } }
+        scenarios: { type: array, minItems: 1, items: { $ref: "#/components/schemas/AssessmentPackageScenario" } }
+        provenance:
+          type: object
+          additionalProperties: false
+          required: [source, sourcePackageId, author, contentHash]
+          properties:
+            source: { type: string, enum: [ContentX] }
+            sourcePackageId: { type: string, minLength: 1 }
+            author: { type: string, minLength: 1 }
+            contentHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+    AssessmentPackageVersionRecord:
+      type: object
+      additionalProperties: false
+      required: [id, packageId, version, contentHash, validation, createdAt]
+      properties:
+        id: { type: string }
+        packageId: { type: string }
+        version: { type: integer }
+        contentHash: { type: string }
+        validation: { $ref: "#/components/schemas/AssessmentValidationReport" }
+        createdAt: { type: string, format: date-time }
+    AssessmentValidationReport:
+      type: object
+      additionalProperties: false
+      required: [valid, diagnostics]
+      properties: { valid: { type: boolean }, diagnostics: { type: array, items: { $ref: "#/components/schemas/AssessmentDiagnostic" } } }
+    AssessmentPublishInput:
+      type: object
+      additionalProperties: false
+      required: [organizationId, category]
+      properties: { organizationId: { type: string, minLength: 1 }, category: { type: string, minLength: 1 } }
+    AssessmentPublishResult:
+      type: object
+      additionalProperties: false
+      required: [status, reused, idempotencyKey]
+      properties:
+        status: { type: string, enum: [published, failed] }
+        reused: { type: boolean }
+        idempotencyKey: { type: string }
+        diagnostics: { type: array, items: { $ref: "#/components/schemas/AssessmentDiagnostic" } }
+        errorCategory: { type: string, enum: [auth, permission, conflict, validation, server, network, timeout] }
+        response: { type: object, additionalProperties: true }
+    AssessmentPublicationRecord:
+      type: object
+      additionalProperties: false
+      required: [id, packageId, packageVersion, target, organizationId, category, idempotencyKey, attempt, status, createdAt]
+      properties:
+        id: { type: string }
+        packageId: { type: string }
+        packageVersion: { type: integer }
+        target: { type: string }
+        organizationId: { type: string }
+        category: { type: string }
+        idempotencyKey: { type: string }
+        attempt: { type: integer }
+        status: { type: string, enum: [pending, validating, validated, importing, succeeded, failed] }
+        response: { type: object, additionalProperties: true }
+        errorCode: { type: ["string", "null"] }
+        errorMessage: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: ["string", "null"], format: date-time }
+        publishedAt: { type: ["string", "null"], format: date-time }
     Entity:
       type: object
       required: [id, kind, name]

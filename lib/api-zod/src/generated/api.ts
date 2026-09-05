@@ -4363,3 +4363,428 @@ export const PostV1CommercialValidationPackagesIdVerifyResponse = zod.object({
 })
 
 
+/**
+ * @summary Compile saved scenarios into an immutable RoleplayX assessment package version
+ */
+export const CreateAssessmentPackageVersionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const createAssessmentPackageVersionBodyScenariosItemEstimatedTimeExclusiveMin = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const createAssessmentPackageVersionBodyScenariosItemEvaluationDimensionsItemWeightMin = 0;
+
+
+
+
+
+export const createAssessmentPackageVersionBodyScenariosItemEvaluationPassingScoreMin = 0;
+export const createAssessmentPackageVersionBodyScenariosItemEvaluationPassingScoreMax = 100;
+
+
+
+
+
+
+
+
+export const createAssessmentPackageVersionBodyScenariosItemTargetDurationMinutesExclusiveMin = 0;
+
+
+
+
+
+
+export const CreateAssessmentPackageVersionBody = zod.object({
+  "packageId": zod.string().min(1).optional(),
+  "packageKey": zod.string().min(1),
+  "version": zod.int().min(1),
+  "publishedAt": zod.coerce.date(),
+  "author": zod.string().min(1),
+  "metadata": zod.object({
+  "title": zod.string().min(1),
+  "description": zod.string().min(1),
+  "locale": zod.string().min(1),
+  "tags": zod.array(zod.string().min(1))
+}),
+  "competencies": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "name": zod.string().min(1),
+  "description": zod.string().min(1).optional()
+})).min(1),
+  "scenarios": zod.array(zod.object({
+  "scenarioId": zod.string().min(1),
+  "scenarioKey": zod.string().min(1),
+  "locale": zod.string().min(1),
+  "categoryKey": zod.string().min(1),
+  "competencyKeys": zod.array(zod.string().min(1)).min(1),
+  "difficulty": zod.enum(['beginner', 'intermediate', 'advanced']),
+  "estimatedTime": zod.number().gt(createAssessmentPackageVersionBodyScenariosItemEstimatedTimeExclusiveMin),
+  "objectiveType": zod.string().min(1),
+  "timeline": zod.string().min(1),
+  "playerRole": zod.string().min(1),
+  "objectives": zod.array(zod.string().min(1)).min(1),
+  "successCriteria": zod.array(zod.string().min(1)).min(1),
+  "primaryPersonaKey": zod.string().min(1),
+  "personaSwitchMode": zod.enum(['manual', 'automatic', 'disabled']),
+  "personaSwitches": zod.array(zod.object({
+  "fromPersonaKey": zod.string().min(1),
+  "toPersonaKey": zod.string().min(1),
+  "atFlowKey": zod.string().min(1).optional(),
+  "reason": zod.string().min(1).optional()
+})).optional(),
+  "constraints": zod.array(zod.string().min(1)).optional(),
+  "difficultyProfile": zod.object({
+  "level": zod.string().min(1),
+  "rationale": zod.string().min(1).optional()
+}),
+  "evaluation": zod.object({
+  "dimensions": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "label": zod.string().min(1),
+  "weight": zod.number().min(createAssessmentPackageVersionBodyScenariosItemEvaluationDimensionsItemWeightMin),
+  "criteria": zod.array(zod.string().min(1)).min(1),
+  "description": zod.string().min(1).optional()
+})).min(1),
+  "passingScore": zod.number().min(createAssessmentPackageVersionBodyScenariosItemEvaluationPassingScoreMin).max(createAssessmentPackageVersionBodyScenariosItemEvaluationPassingScoreMax).optional()
+}),
+  "termination": zod.object({
+  "conditions": zod.array(zod.string().min(1)).min(1),
+  "maxTurns": zod.int().min(1)
+}),
+  "simulation": zod.object({
+  "mode": zod.string().min(1),
+  "initialPrompt": zod.string().min(1).optional(),
+  "rules": zod.array(zod.string().min(1)).optional()
+}),
+  "analytics": zod.object({
+  "eventTypes": zod.array(zod.string().min(1)),
+  "trackPersonaSwitches": zod.boolean()
+}),
+  "targetDurationMinutes": zod.number().gt(createAssessmentPackageVersionBodyScenariosItemTargetDurationMinutesExclusiveMin),
+  "targetTurns": zod.int().min(1),
+  "minValidTurns": zod.int().min(1)
+})).min(1)
+})
+
+export const CreateAssessmentPackageVersionResponse = zod.object({
+  "id": zod.string(),
+  "packageId": zod.string(),
+  "version": zod.int(),
+  "contentHash": zod.string(),
+  "validation": zod.object({
+  "valid": zod.boolean(),
+  "diagnostics": zod.array(zod.object({
+  "severity": zod.enum(['error', 'warning']),
+  "code": zod.string(),
+  "path": zod.string(),
+  "message": zod.string()
+}))
+}),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Validate a stored immutable assessment package version
+ */
+
+
+
+export const ValidateAssessmentPackageVersionParams = zod.object({
+  "id": zod.coerce.string(),
+  "version": zod.coerce.number().int().min(1)
+})
+
+export const ValidateAssessmentPackageVersionResponse = zod.object({
+  "valid": zod.boolean(),
+  "diagnostics": zod.array(zod.object({
+  "severity": zod.enum(['error', 'warning']),
+  "code": zod.string(),
+  "path": zod.string(),
+  "message": zod.string()
+}))
+})
+
+
+/**
+ * @summary Get the completed immutable RoleplayX package payload
+ */
+
+
+
+export const GetAssessmentPackageVersionParams = zod.object({
+  "id": zod.coerce.string(),
+  "version": zod.coerce.number().int().min(1)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const getAssessmentPackageVersionResponseScenariosItemEstimatedTimeExclusiveMin = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const getAssessmentPackageVersionResponseScenariosItemEvaluationDimensionsItemWeightMin = 0;
+
+
+
+
+
+export const getAssessmentPackageVersionResponseScenariosItemEvaluationPassingScoreMin = 0;
+export const getAssessmentPackageVersionResponseScenariosItemEvaluationPassingScoreMax = 100;
+
+
+
+
+
+
+
+
+export const getAssessmentPackageVersionResponseScenariosItemTargetDurationMinutesExclusiveMin = 0;
+
+
+
+
+
+
+export const getAssessmentPackageVersionResponseProvenanceContentHashRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const GetAssessmentPackageVersionResponse = zod.object({
+  "schemaVersion": zod.enum(['1.0']),
+  "packageKey": zod.string().min(1),
+  "version": zod.string().min(1),
+  "publishedAt": zod.coerce.date(),
+  "metadata": zod.object({
+  "title": zod.string().min(1),
+  "description": zod.string().min(1),
+  "locale": zod.string().min(1),
+  "tags": zod.array(zod.string().min(1))
+}),
+  "competencies": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "name": zod.string().min(1),
+  "description": zod.string().min(1).optional()
+})).min(1),
+  "scenarios": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "title": zod.string().min(1),
+  "description": zod.string().min(1),
+  "locale": zod.string().min(1),
+  "categoryKey": zod.string().min(1),
+  "competencies": zod.array(zod.string().min(1)).min(1),
+  "difficulty": zod.enum(['beginner', 'intermediate', 'advanced']),
+  "estimatedTime": zod.number().gt(getAssessmentPackageVersionResponseScenariosItemEstimatedTimeExclusiveMin),
+  "objectiveType": zod.string().min(1),
+  "context": zod.object({
+  "situation": zod.string().min(1),
+  "timeline": zod.string().min(1),
+  "stakes": zod.string().min(1),
+  "playerRole": zod.string().min(1)
+}),
+  "objectives": zod.array(zod.string().min(1)).min(1),
+  "successCriteria": zod.array(zod.string().min(1)).min(1),
+  "personas": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "name": zod.string().min(1),
+  "role": zod.string().min(1),
+  "background": zod.string().min(1),
+  "traits": zod.array(zod.string().min(1)),
+  "isPrimary": zod.boolean()
+})).min(1),
+  "recommendedFlow": zod.array(zod.string().min(1)).min(1),
+  "flow": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "title": zod.string().min(1),
+  "description": zod.string().min(1),
+  "beats": zod.array(zod.string().min(1))
+})).min(1),
+  "personaSwitches": zod.array(zod.object({
+  "fromPersonaKey": zod.string().min(1),
+  "toPersonaKey": zod.string().min(1),
+  "atFlowKey": zod.string().min(1).optional(),
+  "reason": zod.string().min(1).optional()
+})),
+  "personaSwitchMode": zod.enum(['manual', 'automatic', 'disabled']),
+  "constraints": zod.array(zod.string().min(1)),
+  "difficultyProfile": zod.object({
+  "level": zod.string().min(1),
+  "rationale": zod.string().min(1).optional()
+}),
+  "evaluation": zod.object({
+  "dimensions": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "label": zod.string().min(1),
+  "weight": zod.number().min(getAssessmentPackageVersionResponseScenariosItemEvaluationDimensionsItemWeightMin),
+  "criteria": zod.array(zod.string().min(1)).min(1),
+  "description": zod.string().min(1).optional()
+})).min(1),
+  "passingScore": zod.number().min(getAssessmentPackageVersionResponseScenariosItemEvaluationPassingScoreMin).max(getAssessmentPackageVersionResponseScenariosItemEvaluationPassingScoreMax).optional()
+}),
+  "termination": zod.object({
+  "conditions": zod.array(zod.string().min(1)).min(1),
+  "maxTurns": zod.int().min(1)
+}),
+  "simulation": zod.object({
+  "mode": zod.string().min(1),
+  "initialPrompt": zod.string().min(1).optional(),
+  "rules": zod.array(zod.string().min(1)).optional()
+}),
+  "analytics": zod.object({
+  "eventTypes": zod.array(zod.string().min(1)),
+  "trackPersonaSwitches": zod.boolean()
+}),
+  "targetDurationMinutes": zod.number().gt(getAssessmentPackageVersionResponseScenariosItemTargetDurationMinutesExclusiveMin),
+  "targetTurns": zod.int().min(1),
+  "minValidTurns": zod.int().min(1)
+})).min(1),
+  "provenance": zod.object({
+  "source": zod.enum(['ContentX']),
+  "sourcePackageId": zod.string().min(1),
+  "author": zod.string().min(1),
+  "contentHash": zod.string().regex(getAssessmentPackageVersionResponseProvenanceContentHashRegExp)
+})
+})
+
+
+/**
+ * @summary Validate then import one immutable package version into RoleplayX
+ */
+
+
+
+export const PublishAssessmentPackageVersionToRoleplayXParams = zod.object({
+  "id": zod.coerce.string(),
+  "version": zod.coerce.number().int().min(1)
+})
+
+
+
+
+
+export const PublishAssessmentPackageVersionToRoleplayXBody = zod.object({
+  "organizationId": zod.string().min(1),
+  "category": zod.string().min(1)
+})
+
+export const PublishAssessmentPackageVersionToRoleplayXResponse = zod.object({
+  "status": zod.enum(['published', 'failed']),
+  "reused": zod.boolean(),
+  "idempotencyKey": zod.string(),
+  "diagnostics": zod.array(zod.object({
+  "severity": zod.enum(['error', 'warning']),
+  "code": zod.string(),
+  "path": zod.string(),
+  "message": zod.string()
+})).optional(),
+  "errorCategory": zod.enum(['auth', 'permission', 'conflict', 'validation', 'server', 'network', 'timeout']).optional(),
+  "response": zod.record(zod.string(), zod.unknown()).optional()
+})
+
+
+/**
+ * @summary List RoleplayX publication attempts for a package version
+ */
+export const ListAssessmentPackagePublicationHistoryParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ListAssessmentPackagePublicationHistoryResponseItem = zod.object({
+  "id": zod.string(),
+  "packageId": zod.string(),
+  "packageVersion": zod.int(),
+  "target": zod.string(),
+  "organizationId": zod.string(),
+  "category": zod.string(),
+  "idempotencyKey": zod.string(),
+  "attempt": zod.int(),
+  "status": zod.enum(['pending', 'validating', 'validated', 'importing', 'succeeded', 'failed']),
+  "response": zod.record(zod.string(), zod.unknown()).optional(),
+  "errorCode": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish()
+})
+export const ListAssessmentPackagePublicationHistoryResponse = zod.array(ListAssessmentPackagePublicationHistoryResponseItem)
+
+

@@ -19,6 +19,7 @@ import saasRouter from "./saas";
 import commercialValidationRouter from "./commercialValidation";
 import productionEvidenceRouter from "./productionEvidenceRoutes";
 import customerValidationRouter from "./customerValidationRoutes";
+import assessmentsRouter from "./assessments";
 
 const router: IRouter = Router();
 
@@ -42,6 +43,7 @@ router.use(saasRouter);
 router.use(commercialValidationRouter);
 router.use(productionEvidenceRouter);
 router.use(customerValidationRouter);
+router.use(assessmentsRouter);
 
 export default router;
 

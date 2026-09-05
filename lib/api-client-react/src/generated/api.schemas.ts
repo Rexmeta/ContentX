@@ -218,6 +218,501 @@ export interface ApiMessage {
   error: string;
 }
 
+export type AssessmentDiagnosticSeverity = typeof AssessmentDiagnosticSeverity[keyof typeof AssessmentDiagnosticSeverity];
+
+
+export const AssessmentDiagnosticSeverity = {
+  error: 'error',
+  warning: 'warning',
+} as const;
+
+export interface AssessmentDiagnostic {
+  severity: AssessmentDiagnosticSeverity;
+  code: string;
+  path: string;
+  message: string;
+}
+
+export interface AssessmentCompetency {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  description?: string;
+}
+
+export interface AssessmentEvaluationDimension {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  label: string;
+  /** @minimum 0 */
+  weight: number;
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  criteria: string[];
+  /** @minLength 1 */
+  description?: string;
+}
+
+export type AssessmentScenarioConfigurationDifficulty = typeof AssessmentScenarioConfigurationDifficulty[keyof typeof AssessmentScenarioConfigurationDifficulty];
+
+
+export const AssessmentScenarioConfigurationDifficulty = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+} as const;
+
+export type AssessmentScenarioConfigurationPersonaSwitchMode = typeof AssessmentScenarioConfigurationPersonaSwitchMode[keyof typeof AssessmentScenarioConfigurationPersonaSwitchMode];
+
+
+export const AssessmentScenarioConfigurationPersonaSwitchMode = {
+  manual: 'manual',
+  automatic: 'automatic',
+  disabled: 'disabled',
+} as const;
+
+export type AssessmentScenarioConfigurationPersonaSwitchesItem = {
+  /** @minLength 1 */
+  fromPersonaKey: string;
+  /** @minLength 1 */
+  toPersonaKey: string;
+  /** @minLength 1 */
+  atFlowKey?: string;
+  /** @minLength 1 */
+  reason?: string;
+};
+
+export type AssessmentScenarioConfigurationDifficultyProfile = {
+  /** @minLength 1 */
+  level: string;
+  /** @minLength 1 */
+  rationale?: string;
+};
+
+export type AssessmentScenarioConfigurationEvaluation = {
+  /** @minItems 1 */
+  dimensions: AssessmentEvaluationDimension[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  passingScore?: number;
+};
+
+export type AssessmentScenarioConfigurationTermination = {
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  conditions: string[];
+  /** @minimum 1 */
+  maxTurns: number;
+};
+
+export type AssessmentScenarioConfigurationSimulation = {
+  /** @minLength 1 */
+  mode: string;
+  /** @minLength 1 */
+  initialPrompt?: string;
+  /** @items.minLength 1 */
+  rules?: string[];
+};
+
+export type AssessmentScenarioConfigurationAnalytics = {
+  /** @items.minLength 1 */
+  eventTypes: string[];
+  trackPersonaSwitches: boolean;
+};
+
+export interface AssessmentScenarioConfiguration {
+  /** @minLength 1 */
+  scenarioId: string;
+  /** @minLength 1 */
+  scenarioKey: string;
+  /** @minLength 1 */
+  locale: string;
+  /** @minLength 1 */
+  categoryKey: string;
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  competencyKeys: string[];
+  difficulty: AssessmentScenarioConfigurationDifficulty;
+  /** @exclusiveMinimum 0 */
+  estimatedTime: number;
+  /** @minLength 1 */
+  objectiveType: string;
+  /** @minLength 1 */
+  timeline: string;
+  /** @minLength 1 */
+  playerRole: string;
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  objectives: string[];
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  successCriteria: string[];
+  /** @minLength 1 */
+  primaryPersonaKey: string;
+  personaSwitchMode: AssessmentScenarioConfigurationPersonaSwitchMode;
+  personaSwitches?: AssessmentScenarioConfigurationPersonaSwitchesItem[];
+  /** @items.minLength 1 */
+  constraints?: string[];
+  difficultyProfile: AssessmentScenarioConfigurationDifficultyProfile;
+  evaluation: AssessmentScenarioConfigurationEvaluation;
+  termination: AssessmentScenarioConfigurationTermination;
+  simulation: AssessmentScenarioConfigurationSimulation;
+  analytics: AssessmentScenarioConfigurationAnalytics;
+  /** @exclusiveMinimum 0 */
+  targetDurationMinutes: number;
+  /** @minimum 1 */
+  targetTurns: number;
+  /** @minimum 1 */
+  minValidTurns: number;
+}
+
+export type AssessmentPackageVersionCreateInputMetadata = {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  description: string;
+  /** @minLength 1 */
+  locale: string;
+  /** @items.minLength 1 */
+  tags: string[];
+};
+
+export interface AssessmentPackageVersionCreateInput {
+  /** @minLength 1 */
+  packageId?: string;
+  /** @minLength 1 */
+  packageKey: string;
+  /** @minimum 1 */
+  version: number;
+  publishedAt: string;
+  /** @minLength 1 */
+  author: string;
+  metadata: AssessmentPackageVersionCreateInputMetadata;
+  /** @minItems 1 */
+  competencies: AssessmentCompetency[];
+  /** @minItems 1 */
+  scenarios: AssessmentScenarioConfiguration[];
+}
+
+export type AssessmentPackageScenarioDifficulty = typeof AssessmentPackageScenarioDifficulty[keyof typeof AssessmentPackageScenarioDifficulty];
+
+
+export const AssessmentPackageScenarioDifficulty = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+} as const;
+
+export type AssessmentPackageScenarioContext = {
+  /** @minLength 1 */
+  situation: string;
+  /** @minLength 1 */
+  timeline: string;
+  /** @minLength 1 */
+  stakes: string;
+  /** @minLength 1 */
+  playerRole: string;
+};
+
+export type AssessmentPackageScenarioPersonasItem = {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  role: string;
+  /** @minLength 1 */
+  background: string;
+  /** @items.minLength 1 */
+  traits: string[];
+  isPrimary: boolean;
+};
+
+export type AssessmentPackageScenarioFlowItem = {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  description: string;
+  /** @items.minLength 1 */
+  beats: string[];
+};
+
+export type AssessmentPackageScenarioPersonaSwitchesItem = {
+  /** @minLength 1 */
+  fromPersonaKey: string;
+  /** @minLength 1 */
+  toPersonaKey: string;
+  /** @minLength 1 */
+  atFlowKey?: string;
+  /** @minLength 1 */
+  reason?: string;
+};
+
+export type AssessmentPackageScenarioPersonaSwitchMode = typeof AssessmentPackageScenarioPersonaSwitchMode[keyof typeof AssessmentPackageScenarioPersonaSwitchMode];
+
+
+export const AssessmentPackageScenarioPersonaSwitchMode = {
+  manual: 'manual',
+  automatic: 'automatic',
+  disabled: 'disabled',
+} as const;
+
+export type AssessmentPackageScenarioDifficultyProfile = {
+  /** @minLength 1 */
+  level: string;
+  /** @minLength 1 */
+  rationale?: string;
+};
+
+export type AssessmentPackageScenarioEvaluation = {
+  /** @minItems 1 */
+  dimensions: AssessmentEvaluationDimension[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  passingScore?: number;
+};
+
+export type AssessmentPackageScenarioTermination = {
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  conditions: string[];
+  /** @minimum 1 */
+  maxTurns: number;
+};
+
+export type AssessmentPackageScenarioSimulation = {
+  /** @minLength 1 */
+  mode: string;
+  /** @minLength 1 */
+  initialPrompt?: string;
+  /** @items.minLength 1 */
+  rules?: string[];
+};
+
+export type AssessmentPackageScenarioAnalytics = {
+  /** @items.minLength 1 */
+  eventTypes: string[];
+  trackPersonaSwitches: boolean;
+};
+
+export interface AssessmentPackageScenario {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  description: string;
+  /** @minLength 1 */
+  locale: string;
+  /** @minLength 1 */
+  categoryKey: string;
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  competencies: string[];
+  difficulty: AssessmentPackageScenarioDifficulty;
+  /** @exclusiveMinimum 0 */
+  estimatedTime: number;
+  /** @minLength 1 */
+  objectiveType: string;
+  context: AssessmentPackageScenarioContext;
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  objectives: string[];
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  successCriteria: string[];
+  /** @minItems 1 */
+  personas: AssessmentPackageScenarioPersonasItem[];
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  recommendedFlow: string[];
+  /** @minItems 1 */
+  flow: AssessmentPackageScenarioFlowItem[];
+  personaSwitches: AssessmentPackageScenarioPersonaSwitchesItem[];
+  personaSwitchMode: AssessmentPackageScenarioPersonaSwitchMode;
+  /** @items.minLength 1 */
+  constraints: string[];
+  difficultyProfile: AssessmentPackageScenarioDifficultyProfile;
+  evaluation: AssessmentPackageScenarioEvaluation;
+  termination: AssessmentPackageScenarioTermination;
+  simulation: AssessmentPackageScenarioSimulation;
+  analytics: AssessmentPackageScenarioAnalytics;
+  /** @exclusiveMinimum 0 */
+  targetDurationMinutes: number;
+  /** @minimum 1 */
+  targetTurns: number;
+  /** @minimum 1 */
+  minValidTurns: number;
+}
+
+export type AssessmentScenarioPackageV1SchemaVersion = typeof AssessmentScenarioPackageV1SchemaVersion[keyof typeof AssessmentScenarioPackageV1SchemaVersion];
+
+
+export const AssessmentScenarioPackageV1SchemaVersion = {
+  '10': '1.0',
+} as const;
+
+export type AssessmentScenarioPackageV1Metadata = {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  description: string;
+  /** @minLength 1 */
+  locale: string;
+  /** @items.minLength 1 */
+  tags: string[];
+};
+
+export type AssessmentScenarioPackageV1ProvenanceSource = typeof AssessmentScenarioPackageV1ProvenanceSource[keyof typeof AssessmentScenarioPackageV1ProvenanceSource];
+
+
+export const AssessmentScenarioPackageV1ProvenanceSource = {
+  ContentX: 'ContentX',
+} as const;
+
+export type AssessmentScenarioPackageV1Provenance = {
+  source: AssessmentScenarioPackageV1ProvenanceSource;
+  /** @minLength 1 */
+  sourcePackageId: string;
+  /** @minLength 1 */
+  author: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  contentHash: string;
+};
+
+export interface AssessmentScenarioPackageV1 {
+  schemaVersion: AssessmentScenarioPackageV1SchemaVersion;
+  /** @minLength 1 */
+  packageKey: string;
+  /** @minLength 1 */
+  version: string;
+  publishedAt: string;
+  metadata: AssessmentScenarioPackageV1Metadata;
+  /** @minItems 1 */
+  competencies: AssessmentCompetency[];
+  /** @minItems 1 */
+  scenarios: AssessmentPackageScenario[];
+  provenance: AssessmentScenarioPackageV1Provenance;
+}
+
+export interface AssessmentValidationReport {
+  valid: boolean;
+  diagnostics: AssessmentDiagnostic[];
+}
+
+export interface AssessmentPackageVersionRecord {
+  id: string;
+  packageId: string;
+  version: number;
+  contentHash: string;
+  validation: AssessmentValidationReport;
+  createdAt: string;
+}
+
+export interface AssessmentPublishInput {
+  /** @minLength 1 */
+  organizationId: string;
+  /** @minLength 1 */
+  category: string;
+}
+
+export type AssessmentPublishResultStatus = typeof AssessmentPublishResultStatus[keyof typeof AssessmentPublishResultStatus];
+
+
+export const AssessmentPublishResultStatus = {
+  published: 'published',
+  failed: 'failed',
+} as const;
+
+export type AssessmentPublishResultErrorCategory = typeof AssessmentPublishResultErrorCategory[keyof typeof AssessmentPublishResultErrorCategory];
+
+
+export const AssessmentPublishResultErrorCategory = {
+  auth: 'auth',
+  permission: 'permission',
+  conflict: 'conflict',
+  validation: 'validation',
+  server: 'server',
+  network: 'network',
+  timeout: 'timeout',
+} as const;
+
+export type AssessmentPublishResultResponse = { [key: string]: unknown };
+
+export interface AssessmentPublishResult {
+  status: AssessmentPublishResultStatus;
+  reused: boolean;
+  idempotencyKey: string;
+  diagnostics?: AssessmentDiagnostic[];
+  errorCategory?: AssessmentPublishResultErrorCategory;
+  response?: AssessmentPublishResultResponse;
+}
+
+export type AssessmentPublicationRecordStatus = typeof AssessmentPublicationRecordStatus[keyof typeof AssessmentPublicationRecordStatus];
+
+
+export const AssessmentPublicationRecordStatus = {
+  pending: 'pending',
+  validating: 'validating',
+  validated: 'validated',
+  importing: 'importing',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+export type AssessmentPublicationRecordResponse = { [key: string]: unknown };
+
+export interface AssessmentPublicationRecord {
+  id: string;
+  packageId: string;
+  packageVersion: number;
+  target: string;
+  organizationId: string;
+  category: string;
+  idempotencyKey: string;
+  attempt: number;
+  status: AssessmentPublicationRecordStatus;
+  response?: AssessmentPublicationRecordResponse;
+  /** @nullable */
+  errorCode?: string | null;
+  /** @nullable */
+  errorMessage?: string | null;
+  createdAt: string;
+  /** @nullable */
+  completedAt?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+}
+
 export type EntityAttributes = { [key: string]: unknown };
 
 export interface Entity {
