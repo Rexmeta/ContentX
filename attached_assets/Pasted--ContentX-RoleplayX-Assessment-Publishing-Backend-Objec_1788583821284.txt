@@ -1,0 +1,633 @@
+# ContentX → RoleplayX Assessment Publishing Backend
+
+## Objective
+
+Implement the ContentX outbound publishing pipeline for RoleplayX.
+
+ContentX is the canonical authoring/compiler system.
+RoleplayX is the runtime assessment system.
+
+The existing RoleplayX import boundary is already implemented:
+
+* POST `/api/content/import/validate`
+* POST `/api/content/import`
+
+and accepts `AssessmentScenarioPackageV1`.
+
+Do NOT modify RoleplayX in this task.
+
+The goal is to implement the ContentX side:
+
+```text
+ContentX Scenario(s)
+    ↓
+Assessment Package Compiler
+    ↓
+AssessmentScenarioPackageV1
+    ↓
+Validation
+    ↓
+Immutable Package Version
+    ↓
+RoleplayX Publish Client
+```
+
+---
+
+## Existing ContentX architecture to preserve
+
+Important existing modules:
+
+* `artifacts/api-server/src/domains/scenario/model.ts`
+* `artifacts/api-server/src/domains/scenario/repository.ts`
+* `artifacts/api-server/src/domains/content/model.ts`
+* `artifacts/api-server/src/domains/content/service.ts`
+* `artifacts/api-server/src/domains/content/repository.ts`
+* `artifacts/api-server/src/domains/validation/validator.ts`
+* `artifacts/api-server/src/routes/content.ts`
+* `artifacts/api-server/src/routes/scenarios.ts`
+* `lib/db/src/schema/scenarios.ts`
+* `lib/db/src/schema/contents.ts`
+* `lib/db/src/schema/contentVersions.ts`
+* `lib/api-spec/openapi.yaml`
+* `lib/api-zod`
+* existing SaaS/API-key infrastructure under `domains/saas`
+
+Do not replace the existing Content Graph model.
+Do not replace the existing Scenario model.
+Do not rewrite the JSON format engine.
+Do not add RoleplayX-specific fields to the canonical Content Graph.
+
+---
+
+# 1. Add Assessment Package domain
+
+Create:
+
+```text
+artifacts/api-server/src/domains/assessment/
+  model.ts
+  packageCompiler.ts
+  packageValidator.ts
+  packageRepository.ts
+  publishService.ts
+  roleplayXClient.ts
+```
+
+The Assessment domain is an outbound publishing/projection domain.
+
+It must NOT become the canonical content model.
+
+---
+
+# 2. AssessmentScenarioPackageV1 contract
+
+Create a ContentX-side TypeScript/Zod representation matching the existing RoleplayX contract exactly.
+
+The target contract is:
+
+```text
+schemaVersion = "1.0"
+
+packageKey
+version
+publishedAt
+
+metadata:
+  title
+  description
+  locale
+  tags
+
+competencies[]
+
+scenarios[]
+
+provenance:
+  source = "ContentX"
+  sourcePackageId
+  author
+  contentHash
+```
+
+Each scenario must support:
+
+```text
+key
+title
+description
+locale
+categoryKey
+competencies
+difficulty
+estimatedTime
+objectiveType
+
+context:
+  situation
+  timeline
+  stakes
+  playerRole
+
+objectives
+successCriteria
+
+personas
+
+recommendedFlow
+flow
+
+personaSwitches
+personaSwitchMode
+
+constraints
+difficultyProfile
+
+evaluation
+
+termination
+simulation
+analytics
+
+targetDurationMinutes
+targetTurns
+minValidTurns
+```
+
+Use strict Zod validation.
+
+Do not duplicate the contract loosely in multiple places.
+
+---
+
+# 3. Implement deterministic compiler
+
+Create:
+
+```ts
+compileAssessmentScenarioPackage(...)
+```
+
+The compiler must be deterministic.
+
+Do NOT call an LLM during compilation.
+
+Source inputs may include:
+
+* ContentX `DramaticScenario`
+* scenario classification
+* scenario lineage
+* characters/personas
+* competencies
+* evaluation definitions
+* simulation configuration
+
+The compiler must produce a valid `AssessmentScenarioPackageV1`.
+
+Mapping must be explicit and documented.
+
+At minimum:
+
+```text
+DramaticScenario.title
+    → package metadata title / scenario title
+
+DramaticScenario.synopsis
+    → scenario description/context.situation
+
+DramaticScenario.stakes
+    → context.stakes
+
+DramaticScenario.acts
+    → flow/stages and recommendedFlow
+
+DramaticScenario.characters
+    → personas
+
+Scenario classification / competency metadata
+    → competencies
+
+Assessment evaluation configuration
+    → evaluation dimensions
+
+Assessment runtime configuration
+    → termination/simulation/analytics
+```
+
+Do not invent unsupported facts.
+
+When source data cannot populate a required RoleplayX field, return a structured compiler diagnostic instead of silently fabricating content.
+
+---
+
+# 4. Compiler diagnostics
+
+Create:
+
+```ts
+AssessmentCompileDiagnostic
+```
+
+with:
+
+```text
+severity:
+  error | warning
+
+code
+path
+message
+```
+
+Examples:
+
+```text
+MISSING_PLAYER_ROLE
+MISSING_COMPETENCY
+MISSING_EVALUATION
+MISSING_PRIMARY_PERSONA
+INVALID_FLOW
+INVALID_EVALUATION_WEIGHT
+```
+
+Compilation must fail when required fields cannot be safely derived.
+
+Warnings may be returned for optional fields.
+
+---
+
+# 5. Add immutable assessment package persistence
+
+Create DB schemas:
+
+```text
+lib/db/src/schema/assessmentPackages.ts
+lib/db/src/schema/assessmentPackageVersions.ts
+lib/db/src/schema/assessmentPublishes.ts
+```
+
+Assessment package:
+
+```text
+id
+packageKey
+title
+description
+sourceType
+sourceId
+status
+currentVersion
+createdAt
+updatedAt
+```
+
+Status:
+
+```text
+draft
+validated
+approved
+published
+archived
+```
+
+Assessment package version:
+
+```text
+id
+packageId
+version
+packageJson
+contentHash
+validationReport
+createdAt
+createdBy
+```
+
+Publish record:
+
+```text
+id
+packageId
+packageVersion
+target
+targetUrl
+targetOrganizationId
+targetCategoryId
+status
+requestId
+response
+publishedAt
+publishedBy
+errorCode
+errorMessage
+```
+
+Use unique constraints to prevent duplicate package versions.
+
+Published versions must be immutable.
+
+Do not modify a published package version.
+
+---
+
+# 6. RoleplayX HTTP client
+
+Create:
+
+```text
+artifacts/api-server/src/domains/assessment/roleplayXClient.ts
+```
+
+Implement:
+
+```ts
+validatePackage(...)
+importPackage(...)
+```
+
+Target endpoints:
+
+```text
+POST {ROLEPLAYX_BASE_URL}/api/content/import/validate
+POST {ROLEPLAYX_BASE_URL}/api/content/import
+```
+
+Configuration:
+
+```text
+ROLEPLAYX_BASE_URL
+ROLEPLAYX_API_KEY
+```
+
+Never log the API key.
+
+Never persist raw credentials.
+
+Add:
+
+* timeout
+* bounded retry for transient network failures
+* response validation
+* HTTP status mapping
+* structured error codes
+
+Do not retry 400/401/403/409 responses blindly.
+
+---
+
+# 7. Content hash
+
+Before publishing:
+
+1. Remove the supplied `provenance.contentHash`.
+2. Canonicalize JSON recursively with sorted object keys.
+3. Compute SHA-256.
+4. Put the digest into `provenance.contentHash`.
+
+The digest must represent the actual package sent to RoleplayX.
+
+Do not trust externally supplied hashes.
+
+---
+
+# 8. Publish service
+
+Create:
+
+```ts
+publishAssessmentVersion(...)
+```
+
+Flow:
+
+```text
+load package
+↓
+ensure version exists
+↓
+ensure version is immutable
+↓
+compile package
+↓
+validate package
+↓
+compute SHA-256
+↓
+POST RoleplayX /validate
+↓
+if valid:
+    POST RoleplayX /import
+↓
+persist publish result
+↓
+mark package version published
+```
+
+Do not mark the ContentX package as published unless RoleplayX import succeeds.
+
+---
+
+# 9. Idempotency
+
+Use a deterministic request key:
+
+```text
+contentx:{packageId}:{version}:roleplayx:{organizationId}:{categoryId}
+```
+
+Pass it as:
+
+```http
+Idempotency-Key: ...
+```
+
+If the same package/version/target is published again:
+
+* do not create another ContentX publish record unnecessarily
+* do not create duplicate RoleplayX content
+* return the existing successful result where possible
+
+RoleplayX already performs package-version conflict detection. Preserve that behavior.
+
+---
+
+# 10. API routes
+
+Create:
+
+```text
+artifacts/api-server/src/routes/assessmentPublishing.ts
+```
+
+Routes:
+
+```http
+POST /v1/assessments/:id/versions/:version/validate
+GET  /v1/assessments/:id/versions/:version/package
+POST /v1/assessments/:id/versions
+POST /v1/assessments/:id/versions/:version/publish
+GET  /v1/assessments/:id/publishes
+```
+
+Add the router to:
+
+```text
+artifacts/api-server/src/routes/index.ts
+```
+
+Keep route handlers thin.
+Business rules belong in the Assessment domain.
+
+---
+
+# 11. API contract
+
+Update:
+
+```text
+lib/api-spec/openapi.yaml
+```
+
+Then regenerate:
+
+```text
+lib/api-zod
+lib/api-client-react
+```
+
+Do not manually edit generated files unless the existing repository workflow requires it.
+
+Follow the existing OpenAPI → generated Zod/client architecture.
+
+---
+
+# 12. Tests
+
+Add unit tests for:
+
+### Compiler
+
+* valid scenario compiles
+* multiple scenarios compile
+* persona mapping
+* flow mapping
+* evaluation mapping
+* competency mapping
+* missing required field
+* invalid primary persona
+* invalid evaluation weights
+* deterministic output
+
+### Hash
+
+Same package → same hash.
+
+Changing any meaningful field → different hash.
+
+### Persistence
+
+* version uniqueness
+* immutable published version
+* package version creation
+* publish record creation
+
+### RoleplayX client
+
+Mock:
+
+```text
+200 validation
+400 validation failure
+401
+403
+409
+500
+timeout
+```
+
+### Publish service
+
+Test:
+
+```text
+compile → validate → import → persist success
+```
+
+and:
+
+```text
+compile failure
+RoleplayX validation failure
+RoleplayX import failure
+RoleplayX conflict
+retry
+idempotent repeated publish
+```
+
+---
+
+# 13. Important architectural restrictions
+
+DO NOT:
+
+* modify the existing Content Graph schema to add RoleplayX fields
+* make ContentX directly access the RoleplayX database
+* copy the RoleplayX Scenario table into ContentX
+* make RoleplayX depend on ContentX at runtime
+* use an LLM during package compilation
+* rewrite the existing JSON Format engine
+* remove the existing generic export
+* modify existing simulation runtime behavior
+* create bidirectional synchronization yet
+
+The architecture must remain:
+
+```text
+ContentX
+  canonical authoring
+       ↓
+  assessment package
+       ↓
+  publish API
+       ↓
+RoleplayX
+  runtime copy
+```
+
+---
+
+# 14. Completion criteria
+
+The implementation is complete only when:
+
+```text
+ContentX Scenario
+      ↓
+AssessmentScenarioPackageV1
+      ↓
+Zod validation PASS
+      ↓
+SHA-256
+      ↓
+RoleplayX /validate PASS
+      ↓
+RoleplayX /import PASS
+      ↓
+publish record persisted
+      ↓
+same package/version can be safely published again
+```
+
+and the existing ContentX test suite remains green.
+
+Run:
+
+```bash
+pnpm run typecheck:libs
+pnpm --filter @workspace/api-server test -- --exclude="**/*.db.test.ts"
+```
+
+Also add a focused integration test for the complete compiler → mocked RoleplayX publish flow.
+
+Do not claim real RoleplayX E2E until an actual running RoleplayX instance has been contacted.
