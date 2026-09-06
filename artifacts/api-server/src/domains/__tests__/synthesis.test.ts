@@ -1,4 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("../scenario/repository", () => ({
+  getScenario: vi.fn(async (id: string) => ({
+    id,
+    title: `시나리오 ${id}`,
+  })),
+}));
+
 import { amplifyIdea } from "../ai/mockAmplifier";
 import {
   extractElements,
@@ -35,6 +43,15 @@ describe("scenario synthesis", () => {
     }
   });
 
+  it.each(["relationship", "goal", "event", "ending"] as const)(
+    "extractElements returns content for the extended %s element",
+    (element) => {
+      const out = extractElements(amplifyIdea(`${element} 테스트`), [element]);
+
+      expect(out.trim()).not.toBe("");
+    },
+  );
+
   it("mock synthesizer combines sources into a new scenario draft", async () => {
     const result = await mockSynthesizer(makeSources(), "지시문");
     expect(result.title).toContain("합성");
@@ -50,6 +67,63 @@ describe("scenario synthesis", () => {
 });
 
 describe("lineage validation invariants", () => {
+  it("accepts parents containing all extended elements", async () => {
+    const lineage = await validateLineage({
+      parents: [
+        {
+          scenarioId: "scenario_extended_a",
+          elements: ["relationship", "goal"],
+        },
+        {
+          scenarioId: "scenario_extended_b",
+          elements: ["event", "ending"],
+        },
+      ],
+    });
+
+    expect(lineage.parents.map((parent) => parent.elements)).toEqual([
+      ["relationship", "goal"],
+      ["event", "ending"],
+    ]);
+  });
+
+  it("accepts a synthesis request mixing original and extended elements", async () => {
+    const sources: SynthesisSourceInput[] = [
+      {
+        scenario: amplifyIdea("기존 요소 원본"),
+        elements: ["characters", "conflict", "setting", "twist", "structure"],
+      },
+      {
+        scenario: amplifyIdea("확장 요소 원본"),
+        elements: ["relationship", "goal", "event", "ending"],
+      },
+    ];
+
+    const [lineage, synthesized] = await Promise.all([
+      validateLineage({
+        parents: sources.map((source, index) => ({
+          scenarioId: `scenario_mixed_${index + 1}`,
+          elements: source.elements,
+        })),
+      }),
+      mockSynthesizer(sources),
+    ]);
+
+    expect(lineage.parents.flatMap((parent) => parent.elements)).toEqual([
+      "characters",
+      "conflict",
+      "setting",
+      "twist",
+      "structure",
+      "relationship",
+      "goal",
+      "event",
+      "ending",
+    ]);
+    expect(synthesized.title).toContain(sources[0]!.scenario.title);
+    expect(synthesized.title).toContain(sources[1]!.scenario.title);
+  });
+
   it("rejects fewer than 2 parents", async () => {
     await expect(
       validateLineage({
