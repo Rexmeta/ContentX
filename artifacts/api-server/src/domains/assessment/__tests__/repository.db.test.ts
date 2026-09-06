@@ -1,6 +1,7 @@
 /**
  * Real-PostgreSQL regression coverage for immutable assessment package evidence
- * and RoleplayX publication attempts. Skipped outside a configured DB.
+ * and RoleplayX publication attempts. Skipped outside a configured DB unless
+ * ASSESSMENT_DB_TEST_REQUIRED=true makes DB coverage mandatory in CI.
  */
 import { afterAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
@@ -12,6 +13,11 @@ import {
 import * as repository from "../repository";
 
 const hasDb = Boolean(process.env["DATABASE_URL"]);
+if (process.env["ASSESSMENT_DB_TEST_REQUIRED"] === "true" && !hasDb) {
+  throw new Error(
+    "DATABASE_URL is required because assessment DB regression coverage is mandatory",
+  );
+}
 const d = hasDb ? describe : describe.skip;
 const createdPackageIds = new Set<string>();
 const runTag = `assessment-db-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
