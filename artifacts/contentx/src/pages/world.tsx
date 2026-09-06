@@ -545,7 +545,7 @@ export default function Dashboard() {
 
   if (step === 'SCENARIO' && draft) {
     return (
-      <Layout breadcrumbs={[{label: "ContentX"}, {label: "World", href: "/world"}, {label: "Scenario Draft"}]}>
+      <Layout breadcrumbs={[{label: "ContentX"}, {label: "라이브러리", href: "/world"}, {label: "시나리오 초안"}]}>
         <div className="relative z-10 max-w-7xl mx-auto p-4 md:p-6 space-y-6 pb-28">
           {/* Stepper */}
           <div className="flex flex-wrap items-center gap-3 md:gap-4 tech-label border border-border rounded-xl bg-card p-4">
@@ -969,8 +969,14 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout breadcrumbs={[{label: "ContentX"}, {label: "World"}]}>
+    <Layout breadcrumbs={[{label: "ContentX"}, {label: "라이브러리"}]}>
       <div className="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1600px] mx-auto">
+        <div className="lg:col-span-12">
+          <h1 className="headline-lg">참고 자료 라이브러리</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            저장한 콘텐츠 그래프와 시나리오를 찾아보고, 조합·분류해 새로운 작업의 참고 자료로 활용하세요.
+          </p>
+        </div>
         
         {/* Left Column: Generator & Stats */}
         <div className="lg:col-span-4 space-y-6">
@@ -1083,8 +1089,8 @@ export default function Dashboard() {
                 className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-4 px-1 text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'CONTENT' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
               >
                 <Database className="h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline">Content Library</span>
-                <span className="sm:hidden">Content</span>
+                <span className="hidden sm:inline">콘텐츠 자료</span>
+                <span className="sm:hidden">콘텐츠</span>
                 <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-full">{contents?.length || 0}</span>
               </button>
               <button 
@@ -1092,8 +1098,8 @@ export default function Dashboard() {
                 className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-4 px-1 text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'SCENARIOS' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
               >
                 <BookOpen className="h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline">Scenario Library</span>
-                <span className="sm:hidden">Scenarios</span>
+                <span className="hidden sm:inline">시나리오 자료</span>
+                <span className="sm:hidden">시나리오</span>
                 <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-full">{scenarios?.length || 0}</span>
               </button>
               <button 
@@ -1101,7 +1107,7 @@ export default function Dashboard() {
                 className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 py-4 px-1 text-[10px] md:text-xs font-mono font-bold uppercase tracking-wider transition-colors ${activeTab === 'LINEAGE' ? 'bg-background border-b-2 border-primary text-primary' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
               >
                 <GitMerge className="h-4 w-4 shrink-0" />
-                Lineage
+                출처 관계
                 <span className="bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground border border-border rounded-full">{scenarios?.filter(s => s.lineage).length || 0}</span>
               </button>
             </div>
