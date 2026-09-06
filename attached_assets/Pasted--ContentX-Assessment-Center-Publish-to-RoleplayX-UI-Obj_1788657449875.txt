@@ -1,0 +1,367 @@
+# ContentX Assessment Center + Publish to RoleplayX UI
+
+## Objective
+
+Add a user-facing Assessment workflow to ContentX.
+
+ContentX should behave as the authoring and assessment-package factory.
+
+RoleplayX remains the runtime assessment platform.
+
+Golden path:
+
+```text
+Create Assessment
+    ↓
+Select / generate scenarios
+    ↓
+Review scenarios
+    ↓
+Create immutable version
+    ↓
+Validate
+    ↓
+Publish to RoleplayX
+    ↓
+Show publish result
+```
+
+Do not expose internal concepts such as SimulationSpec, compiler internals, SHA-256, or runtime adapters in the primary UX.
+
+---
+
+# 1. Add Assessment navigation
+
+Add an Assessment entry to the existing ContentX navigation.
+
+Suggested route:
+
+```text
+/assessments
+```
+
+Create:
+
+```text
+artifacts/contentx/src/pages/assessments/
+  index.tsx
+  detail.tsx
+  publish.tsx
+```
+
+Reuse existing Layout, cards, tables, dialogs, buttons, badges, and API client patterns.
+
+---
+
+# 2. Assessment list
+
+Display:
+
+```text
+Assessment
+Scenarios
+Competencies
+Version
+Status
+Published Target
+Updated
+```
+
+Example:
+
+```text
+Team Leader Promotion
+3 scenarios
+5 competencies
+v1.0.0
+Published
+RoleplayX
+```
+
+Statuses:
+
+```text
+Draft
+Validated
+Approved
+Published
+Archived
+```
+
+---
+
+# 3. Assessment detail page
+
+Show:
+
+## Overview
+
+```text
+Team Leader Promotion
+
+Description
+
+Competencies
+• Coaching
+• Communication
+• Conflict Management
+• Decision Making
+• Leadership
+```
+
+## Scenarios
+
+```text
+Low Performer Coaching
+Key Talent Retention
+Team Conflict Resolution
+```
+
+Each scenario should show:
+
+* difficulty
+* estimated duration
+* primary persona
+* competencies
+* evaluation dimensions
+
+---
+
+# 4. Version panel
+
+Show:
+
+```text
+Versions
+
+v1.0.0   Published
+v1.1.0   Draft
+```
+
+For published versions:
+
+```text
+Immutable
+```
+
+Do not show edit controls for immutable versions.
+
+---
+
+# 5. Preview package
+
+Add:
+
+```text
+[Preview Package]
+```
+
+Open a dialog/page showing:
+
+```text
+Package
+Schema Version
+Package Version
+Scenario Count
+Competency Count
+Content Hash
+
+Scenario validation
+✓ Scenario 1
+✓ Scenario 2
+✓ Scenario 3
+```
+
+Do not expose the raw JSON by default.
+
+Provide an optional:
+
+```text
+View JSON
+```
+
+for advanced users.
+
+---
+
+# 6. Validate
+
+Button:
+
+```text
+[Validate]
+```
+
+Call:
+
+```http
+POST /v1/assessments/:id/versions/:version/validate
+```
+
+Display:
+
+```text
+✓ Package valid
+
+3 scenarios
+5 competencies
+12 evaluation dimensions
+```
+
+For failures:
+
+```text
+Cannot publish
+
+Scenario 2
+Persona is missing a required field.
+
+Scenario 3
+Evaluation weights must total 10.
+```
+
+Errors must be actionable.
+
+---
+
+# 7. Publish to RoleplayX
+
+Primary CTA:
+
+```text
+[Publish to RoleplayX]
+```
+
+Open dialog:
+
+```text
+Publish Assessment
+
+Target
+RoleplayX
+
+Organization
+[ Select organization ]
+
+Assessment Category
+[ Select category ]
+
+Package
+Team Leader Promotion v1.0.0
+
+Scenarios
+3
+
+[Validate Target]
+
+[Publish]
+```
+
+Do not allow Publish unless package validation has passed.
+
+---
+
+# 8. Publish progress
+
+Show:
+
+```text
+Publishing...
+
+✓ Package compiled
+✓ Package validated
+✓ RoleplayX target validated
+● Importing scenarios
+○ Finalizing
+```
+
+On success:
+
+```text
+Published Successfully
+
+Team Leader Promotion
+Version 1.0.0
+
+3 scenarios imported
+
+[Open RoleplayX]
+```
+
+The Open RoleplayX link may be generated from the configured RoleplayX base URL.
+
+---
+
+# 9. Publish history
+
+Add a section:
+
+```text
+Publish History
+
+v1.0.0
+RoleplayX
+3 scenarios
+Published Sep 5, 2026
+Success
+
+v1.0.0
+RoleplayX
+Failed
+Target category mismatch
+```
+
+Show error details when a publish fails.
+
+---
+
+# 10. UX restrictions
+
+Do NOT:
+
+* create a second scenario editor specifically for RoleplayX
+* expose raw package JSON as the primary workflow
+* allow editing a published version
+* allow publish before validation
+* show technical compiler terminology in the main UX
+* duplicate existing Scenario editing components
+
+ContentX remains the authoring system.
+
+RoleplayX remains the execution system.
+
+---
+
+# 11. Tests
+
+Add Playwright coverage for:
+
+```text
+Assessment list
+→ open assessment
+→ inspect scenarios
+→ create version
+→ validate
+→ open publish dialog
+→ select target
+→ publish
+→ success state
+```
+
+Also test:
+
+```text
+invalid package
+→ publish disabled
+
+published version
+→ edit disabled
+
+publish failure
+→ error displayed
+
+successful publish
+→ publish history updated
+```
+
+Run existing frontend tests and full typecheck after implementation.
