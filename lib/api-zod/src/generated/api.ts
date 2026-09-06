@@ -4398,6 +4398,276 @@ export const ListAssessmentsResponse = zod.array(ListAssessmentsResponseItem)
 
 
 /**
+ * @summary List verified assessment scenario templates
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const listAssessmentTemplatesResponseEvaluationDimensionsItemWeightMin = 0;
+export const listAssessmentTemplatesResponseEvaluationDimensionsItemWeightMax = 1;
+
+
+
+
+export const listAssessmentTemplatesResponseEvaluationDefaultPassingScoreMin = 0;
+export const listAssessmentTemplatesResponseEvaluationDefaultPassingScoreMax = 100;
+
+
+
+
+
+
+
+
+
+
+export const ListAssessmentTemplatesResponseItem = zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "subtitle": zod.string().min(1),
+  "category": zod.enum(['leadership', 'conflict_resolution', 'communication']),
+  "categoryLabel": zod.string().min(1),
+  "targetRole": zod.string().min(1),
+  "difficulty": zod.enum(['beginner', 'intermediate', 'advanced']),
+  "estimatedTime": zod.int().min(1),
+  "description": zod.string().min(1),
+  "learningObjectives": zod.array(zod.string().min(1)),
+  "dramatic": zod.object({
+  "logline": zod.string().min(1),
+  "synopsis": zod.string().min(1),
+  "theme": zod.string().min(1),
+  "stakes": zod.string().min(1),
+  "twist": zod.string().min(1),
+  "acts": zod.array(zod.object({
+  "name": zod.string().min(1),
+  "summary": zod.string().min(1),
+  "beats": zod.array(zod.string().min(1))
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string().min(1),
+  "role": zod.string().min(1),
+  "motivation": zod.string().min(1),
+  "traits": zod.array(zod.string().min(1)),
+  "initialDialogue": zod.string().min(1),
+  "behaviorGuidelines": zod.array(zod.string().min(1))
+})).min(1)
+}),
+  "competencies": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "name": zod.string().min(1),
+  "description": zod.string().min(1)
+})).min(1),
+  "evaluation": zod.object({
+  "dimensions": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "label": zod.string().min(1),
+  "weight": zod.number().min(listAssessmentTemplatesResponseEvaluationDimensionsItemWeightMin).max(listAssessmentTemplatesResponseEvaluationDimensionsItemWeightMax),
+  "criteria": zod.array(zod.string().min(1)).min(1),
+  "description": zod.string().optional()
+})).min(1),
+  "defaultPassingScore": zod.number().min(listAssessmentTemplatesResponseEvaluationDefaultPassingScoreMin).max(listAssessmentTemplatesResponseEvaluationDefaultPassingScoreMax)
+}),
+  "simulation": zod.object({
+  "mode": zod.string().min(1),
+  "defaultInitialPrompt": zod.string().min(1),
+  "rules": zod.array(zod.string().min(1))
+}),
+  "termination": zod.object({
+  "conditions": zod.array(zod.string().min(1)),
+  "maxTurns": zod.int().min(1),
+  "targetTurns": zod.int().min(1),
+  "minValidTurns": zod.int().min(1)
+})
+})
+export const ListAssessmentTemplatesResponse = zod.array(ListAssessmentTemplatesResponseItem)
+
+
+/**
+ * @summary Get a verified assessment scenario template
+ */
+
+
+
+export const GetAssessmentTemplateParams = zod.object({
+  "id": zod.coerce.string().min(1)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const getAssessmentTemplateResponseEvaluationDimensionsItemWeightMin = 0;
+export const getAssessmentTemplateResponseEvaluationDimensionsItemWeightMax = 1;
+
+
+
+
+export const getAssessmentTemplateResponseEvaluationDefaultPassingScoreMin = 0;
+export const getAssessmentTemplateResponseEvaluationDefaultPassingScoreMax = 100;
+
+
+
+
+
+
+
+
+
+
+export const GetAssessmentTemplateResponse = zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "subtitle": zod.string().min(1),
+  "category": zod.enum(['leadership', 'conflict_resolution', 'communication']),
+  "categoryLabel": zod.string().min(1),
+  "targetRole": zod.string().min(1),
+  "difficulty": zod.enum(['beginner', 'intermediate', 'advanced']),
+  "estimatedTime": zod.int().min(1),
+  "description": zod.string().min(1),
+  "learningObjectives": zod.array(zod.string().min(1)),
+  "dramatic": zod.object({
+  "logline": zod.string().min(1),
+  "synopsis": zod.string().min(1),
+  "theme": zod.string().min(1),
+  "stakes": zod.string().min(1),
+  "twist": zod.string().min(1),
+  "acts": zod.array(zod.object({
+  "name": zod.string().min(1),
+  "summary": zod.string().min(1),
+  "beats": zod.array(zod.string().min(1))
+})),
+  "characters": zod.array(zod.object({
+  "name": zod.string().min(1),
+  "role": zod.string().min(1),
+  "motivation": zod.string().min(1),
+  "traits": zod.array(zod.string().min(1)),
+  "initialDialogue": zod.string().min(1),
+  "behaviorGuidelines": zod.array(zod.string().min(1))
+})).min(1)
+}),
+  "competencies": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "name": zod.string().min(1),
+  "description": zod.string().min(1)
+})).min(1),
+  "evaluation": zod.object({
+  "dimensions": zod.array(zod.object({
+  "key": zod.string().min(1),
+  "label": zod.string().min(1),
+  "weight": zod.number().min(getAssessmentTemplateResponseEvaluationDimensionsItemWeightMin).max(getAssessmentTemplateResponseEvaluationDimensionsItemWeightMax),
+  "criteria": zod.array(zod.string().min(1)).min(1),
+  "description": zod.string().optional()
+})).min(1),
+  "defaultPassingScore": zod.number().min(getAssessmentTemplateResponseEvaluationDefaultPassingScoreMin).max(getAssessmentTemplateResponseEvaluationDefaultPassingScoreMax)
+}),
+  "simulation": zod.object({
+  "mode": zod.string().min(1),
+  "defaultInitialPrompt": zod.string().min(1),
+  "rules": zod.array(zod.string().min(1))
+}),
+  "termination": zod.object({
+  "conditions": zod.array(zod.string().min(1)),
+  "maxTurns": zod.int().min(1),
+  "targetTurns": zod.int().min(1),
+  "minValidTurns": zod.int().min(1)
+})
+})
+
+
+/**
+ * @summary Create a draft assessment package from a verified scenario template
+ */
+
+
+
+
+
+
+export const createAssessmentFromTemplateBodyPassingScoreMin = 0;
+export const createAssessmentFromTemplateBodyPassingScoreMax = 100;
+
+
+
+export const CreateAssessmentFromTemplateBody = zod.object({
+  "templateId": zod.string().min(1),
+  "companyContext": zod.string().min(1),
+  "participantRole": zod.string().min(1).optional(),
+  "situation": zod.string().min(1).optional(),
+  "counterpartName": zod.string().min(1).optional(),
+  "counterpartRole": zod.string().min(1).optional(),
+  "difficulty": zod.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  "passingScore": zod.number().min(createAssessmentFromTemplateBodyPassingScoreMin).max(createAssessmentFromTemplateBodyPassingScoreMax).optional()
+})
+
+
+
+
+
+export const createAssessmentFromTemplateResponseContentHashRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const CreateAssessmentFromTemplateResponse = zod.object({
+  "assessmentId": zod.string().min(1),
+  "version": zod.int().min(1),
+  "status": zod.enum(['draft']),
+  "title": zod.string().min(1),
+  "packageKey": zod.string().min(1),
+  "contentHash": zod.string().regex(createAssessmentFromTemplateResponseContentHashRegExp)
+})
+
+
+/**
  * @summary Get an assessment package with immutable version and publication summaries
  */
 export const GetAssessmentParams = zod.object({

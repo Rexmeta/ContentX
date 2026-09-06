@@ -1,12 +1,17 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import {
+  CreateAssessmentFromTemplateBody,
+  CreateAssessmentFromTemplateResponse,
   CreateAssessmentPackageVersionBody,
   CreateAssessmentPackageVersionResponse,
+  GetAssessmentTemplateParams,
+  GetAssessmentTemplateResponse,
   GetAssessmentParams,
   GetAssessmentResponse,
   GetAssessmentPackageVersionParams,
   GetAssessmentPackageVersionResponse,
   ListAssessmentsResponse,
+  ListAssessmentTemplatesResponse,
   ListAssessmentPackagePublicationHistoryResponse,
   PublishAssessmentPackageVersionToRoleplayXBody,
   PublishAssessmentPackageVersionToRoleplayXResponse,
@@ -20,7 +25,6 @@ import { createHttpAssessmentPublishingService } from "../domains/assessment/htt
 import type { AssessmentScenarioConfiguration } from "../domains/assessment/model";
 import type { DramaticScenario } from "../domains/scenario/model";
 import { newId } from "../shared/id";
-import { z } from "zod";
 import {
   listScenarioTemplates,
   getScenarioTemplate,
@@ -303,41 +307,34 @@ async function listPackagePublications(req: Request, res: Response): Promise<voi
   res.json(ListAssessmentPackagePublicationHistoryResponse.parse(history.map(publicationRecord)));
 }
 
-const FromTemplateBodySchema = z.object({
-  templateId: z.string().trim().min(1),
-  companyContext: z.string().trim().min(1),
-  participantRole: z.string().trim().optional(),
-  situation: z.string().trim().optional(),
-  counterpartName: z.string().trim().optional(),
-  counterpartRole: z.string().trim().optional(),
-  difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
-  passingScore: z.number().min(0).max(100).optional(),
-});
-
 async function listTemplates(_req: Request, res: Response): Promise<void> {
-  res.json(listScenarioTemplates());
+  res.json(ListAssessmentTemplatesResponse.parse(listScenarioTemplates()));
 }
 
 async function getTemplate(req: Request, res: Response): Promise<void> {
-  const id = typeof req.params.id === "string" ? req.params.id : "";
-  const template = getScenarioTemplate(id);
-  if (!template) {
-    res.status(404).json({ error: `Assessment template "${id}" not found.` });
+  const parsed = GetAssessmentTemplateParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
     return;
   }
-  res.json(template);
+  const template = getScenarioTemplate(parsed.data.id);
+  if (!template) {
+    res.status(404).json({ error: `Assessment template "${parsed.data.id}" not found.` });
+    return;
+  }
+  res.json(GetAssessmentTemplateResponse.parse(template));
 }
 
 async function createFromTemplate(req: Request, res: Response): Promise<void> {
-  const parsed = FromTemplateBodySchema.safeParse(req.body);
+  const parsed = CreateAssessmentFromTemplateBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
   const {
-    templateId,
-    companyContext,
+    templateId: rawTemplateId,
+    companyContext: rawCompanyContext,
     participantRole,
     situation,
     counterpartName,
@@ -345,6 +342,12 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
     difficulty,
     passingScore,
   } = parsed.data;
+  const templateId = rawTemplateId.trim();
+  const companyContext = rawCompanyContext.trim();
+  if (!templateId || !companyContext) {
+    res.status(400).json({ error: "templateId and companyContext must not be blank." });
+    return;
+  }
 
   try {
     const scenarioId = newId("scenario");
@@ -396,14 +399,16 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
       createdBy: "ContentX HR Studio",
     });
 
-    res.status(201).json({
-      assessmentId: packageId,
-      version: 1,
-      status: "draft",
-      title: instantiated.title,
-      packageKey: compiled.package.packageKey,
-      contentHash: row.contentHash,
-    });
+    res.status(201).json(
+      CreateAssessmentFromTemplateResponse.parse({
+        assessmentId: packageId,
+        version: 1,
+        status: "draft",
+        title: instantiated.title,
+        packageKey: compiled.package.packageKey,
+        contentHash: row.contentHash,
+      }),
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to instantiate assessment from template.";
     res.status(500).json({ error: message });

@@ -197,6 +197,7 @@ describe("assessment read routes", () => {
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body.length).toBe(3);
     expect(response.body[0].id).toBe("tmpl-ldr-01");
+    expect(getAssessmentPackageReadModel).not.toHaveBeenCalled();
   });
 
   it("retrieves a single template by id", async () => {

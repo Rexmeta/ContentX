@@ -624,6 +624,199 @@ export interface AssessmentScenarioPackageV1 {
   provenance: AssessmentScenarioPackageV1Provenance;
 }
 
+export type AssessmentScenarioTemplateCategory = typeof AssessmentScenarioTemplateCategory[keyof typeof AssessmentScenarioTemplateCategory];
+
+
+export const AssessmentScenarioTemplateCategory = {
+  leadership: 'leadership',
+  conflict_resolution: 'conflict_resolution',
+  communication: 'communication',
+} as const;
+
+export type AssessmentScenarioTemplateDifficulty = typeof AssessmentScenarioTemplateDifficulty[keyof typeof AssessmentScenarioTemplateDifficulty];
+
+
+export const AssessmentScenarioTemplateDifficulty = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+} as const;
+
+export type AssessmentScenarioTemplateDramaticActsItem = {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  summary: string;
+  /** @items.minLength 1 */
+  beats: string[];
+};
+
+export type AssessmentScenarioTemplateDramaticCharactersItem = {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  role: string;
+  /** @minLength 1 */
+  motivation: string;
+  /** @items.minLength 1 */
+  traits: string[];
+  /** @minLength 1 */
+  initialDialogue: string;
+  /** @items.minLength 1 */
+  behaviorGuidelines: string[];
+};
+
+export type AssessmentScenarioTemplateDramatic = {
+  /** @minLength 1 */
+  logline: string;
+  /** @minLength 1 */
+  synopsis: string;
+  /** @minLength 1 */
+  theme: string;
+  /** @minLength 1 */
+  stakes: string;
+  /** @minLength 1 */
+  twist: string;
+  acts: AssessmentScenarioTemplateDramaticActsItem[];
+  /** @minItems 1 */
+  characters: AssessmentScenarioTemplateDramaticCharactersItem[];
+};
+
+export type AssessmentScenarioTemplateCompetenciesItem = {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  description: string;
+};
+
+export type AssessmentScenarioTemplateEvaluationDimensionsItem = {
+  /** @minLength 1 */
+  key: string;
+  /** @minLength 1 */
+  label: string;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  weight: number;
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  criteria: string[];
+  description?: string;
+};
+
+export type AssessmentScenarioTemplateEvaluation = {
+  /** @minItems 1 */
+  dimensions: AssessmentScenarioTemplateEvaluationDimensionsItem[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  defaultPassingScore: number;
+};
+
+export type AssessmentScenarioTemplateSimulation = {
+  /** @minLength 1 */
+  mode: string;
+  /** @minLength 1 */
+  defaultInitialPrompt: string;
+  /** @items.minLength 1 */
+  rules: string[];
+};
+
+export type AssessmentScenarioTemplateTermination = {
+  /** @items.minLength 1 */
+  conditions: string[];
+  /** @minimum 1 */
+  maxTurns: number;
+  /** @minimum 1 */
+  targetTurns: number;
+  /** @minimum 1 */
+  minValidTurns: number;
+};
+
+export interface AssessmentScenarioTemplate {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  subtitle: string;
+  category: AssessmentScenarioTemplateCategory;
+  /** @minLength 1 */
+  categoryLabel: string;
+  /** @minLength 1 */
+  targetRole: string;
+  difficulty: AssessmentScenarioTemplateDifficulty;
+  /** @minimum 1 */
+  estimatedTime: number;
+  /** @minLength 1 */
+  description: string;
+  /** @items.minLength 1 */
+  learningObjectives: string[];
+  dramatic: AssessmentScenarioTemplateDramatic;
+  /** @minItems 1 */
+  competencies: AssessmentScenarioTemplateCompetenciesItem[];
+  evaluation: AssessmentScenarioTemplateEvaluation;
+  simulation: AssessmentScenarioTemplateSimulation;
+  termination: AssessmentScenarioTemplateTermination;
+}
+
+export type AssessmentTemplateInstantiationInputDifficulty = typeof AssessmentTemplateInstantiationInputDifficulty[keyof typeof AssessmentTemplateInstantiationInputDifficulty];
+
+
+export const AssessmentTemplateInstantiationInputDifficulty = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+} as const;
+
+export interface AssessmentTemplateInstantiationInput {
+  /** @minLength 1 */
+  templateId: string;
+  /** @minLength 1 */
+  companyContext: string;
+  /** @minLength 1 */
+  participantRole?: string;
+  /** @minLength 1 */
+  situation?: string;
+  /** @minLength 1 */
+  counterpartName?: string;
+  /** @minLength 1 */
+  counterpartRole?: string;
+  difficulty?: AssessmentTemplateInstantiationInputDifficulty;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  passingScore?: number;
+}
+
+export type AssessmentTemplateInstantiationResultStatus = typeof AssessmentTemplateInstantiationResultStatus[keyof typeof AssessmentTemplateInstantiationResultStatus];
+
+
+export const AssessmentTemplateInstantiationResultStatus = {
+  draft: 'draft',
+} as const;
+
+export interface AssessmentTemplateInstantiationResult {
+  /** @minLength 1 */
+  assessmentId: string;
+  /** @minimum 1 */
+  version: number;
+  status: AssessmentTemplateInstantiationResultStatus;
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  packageKey: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  contentHash: string;
+}
+
 export interface AssessmentValidationReport {
   valid: boolean;
   diagnostics: AssessmentDiagnostic[];

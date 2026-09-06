@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -8,42 +8,106 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getListAssessmentsQueryKey } from "@workspace/api-client-react";
+import {
+  getListAssessmentsQueryKey,
+  useCreateAssessmentFromTemplate,
+  useListAssessmentTemplates,
+  type AssessmentScenarioTemplate,
+  type AssessmentTemplateInstantiationResult,
+} from "@workspace/api-client-react";
 import { 
   ArrowRight, ArrowLeft, Check, CheckCircle2, Clock, 
   Loader2, Sparkles, User, Users, ShieldAlert, Target, BookOpen
 } from "lucide-react";
 
-interface ScenarioTemplate {
-  id: string;
-  title: string;
-  subtitle: string;
-  category: string;
-  categoryLabel: string;
-  targetRole: string;
-  difficulty: "beginner" | "intermediate" | "advanced";
-  estimatedTime: number;
-  description: string;
-  learningObjectives: string[];
-  competencies: Array<{ key: string; name: string; description: string }>;
-  evaluation: {
-    dimensions: Array<{ key: string; label: string; weight: number; criteria: string[] }>;
-    defaultPassingScore: number;
-  };
-  dramatic: {
-    characters: Array<{ name: string; role: string; initialDialogue?: string }>;
-  };
+type ScenarioTemplate = AssessmentScenarioTemplate;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+function isScenarioTemplate(value: unknown): value is ScenarioTemplate {
+  if (!isRecord(value) || !isRecord(value.dramatic) || !isRecord(value.evaluation)) return false;
+
+  return (
+    typeof value.id === "string" &&
+    typeof value.title === "string" &&
+    typeof value.subtitle === "string" &&
+    typeof value.categoryLabel === "string" &&
+    typeof value.targetRole === "string" &&
+    typeof value.description === "string" &&
+    typeof value.estimatedTime === "number" &&
+    typeof value.dramatic.synopsis === "string" &&
+    Array.isArray(value.dramatic.characters) &&
+    value.dramatic.characters.every(
+      (character) =>
+        isRecord(character) &&
+        typeof character.name === "string" &&
+        typeof character.role === "string",
+    ) &&
+    Array.isArray(value.competencies) &&
+    value.competencies.every(
+      (competency) =>
+        isRecord(competency) &&
+        typeof competency.key === "string" &&
+        typeof competency.name === "string",
+    ) &&
+    Array.isArray(value.evaluation.dimensions) &&
+    value.evaluation.dimensions.every(
+      (dimension) =>
+        isRecord(dimension) &&
+        typeof dimension.key === "string" &&
+        typeof dimension.label === "string" &&
+        typeof dimension.weight === "number" &&
+        Array.isArray(dimension.criteria) &&
+        dimension.criteria.every((criterion) => typeof criterion === "string"),
+    )
+  );
+}
+
+function isScenarioTemplateList(value: unknown): value is ScenarioTemplate[] {
+  return Array.isArray(value) && value.every(isScenarioTemplate);
+}
+
+function isInstantiationResult(value: unknown): value is AssessmentTemplateInstantiationResult {
+  return (
+    isRecord(value) &&
+    typeof value.assessmentId === "string" &&
+    typeof value.version === "number" &&
+    typeof value.title === "string"
+  );
+}
+
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (isRecord(error)) {
+    if (error.status === 404) {
+      return "시나리오 템플릿 서비스를 찾을 수 없습니다. 잠시 후 다시 시도해 주세요.";
+    }
+    if (typeof error.status === "number" && error.status >= 500) {
+      return "시나리오 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.";
+    }
+    if (isRecord(error.data) && typeof error.data.error === "string") {
+      const message = error.data.error.trim();
+      if (message) return message;
+    }
+    if (typeof error.message === "string" && error.message.trim()) {
+      return error.message;
+    }
+  }
+  return fallback;
 }
 
 export default function ScenarioWizard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const templateQuery = useListAssessmentTemplates();
+  const createFromTemplate = useCreateAssessmentFromTemplate();
+  const initializedTemplateDefaults = useRef(false);
+  const submitLock = useRef(false);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [templates, setTemplates] = useState<ScenarioTemplate[]>([]);
-  const [loadingTemplates, setLoadingTemplates] = useState(true);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("tmpl-ldr-01");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [companyContext, setCompanyContext] = useState("");
   const [participantRole, setParticipantRole] = useState("");
   const [situation, setSituation] = useState("");
@@ -51,33 +115,31 @@ export default function ScenarioWizard() {
   const [counterpartRole, setCounterpartRole] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch templates from API
+  const templatePayload = templateQuery.data as unknown;
+  const templates = isScenarioTemplateList(templatePayload) ? templatePayload : [];
+  const loadingTemplates = templateQuery.isLoading || templateQuery.isFetching;
+  const templateLoadError = templateQuery.isError
+    ? getApiErrorMessage(templateQuery.error, "템플릿 목록을 불러오지 못했습니다.")
+    : templateQuery.isSuccess && !isScenarioTemplateList(templatePayload)
+      ? "템플릿 응답 형식이 올바르지 않습니다. 다시 시도해 주세요."
+      : templateQuery.isSuccess && templates.length === 0
+        ? "현재 사용할 수 있는 시나리오 템플릿이 없습니다."
+        : null;
+
   useEffect(() => {
-    fetch("/api/v1/assessments/templates")
-      .then((res) => res.json())
-      .then((data: ScenarioTemplate[]) => {
-        setTemplates(data);
-        if (data.length > 0) {
-          const urlParams = new URLSearchParams(window.location.search);
-          const requestedTemplate = urlParams.get("templateId");
-          const initial = data.find((t) => t.id === requestedTemplate) || data[0];
-          setSelectedTemplateId(initial.id);
-          setParticipantRole(initial.targetRole);
-          if (initial.dramatic.characters[0]) {
-            setCounterpartName(initial.dramatic.characters[0].name);
-            setCounterpartRole(initial.dramatic.characters[0].role);
-          }
-        }
-      })
-      .catch((err) => {
-        toast({
-          variant: "destructive",
-          title: "템플릿 목록 로드 실패",
-          description: err.message,
-        });
-      })
-      .finally(() => setLoadingTemplates(false));
-  }, [toast]);
+    if (initializedTemplateDefaults.current || templates.length === 0) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedTemplate = urlParams.get("templateId");
+    const initial = templates.find((template) => template.id === requestedTemplate) || templates[0];
+    initializedTemplateDefaults.current = true;
+    setSelectedTemplateId(initial.id);
+    setParticipantRole(initial.targetRole);
+    if (initial.dramatic.characters[0]) {
+      setCounterpartName(initial.dramatic.characters[0].name);
+      setCounterpartRole(initial.dramatic.characters[0].role);
+    }
+  }, [templates]);
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0];
 
@@ -93,6 +155,7 @@ export default function ScenarioWizard() {
   };
 
   const handleCreateScenario = async () => {
+    if (submitLock.current || isSubmitting) return;
     if (!companyContext.trim()) {
       toast({
         variant: "destructive",
@@ -102,27 +165,22 @@ export default function ScenarioWizard() {
       return;
     }
 
+    submitLock.current = true;
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/v1/assessments/from-template", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const result = await createFromTemplate.mutateAsync({
+        data: {
           templateId: selectedTemplateId,
           companyContext: companyContext.trim(),
           participantRole: participantRole.trim() || undefined,
           situation: situation.trim() || undefined,
           counterpartName: counterpartName.trim() || undefined,
           counterpartRole: counterpartRole.trim() || undefined,
-        }),
+        },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "시나리오 생성에 실패했습니다.");
+      if (!isInstantiationResult(result)) {
+        throw new Error("생성 결과 형식이 올바르지 않습니다. 저장된 평가 목록을 확인해 주세요.");
       }
-
-      const result = await response.json();
 
       queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
 
@@ -133,13 +191,14 @@ export default function ScenarioWizard() {
 
       // Redirect to assessment details page
       setLocation(`/assessments/${result.assessmentId}?version=${result.version}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "생성 실패",
-        description: error.message || "시나리오를 생성하는 중 오류가 발생했습니다.",
+        description: getApiErrorMessage(error, "시나리오를 생성하는 중 오류가 발생했습니다."),
       });
     } finally {
+      submitLock.current = false;
       setIsSubmitting(false);
     }
   };
@@ -200,6 +259,25 @@ export default function ScenarioWizard() {
             {loadingTemplates ? (
               <div className="p-12 flex justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : templateLoadError ? (
+              <div
+                role="alert"
+                data-testid="scenario-template-error"
+                className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center"
+              >
+                <ShieldAlert className="mx-auto h-8 w-8 text-destructive" />
+                <h3 className="mt-3 font-semibold">템플릿을 불러오지 못했습니다</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{templateLoadError}</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => void templateQuery.refetch()}
+                  disabled={templateQuery.isFetching}
+                >
+                  {templateQuery.isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  다시 시도
+                </Button>
               </div>
             ) : (
               <div className="grid md:grid-cols-3 gap-4">
@@ -264,7 +342,7 @@ export default function ScenarioWizard() {
             <div className="flex justify-end pt-4">
               <Button
                 onClick={() => setStep(2)}
-                disabled={loadingTemplates || !selectedTemplate}
+                disabled={loadingTemplates || Boolean(templateLoadError) || !selectedTemplate}
                 className="px-6"
               >
                 다음: 회사 상황 입력 <ArrowRight className="ml-2 h-4 w-4" />

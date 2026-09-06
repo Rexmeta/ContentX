@@ -34,6 +34,9 @@ import type {
   AssessmentPublishInput,
   AssessmentPublishResult,
   AssessmentScenarioPackageV1,
+  AssessmentScenarioTemplate,
+  AssessmentTemplateInstantiationInput,
+  AssessmentTemplateInstantiationResult,
   AssessmentValidationReport,
   BenchmarkInput,
   BenchmarkReport,
@@ -6836,6 +6839,231 @@ export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessm
 
 
 
+
+export const getListAssessmentTemplatesUrl = () => {
+
+
+
+
+  return `/api/v1/assessments/templates`
+}
+
+/**
+ * @summary List verified assessment scenario templates
+ */
+export const listAssessmentTemplates = async ( options?: Parameters<typeof customFetch>[1]): Promise<AssessmentScenarioTemplate[]> => {
+
+  return customFetch<AssessmentScenarioTemplate[]>(getListAssessmentTemplatesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAssessmentTemplatesQueryKey = () => {
+    return [
+    `/api/v1/assessments/templates`
+    ] as const;
+    }
+
+
+export const getListAssessmentTemplatesQueryOptions = <TData = Awaited<ReturnType<typeof listAssessmentTemplates>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssessmentTemplates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssessmentTemplatesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssessmentTemplates>>> = ({ signal }) => listAssessmentTemplates({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssessmentTemplates>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAssessmentTemplatesQueryResult = NonNullable<Awaited<ReturnType<typeof listAssessmentTemplates>>>
+export type ListAssessmentTemplatesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List verified assessment scenario templates
+ */
+
+export function useListAssessmentTemplates<TData = Awaited<ReturnType<typeof listAssessmentTemplates>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssessmentTemplates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAssessmentTemplatesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAssessmentTemplateUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/assessments/templates/${id}`
+}
+
+/**
+ * @summary Get a verified assessment scenario template
+ */
+export const getAssessmentTemplate = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentScenarioTemplate> => {
+
+  return customFetch<AssessmentScenarioTemplate>(getGetAssessmentTemplateUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssessmentTemplateQueryKey = (id: string,) => {
+    return [
+    `/api/v1/assessments/templates/${id}`
+    ] as const;
+    }
+
+
+export const getGetAssessmentTemplateQueryOptions = <TData = Awaited<ReturnType<typeof getAssessmentTemplate>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessmentTemplate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessmentTemplateQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessmentTemplate>>> = ({ signal }) => getAssessmentTemplate(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessmentTemplate>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssessmentTemplateQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessmentTemplate>>>
+export type GetAssessmentTemplateQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get a verified assessment scenario template
+ */
+
+export function useGetAssessmentTemplate<TData = Awaited<ReturnType<typeof getAssessmentTemplate>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessmentTemplate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssessmentTemplateQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAssessmentFromTemplateUrl = () => {
+
+
+
+
+  return `/api/v1/assessments/from-template`
+}
+
+/**
+ * @summary Create a draft assessment package from a verified scenario template
+ */
+export const createAssessmentFromTemplate = async (assessmentTemplateInstantiationInput: AssessmentTemplateInstantiationInput, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentTemplateInstantiationResult> => {
+
+  return customFetch<AssessmentTemplateInstantiationResult>(getCreateAssessmentFromTemplateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(assessmentTemplateInstantiationInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAssessmentFromTemplateMutationOptions = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentFromTemplate>>, TError,{data: BodyType<AssessmentTemplateInstantiationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAssessmentFromTemplate>>, TError,{data: BodyType<AssessmentTemplateInstantiationInput>}, TContext> => {
+
+const mutationKey = ['createAssessmentFromTemplate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAssessmentFromTemplate>>, {data: BodyType<AssessmentTemplateInstantiationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAssessmentFromTemplate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssessmentFromTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof createAssessmentFromTemplate>>>
+    export type CreateAssessmentFromTemplateMutationBody = BodyType<AssessmentTemplateInstantiationInput>
+    export type CreateAssessmentFromTemplateMutationError = ErrorType<ApiMessage>
+
+    /**
+ * @summary Create a draft assessment package from a verified scenario template
+ */
+export const useCreateAssessmentFromTemplate = <TError = ErrorType<ApiMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentFromTemplate>>, TError,{data: BodyType<AssessmentTemplateInstantiationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAssessmentFromTemplate>>,
+        TError,
+        {data: BodyType<AssessmentTemplateInstantiationInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAssessmentFromTemplateMutationOptions(options));
+    }
 
 export const getGetAssessmentUrl = (id: string,) => {
 
