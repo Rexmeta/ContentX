@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 
 vi.mock("../../ai/llmClient", () => ({
   completeJSON: vi.fn(),
@@ -11,10 +12,37 @@ import { instantiateAssessmentTemplate } from "../templateInstantiator";
 import { compileAssessmentScenarioPackage } from "../compiler";
 
 describe("assessment scenario generator", () => {
+  it("keeps the attached launch-conflict sample as the minimum structural quality fixture", () => {
+    const fixture = JSON.parse(readFileSync(
+      new URL("../../../../../../attached_assets/갈등_중재-_신제품_출시_임박,_품질_문제_대_일정_준수-new-product-론칭-임박-2025-11-18T_1788691776654.json", import.meta.url),
+      "utf8",
+    )) as {
+      description: string;
+      context: { stakes: string; timeline: string; situation: string; playerRole: { responsibility: string } };
+      objectives: string[];
+      successCriteria: Record<string, string>;
+      personas: Array<{ stance: string; goal: string; tradeoff: string }>;
+    };
+
+    expect(fixture.description.length).toBeGreaterThanOrEqual(250);
+    expect(fixture.context.situation.length).toBeGreaterThanOrEqual(150);
+    expect(fixture.context.stakes.length).toBeGreaterThanOrEqual(100);
+    expect(fixture.context.timeline).not.toHaveLength(0);
+    expect(fixture.context.playerRole.responsibility.length).toBeGreaterThanOrEqual(80);
+    expect(fixture.objectives).toHaveLength(4);
+    expect(Object.keys(fixture.successCriteria)).toEqual(["optimal", "good", "acceptable", "failure"]);
+    expect(fixture.personas.length).toBeGreaterThanOrEqual(2);
+    for (const persona of fixture.personas) {
+      expect(persona.stance.length).toBeGreaterThanOrEqual(100);
+      expect(persona.goal.length).toBeGreaterThanOrEqual(60);
+      expect(persona.tradeoff.length).toBeGreaterThanOrEqual(80);
+    }
+  });
+
   it("rejects shallow AI output before it can reach persistence", async () => {
     vi.mocked(completeJSON).mockResolvedValueOnce({
       title: "짧은 제목", logline: "짧은 로그라인", synopsis: "짧은 설명", theme: "짧은 주제", stakes: "짧은 위험", twist: "짧은 반전",
-      acts: [], characters: [], timeline: "짧음", playerRole: "리드", objectives: [], successCriteria: [],
+      acts: [], characters: [], timeline: "짧음", playerRole: { position: "리드", department: "팀", experience: "1년", responsibility: "짧음" }, objectives: [], successCriteria: {},
       constraints: [], difficultyRationale: "짧음", simulationInitialPrompt: "짧음", simulationRules: [],
       terminationConditions: [], competencyKeys: ["active_listening"], evaluation: [],
     });
@@ -30,9 +58,9 @@ describe("assessment scenario generator", () => {
     const rich = {
       title: "골든타임 장애 대응 리더십 평가", logline: "오후 세 시 고객 데드라인을 앞두고 핫픽스와 롤백 사이에서 두 조직의 충돌을 중재해야 한다.", synopsis: "A".repeat(500), theme: "위기 상황의 데이터 기반 합의와 신뢰 회복", stakes: "B".repeat(150), twist: "C".repeat(80),
       acts: ["상황 정렬", "리스크 검증", "실행 합의"].map((name) => ({ name, summary: "D".repeat(100), beats: ["E".repeat(20), "F".repeat(20), "G".repeat(20)] })),
-      characters: ["박지훈", "이선영"].map((name) => ({ name, role: "장애 대응 팀 리더", motivation: "H".repeat(100), traits: ["논리적", "긴장함", "책임감"], initialDialogue: "I".repeat(20), behaviorGuidelines: ["J".repeat(20), "K".repeat(20), "L".repeat(20)] })),
-      timeline: "M".repeat(50), playerRole: "Incident Lead", objectives: ["N".repeat(35), "O".repeat(35), "P".repeat(35), "Q".repeat(35)],
-      successCriteria: ["R".repeat(35), "S".repeat(35), "T".repeat(35), "U".repeat(35)], constraints: ["V".repeat(20), "W".repeat(20), "X".repeat(20)],
+      characters: ["박지훈", "이선영"].map((name) => ({ name, role: "장애 대응 팀 리더", stance: "H".repeat(100), goal: "G".repeat(60), tradeoff: "T".repeat(80), traits: ["논리적", "긴장함", "책임감"], initialDialogue: "I".repeat(20), behaviorGuidelines: ["J".repeat(20), "K".repeat(20), "L".repeat(20)] })),
+      timeline: "M".repeat(50), playerRole: { position: "Incident Lead", department: "운영팀", experience: "10년차", responsibility: "R".repeat(100) }, objectives: ["N".repeat(35), "O".repeat(35), "P".repeat(35), "Q".repeat(35)],
+      successCriteria: { optimal: "R".repeat(100), good: "S".repeat(100), acceptable: "T".repeat(100), failure: "U".repeat(100) }, constraints: ["V".repeat(20), "W".repeat(20), "X".repeat(20)],
       difficultyRationale: "Y".repeat(35), simulationInitialPrompt: "Z".repeat(150), simulationRules: ["a".repeat(20), "b".repeat(20), "c".repeat(20)],
       terminationConditions: ["d".repeat(20), "e".repeat(20)], competencyKeys: ["wrong"], evaluation: [{ key: "wrong", weight: 1, criteria: ["f".repeat(10)] }],
     };
@@ -68,7 +96,9 @@ describe("assessment scenario generator", () => {
       characters: ["새로운 개발 리드", "새로운 운영 리드"].map((name) => ({
         name,
         role: "장애 대응 부서 책임자",
-        motivation: "자신의 전문적 입장과 팀의 안전을 지키면서도 검증 가능한 조건이 충족되면 상대 대안을 수용하려 한다. ".repeat(3),
+        stance: "자신의 전문적 판단과 팀의 안전을 지키기 위해 검증되지 않은 복구 방안에는 반대하며 객관적인 장애 지표를 요구한다. ".repeat(3),
+        goal: "고객 제출 시각 전에 추가 장애 없이 실행 가능한 단일 복구 방안과 명확한 책임자를 확정한다. ".repeat(2),
+        tradeoff: "중단 기준과 대체 계획, 담당자가 문서로 확정되고 사전 검증 결과가 기준을 통과한다면 상대 조직의 방안을 조건부로 수용한다. ".repeat(2),
         traits: ["논리적", "긴장함", "책임감"],
         initialDialogue: "현재 상태에서 근거 없이 결정을 서두르면 고객 피해가 더 커질 수 있습니다.",
         behaviorGuidelines: [
@@ -78,19 +108,24 @@ describe("assessment scenario generator", () => {
         ],
       })),
       timeline: "현재 오전 열한 시이며 고객 정상화 계획 제출 시각인 오후 세 시까지 남은 시간은 네 시간이다.",
-      playerRole: "임시 장애 대응 총괄 리더",
+      playerRole: {
+        position: "임시 장애 대응 총괄 리더",
+        department: "서비스 운영실",
+        experience: "12년차",
+        responsibility: "개발과 운영 조직의 상충하는 판단을 조율하고 오후 세 시 전에 고객 정상화 계획, 담당자, 중단 기준과 대체 계획을 확정한다. ".repeat(2),
+      },
       objectives: [
         "오후 두 시까지 복구 대안 하나를 선택하고 양 팀의 역할과 책임을 문서로 확정한다.",
         "고객 제출용 정상화 계획에 조치 내용과 완료 예상 시각 및 재발 방지 방향을 포함한다.",
         "책임 공방을 중단시키고 검증 가능한 데이터와 공동 목표 중심으로 논의를 전환한다.",
         "선택한 방안의 중단 조건과 대체 계획, 사후 분석 일정을 명시적으로 합의한다.",
       ],
-      successCriteria: [
-        "최적 수준은 오후 세 시 전 안정화와 고객 신뢰 회복 및 양 팀의 자발적 합의를 모두 달성한다.",
-        "우수 수준은 명확한 근거의 리더 결정을 양 팀이 수용하고 정해진 역할대로 복구한다.",
-        "수용 수준은 안전한 복구로 데드라인을 맞추지만 근본 원인과 일부 갈등이 남는다.",
-        "실패 수준은 결정 지연 또는 추가 장애로 데드라인과 핵심 고객 계약을 모두 잃는다.",
-      ],
+      successCriteria: {
+        optimal: "오후 세 시 전 서비스를 안정화하고 고객 정상화 계획을 제출하며 양 팀이 담당자, 중단 기준, 대체 계획과 재발 방지 일정까지 자발적으로 합의한다. ".repeat(2),
+        good: "명확한 데이터에 근거한 복구 결정을 양 팀이 수용하고 정해진 역할대로 실행하여 고객 데드라인을 지키며 주요 위험을 통제한다. ".repeat(2),
+        acceptable: "안전한 복구로 고객 데드라인은 맞추지만 근본 원인 분석 일정이나 일부 책임 분담이 미완성되어 후속 갈등 가능성이 남는다. ".repeat(2),
+        failure: "결정 지연이나 검증 없는 조치로 추가 장애가 발생하여 고객 제출 시각과 핵심 계약을 잃고 양 팀의 책임 공방도 해결하지 못한다. ".repeat(2),
+      },
       constraints: [
         "검증되지 않은 기술적 가정을 확정 사실처럼 고객에게 전달하지 않는다.",
         "모든 실행안에는 담당자와 완료 시각 및 중단 기준을 반드시 포함한다.",

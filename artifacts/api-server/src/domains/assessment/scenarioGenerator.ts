@@ -6,15 +6,26 @@ import type { InstantiatedAssessment } from "./templateInstantiator";
 import { assessmentElementKey } from "./compiler";
 
 const text = (minimum: number) => z.string().trim().min(minimum);
+const successLevels = ["optimal", "good", "acceptable", "failure"] as const;
+const successLabels: Record<(typeof successLevels)[number], string> = {
+  optimal: "최적",
+  good: "양호",
+  acceptable: "수용 가능",
+  failure: "실패",
+};
 const generatedSchema = z.object({
   title: text(8), logline: text(30), synopsis: text(500), theme: text(15), stakes: text(150), twist: text(80),
   acts: z.array(z.object({ name: text(4), summary: text(100), beats: z.array(text(20)).min(3).max(5) }).strict()).length(3),
   characters: z.array(z.object({
-    name: text(2), role: text(4), motivation: text(100), traits: z.array(text(2)).min(3),
+    name: text(2), role: text(4), stance: text(100), goal: text(60), tradeoff: text(80), traits: z.array(text(2)).min(3),
     initialDialogue: text(20), behaviorGuidelines: z.array(text(20)).min(3),
   }).strict()).min(2).max(4),
-  timeline: text(50), playerRole: text(4), objectives: z.array(text(35)).min(4),
-  successCriteria: z.array(text(35)).min(4), constraints: z.array(text(20)).min(3),
+  timeline: text(50), playerRole: z.object({
+    position: text(4), department: text(2), experience: text(2), responsibility: text(100),
+  }).strict(), objectives: z.array(text(35)).min(4),
+  successCriteria: z.object({
+    optimal: text(100), good: text(100), acceptable: text(100), failure: text(100),
+  }).strict(), constraints: z.array(text(20)).min(3),
   difficultyRationale: text(35), simulationInitialPrompt: text(150),
   simulationRules: z.array(text(20)).min(3), terminationConditions: z.array(text(20)).min(2),
   competencyKeys: z.array(text(1)).min(1),
@@ -46,7 +57,11 @@ ${JSON.stringify({ title: input.title, description: input.description, draft: in
 
 반드시 JSON 객체만 반환한다. 다음 키를 정확히 포함한다:
 title, logline, synopsis, theme, stakes, twist, acts, characters, timeline, playerRole, objectives, successCriteria, constraints, difficultyRationale, simulationInitialPrompt, simulationRules, terminationConditions, competencyKeys, evaluation.
-acts는 정확히 3개이며 각 막은 name, summary, beats(3~5개)를 가진다. characters는 2~4명이며 name, role, motivation, traits, initialDialogue, behaviorGuidelines를 가진다. 각 인물의 motivation에는 입장·목표·양보 조건을 자연스럽게 포함한다. synopsis/stakes는 얕은 요약이 아니라 배경, 사건 경과, 데드라인, 이해관계, 위험을 충분히 서술한다. objectives와 successCriteria는 측정 가능한 행동과 산출물을 써라.`;
+acts는 정확히 3개이며 각 막은 name, summary, beats(3~5개)를 가진다.
+characters는 2~4명이며 name, role, stance, goal, tradeoff, traits, initialDialogue, behaviorGuidelines를 가진다. stance(현재 주장과 근거), goal(얻고자 하는 결과), tradeoff(양보 가능한 조건)를 서로 반복하지 말고 각각 충분히 구체적으로 쓴다.
+playerRole은 position, department, experience, responsibility를 가진 객체이며 responsibility에는 응시자가 내려야 할 결정, 조율할 이해관계자, 만들어야 할 산출물을 명시한다.
+successCriteria는 optimal, good, acceptable, failure 네 키를 정확히 가진 객체다. 각 수준은 관찰 가능한 합의 수준, 실행안, 잔여 위험과 실패 결과가 단계적으로 구분되어야 한다.
+synopsis/stakes는 얕은 요약이 아니라 배경, 사건 경과, 구체적 데드라인, 단기·장기 이해관계와 위험을 충분히 서술한다. objectives는 측정 가능한 행동과 산출물을 쓴다.`;
 }
 
 function sameFixedSet(value: GeneratedAssessmentScenario, input: InstantiatedAssessment): string[] {
@@ -77,19 +92,28 @@ export async function generateAssessmentScenario(input: InstantiatedAssessment):
     : sameFixedSet(parsed.data, input);
   if (issues.length) throw new AssessmentScenarioGenerationError("validation", "AI output did not meet the required assessment quality contract.", issues);
   const value = parsed.data!;
+  const playerRole = [
+    `[직책] ${value.playerRole.position}`,
+    `[소속] ${value.playerRole.department}`,
+    `[경력] ${value.playerRole.experience}`,
+    `[책임] ${value.playerRole.responsibility}`,
+  ].join("\n");
+  const successCriteria = successLevels.map((level) => `[${successLabels[level]}] ${value.successCriteria[level]}`);
   return {
     dramaticScenario: {
       title: value.title, logline: value.logline, synopsis: value.synopsis, theme: value.theme, stakes: value.stakes, twist: value.twist,
-      acts: value.acts, characters: value.characters.map(({ name, role, motivation }) => ({ name, role, motivation })),
+      acts: value.acts, characters: value.characters.map(({ name, role, stance, goal, tradeoff }) => ({
+        name, role, motivation: `[입장]\n${stance}\n[목표]\n${goal}\n[양보 조건]\n${tradeoff}`,
+      })),
       sourceIdea: input.dramaticScenario.sourceIdea,
     },
     configuration: {
       ...input.configuration,
       primaryPersonaKey: assessmentElementKey(value.characters[0]!.name, 0),
-      timeline: value.timeline, playerRole: value.playerRole, objectives: value.objectives, successCriteria: value.successCriteria,
+      timeline: value.timeline, playerRole, objectives: value.objectives, successCriteria,
       constraints: value.constraints, difficultyProfile: { ...input.configuration.difficultyProfile, rationale: value.difficultyRationale },
-      personaProfiles: value.characters.map(({ name, role, motivation, traits, initialDialogue, behaviorGuidelines }) => ({
-        name, role, background: motivation, traits, initialDialogue, behaviorGuidelines,
+      personaProfiles: value.characters.map(({ name, role, stance, goal, tradeoff, traits, initialDialogue, behaviorGuidelines }) => ({
+        name, role, background: `[입장]\n${stance}\n[목표]\n${goal}\n[양보 조건]\n${tradeoff}`, traits, initialDialogue, behaviorGuidelines,
       })),
       simulation: { ...input.configuration.simulation!, initialPrompt: value.simulationInitialPrompt, rules: value.simulationRules },
       termination: { ...input.configuration.termination!, conditions: value.terminationConditions },

@@ -248,9 +248,15 @@ describe("assessment read routes", () => {
         configuration: {
           ...input.configuration,
           primaryPersonaKey: "ai-counterpart-1",
+          successCriteria: [
+            "[최적] 품질과 일정 위험을 모두 통제하는 실행안에 합의한다.",
+            "[양호] 핵심 품질 위험을 통제하고 일정 조정안을 수용한다.",
+            "[수용 가능] 임시 조치와 후속 검증 일정에 합의한다.",
+            "[실패] 합의에 실패해 품질과 일정 손실이 모두 커진다.",
+          ],
           personaProfiles: characters.map((character) => ({
             ...character,
-            background: character.motivation,
+            background: `[입장]\n${character.motivation}\n[목표]\n담당자와 검증 일정을 확정한다.\n[양보 조건]\n객관적 중단 기준이 있으면 상대 방안을 수용한다.`,
             traits: ["단호함", "책임감", "협상 가능"],
             initialDialogue: "안전 조건이 확인되기 전에는 동의할 수 없습니다.",
             behaviorGuidelines: ["근거를 요구한다.", "조건부로 협상한다.", "쉬운 양보를 피한다."],

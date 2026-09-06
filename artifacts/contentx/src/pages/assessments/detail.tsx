@@ -13,6 +13,21 @@ import { CheckCircle2, Loader2, PlusCircle, Send, ShieldAlert } from "lucide-rea
 import { AssessmentVersionForm } from "./assessment-version-form";
 import { trackEvent } from "@/lib/analytics";
 
+const successLevelMeta = [
+  { label: "[최적]", title: "최적", className: "border-emerald-500/30 bg-emerald-500/5" },
+  { label: "[양호]", title: "양호", className: "border-blue-500/30 bg-blue-500/5" },
+  { label: "[수용 가능]", title: "수용 가능", className: "border-amber-500/30 bg-amber-500/5" },
+  { label: "[실패]", title: "실패", className: "border-destructive/30 bg-destructive/5" },
+];
+
+function labeledSection(value: string, label: string, nextLabels: string[]): string {
+  const start = value.indexOf(label);
+  if (start < 0) return "";
+  const contentStart = start + label.length;
+  const ends = nextLabels.map((next) => value.indexOf(next, contentStart)).filter((index) => index >= 0);
+  return value.slice(contentStart, ends.length ? Math.min(...ends) : undefined).trim();
+}
+
 export default function AssessmentDetail() {
   const [, params] = useRoute("/assessments/:id");
   const [, setLocation] = useLocation();
@@ -147,14 +162,15 @@ export default function AssessmentDetail() {
                   )}
                   {scenario.successCriteria.length > 0 && (
                     <div>
-                      <span className="text-xs font-medium text-muted-foreground block mb-1">성공 기준</span>
-                      <ul className="grid sm:grid-cols-2 gap-1.5 text-xs text-muted-foreground">
-                        {scenario.successCriteria.map((criterion, i) => (
-                          <li key={i} className="flex items-center gap-1.5 bg-background p-1.5 rounded border">
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">단계별 성공 기준</span>
+                      <ul data-testid={`success-levels-${scenario.key}`} className="grid sm:grid-cols-2 gap-1.5 text-xs text-muted-foreground">
+                        {scenario.successCriteria.map((criterion, i) => {
+                          const meta = successLevelMeta.find((item) => criterion.startsWith(item.label));
+                          return <li key={i} className={`flex items-start gap-1.5 p-2 rounded border ${meta?.className ?? "bg-background"}`}>
                             <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
-                            <span>{criterion}</span>
-                          </li>
-                        ))}
+                            <span><b className="text-foreground">{meta?.title ?? `기준 ${i + 1}`}</b><br />{meta ? criterion.slice(meta.label.length).trim() : criterion}</span>
+                          </li>;
+                        })}
                       </ul>
                     </div>
                   )}
@@ -186,7 +202,11 @@ export default function AssessmentDetail() {
                             <span className="font-bold text-foreground">{persona.name} ({persona.role})</span>
                             {persona.isPrimary && <span className="text-[10px] text-primary">주 상대역</span>}
                           </div>
-                          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{persona.background}</p>
+                          {["[입장]", "[목표]", "[양보 조건]"].every((label) => persona.background.includes(label)) ? (
+                            <dl className="space-y-2 text-muted-foreground">
+                              {["[입장]", "[목표]", "[양보 조건]"].map((label, index, labels) => <div key={label}><dt className="font-semibold text-foreground">{label.slice(1, -1)}</dt><dd className="leading-relaxed">{labeledSection(persona.background, label, labels.filter((other) => other !== label))}</dd></div>)}
+                            </dl>
+                          ) : <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{persona.background}</p>}
                           {persona.traits.length > 0 && <div className="flex flex-wrap gap-1">{persona.traits.map((trait) => <span key={trait} className="rounded bg-muted px-1.5 py-0.5 text-[10px]">{trait}</span>)}</div>}
                         </div>
                       ))}

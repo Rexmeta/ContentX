@@ -24,6 +24,25 @@ function nonBlank(value: string | undefined, diagnostics: AssessmentCompileDiagn
   return "";
 }
 
+const requiredSuccessLabels = ["[최적]", "[양호]", "[수용 가능]", "[실패]"];
+const requiredPersonaLabels = ["[입장]", "[목표]", "[양보 조건]"];
+
+function validateRichGeneratedMaterial(
+  config: AssessmentScenarioConfiguration,
+  diagnostics: AssessmentCompileDiagnostic[],
+  path: string,
+): void {
+  const criteria = config.successCriteria ?? [];
+  if (requiredSuccessLabels.some((label) => !criteria.some((item) => item.startsWith(label)))) {
+    diagnostic(diagnostics, "INCOMPLETE_SUCCESS_LEVELS", `${path}.configuration.successCriteria`, "최적·양호·수용 가능·실패의 4단계 성공 기준이 모두 필요합니다.");
+  }
+  for (const [index, profile] of (config.personaProfiles ?? []).entries()) {
+    if (requiredPersonaLabels.some((label) => !profile.background.includes(label))) {
+      diagnostic(diagnostics, "INCOMPLETE_PERSONA_NEGOTIATION", `${path}.configuration.personaProfiles[${index}].background`, "각 페르소나의 입장·목표·양보 조건이 구분되어야 합니다.");
+    }
+  }
+}
+
 /** Stable keys make character/act references portable without altering DramaticScenario. */
 export function assessmentElementKey(value: string, index: number): string {
   const normalized = value.trim().toLowerCase()
@@ -88,6 +107,7 @@ function compileScenario(
   if (!config.termination) diagnostic(diagnostics, "MISSING_TERMINATION", `${path}.configuration.termination`, "Termination configuration is required.");
   if (!config.simulation) diagnostic(diagnostics, "MISSING_SIMULATION", `${path}.configuration.simulation`, "Simulation configuration is required.");
   if (!config.analytics) diagnostic(diagnostics, "MISSING_ANALYTICS", `${path}.configuration.analytics`, "Analytics configuration is required.");
+  if (config.personaProfiles?.length) validateRichGeneratedMaterial(config, diagnostics, path);
 
   return {
     key: nonBlank(config.scenarioKey, diagnostics, "MISSING_SCENARIO_KEY", `${path}.configuration.scenarioKey`),

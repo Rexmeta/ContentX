@@ -65,8 +65,14 @@ describe("assessment package compiler", () => {
 
   it("preserves rich generated persona material in the RoleplayX package", () => {
     const source = input();
+    source.scenarios[0]!.configuration.successCriteria = [
+      "[최적] 고객 영향과 원인을 모두 해결한다.",
+      "[양호] 핵심 문제와 고객 요구를 해결한다.",
+      "[수용 가능] 임시 조치와 후속 계획에 합의한다.",
+      "[실패] 해결책 없이 고객이 계약을 취소한다.",
+    ];
     source.scenarios[0]!.configuration.personaProfiles = [{
-      name: "Customer", role: "customer", background: "배송 지연으로 생산 라인이 멈출 위험에 처한 고객 담당자",
+      name: "Customer", role: "customer", background: "[입장]\n배송 지연으로 생산 라인이 멈출 위험을 즉시 해소해야 한다.\n[목표]\n오늘 안에 확정 납기와 책임자를 받는다.\n[양보 조건]\n검증 가능한 대체 납품 계획이 있으면 분할 배송을 수용한다.",
       traits: ["불안함", "단호함", "합리적"], initialDialogue: "오늘 안에 납품되지 않으면 계약을 재검토해야 합니다.",
       behaviorGuidelines: ["초반에는 구체적인 ETA를 요구한다.", "검증 가능한 계획이 제시되면 협조한다.", "근거 없는 약속에는 동의하지 않는다."],
     }];
