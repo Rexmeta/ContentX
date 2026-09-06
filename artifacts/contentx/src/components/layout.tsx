@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { 
   Terminal, Users, UserCircle, PlayCircle, BarChart, Network, 
   ChevronRight, Box, ListTodo, Settings2, Code, FlaskConical,
-  ChevronDown, Lightbulb, PlusCircle, Library, Layers, Menu
+  ChevronDown, Lightbulb, PlusCircle, Library, Layers, Menu, ClipboardCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ const advancedItems = [
   { href: "/agents", label: "에이전트", icon: Terminal },
   { href: "/simulations", label: "시뮬레이션", icon: PlayCircle },
   { href: "/evaluations", label: "평가", icon: BarChart },
+  { href: "/assessments", label: "Assessment", icon: ClipboardCheck },
   { href: "/explorer", label: "그래프 탐색기", icon: Network },
   { href: "/overview", label: "대시보드", icon: Settings2 },
 ];
@@ -45,7 +46,7 @@ const advancedItems = [
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const [location] = useLocation();
   const [advancedOpen, setAdvancedOpen] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches
+    typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 768px)").matches
   );
 
   return (

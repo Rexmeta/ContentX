@@ -2,8 +2,11 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import {
   CreateAssessmentPackageVersionBody,
   CreateAssessmentPackageVersionResponse,
+  GetAssessmentParams,
+  GetAssessmentResponse,
   GetAssessmentPackageVersionParams,
   GetAssessmentPackageVersionResponse,
+  ListAssessmentsResponse,
   ListAssessmentPackagePublicationHistoryResponse,
   PublishAssessmentPackageVersionToRoleplayXBody,
   PublishAssessmentPackageVersionToRoleplayXResponse,
@@ -19,6 +22,35 @@ import type { DramaticScenario } from "../domains/scenario/model";
 import { newId } from "../shared/id";
 
 const router: IRouter = Router();
+
+function assessmentParams(value: unknown) {
+  return GetAssessmentParams.safeParse(value);
+}
+
+function assessmentRecord(
+  row: Awaited<ReturnType<typeof assessmentRepository.getAssessmentPackage>>,
+  summary: Pick<
+    assessmentRepository.AssessmentPackageReadModel,
+    "scenarioCount" | "competencyCount" | "latestTarget"
+  >,
+) {
+  if (!row) throw new Error("Assessment package record is required.");
+  return {
+    id: row.id,
+    packageKey: row.packageKey,
+    title: row.title,
+    description: row.description,
+    sourceType: row.sourceType,
+    sourceId: row.sourceId,
+    status: row.status,
+    currentVersion: row.currentVersion,
+    scenarioCount: summary.scenarioCount,
+    competencyCount: summary.competencyCount,
+    latestTarget: summary.latestTarget,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
 
 function versionParams(value: unknown) {
   const raw = value as { id?: unknown; packageId?: unknown; version?: unknown };
@@ -39,6 +71,51 @@ function versionRecord(row: Awaited<ReturnType<typeof assessmentRepository.creat
     validation: row.validationReport,
     createdAt: row.createdAt,
   };
+}
+
+function versionSummary(
+  row: assessmentRepository.AssessmentPackageVersionReadSummary,
+) {
+  return {
+    id: row.id,
+    packageId: row.packageId,
+    version: row.version,
+    contentHash: row.contentHash,
+    validation: row.validation,
+    status: row.status,
+    latestTarget: row.latestTarget,
+    createdBy: row.createdBy,
+    createdAt: row.createdAt,
+  };
+}
+
+async function listAssessments(_req: Request, res: Response): Promise<void> {
+  const packages = await assessmentRepository.listAssessmentPackageReadModels();
+  res.json(
+    ListAssessmentsResponse.parse(
+      packages.map((readModel) => assessmentRecord(readModel.assessmentPackage, readModel)),
+    ),
+  );
+}
+
+async function getAssessment(req: Request, res: Response): Promise<void> {
+  const parsed = assessmentParams(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const readModel = await assessmentRepository.getAssessmentPackageReadModel(parsed.data.id);
+  if (!readModel) {
+    res.status(404).json({ error: "Assessment package not found." });
+    return;
+  }
+  res.json(
+    GetAssessmentResponse.parse({
+      ...assessmentRecord(readModel.assessmentPackage, readModel),
+      versions: readModel.versions.map(versionSummary),
+      publicationHistory: readModel.publicationHistory.map(publicationRecord),
+    }),
+  );
 }
 
 async function createVersion(req: Request, res: Response, packageId: string): Promise<void> {
@@ -220,6 +297,8 @@ async function listPackagePublications(req: Request, res: Response): Promise<voi
   res.json(ListAssessmentPackagePublicationHistoryResponse.parse(history.map(publicationRecord)));
 }
 
+router.get("/v1/assessments", listAssessments);
+router.get("/v1/assessments/:id", getAssessment);
 router.post("/v1/assessments/:id/versions", (req, res) => createVersion(req, res, req.params.id));
 router.post("/v1/assessments/:id/versions/:version/validate", validateVersion);
 router.get("/v1/assessments/:id/versions/:version/package", getVersionPackage);

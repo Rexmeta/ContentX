@@ -638,6 +638,196 @@ export interface AssessmentPackageVersionRecord {
   createdAt: string;
 }
 
+export type AssessmentPackageSummaryStatus = typeof AssessmentPackageSummaryStatus[keyof typeof AssessmentPackageSummaryStatus];
+
+
+export const AssessmentPackageSummaryStatus = {
+  draft: 'draft',
+  validated: 'validated',
+  approved: 'approved',
+  published: 'published',
+  archived: 'archived',
+} as const;
+
+export type AssessmentPackageSummaryLatestTargetStatus = typeof AssessmentPackageSummaryLatestTargetStatus[keyof typeof AssessmentPackageSummaryLatestTargetStatus];
+
+
+export const AssessmentPackageSummaryLatestTargetStatus = {
+  pending: 'pending',
+  validating: 'validating',
+  validated: 'validated',
+  importing: 'importing',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AssessmentPackageSummaryLatestTarget = {
+  target: string;
+  organizationId: string;
+  category: string;
+  status: AssessmentPackageSummaryLatestTargetStatus;
+} | null;
+
+export interface AssessmentPackageSummary {
+  id: string;
+  packageKey: string;
+  title: string;
+  description: string;
+  sourceType: string;
+  sourceId: string;
+  status: AssessmentPackageSummaryStatus;
+  /** @minimum 0 */
+  currentVersion: number;
+  /** @minimum 0 */
+  scenarioCount: number;
+  /** @minimum 0 */
+  competencyCount: number;
+  /** @nullable */
+  latestTarget: AssessmentPackageSummaryLatestTarget;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AssessmentPackageVersionSummaryStatus = typeof AssessmentPackageVersionSummaryStatus[keyof typeof AssessmentPackageVersionSummaryStatus];
+
+
+export const AssessmentPackageVersionSummaryStatus = {
+  draft: 'draft',
+  validated: 'validated',
+  published: 'published',
+} as const;
+
+export type AssessmentPackageVersionSummaryLatestTargetStatus = typeof AssessmentPackageVersionSummaryLatestTargetStatus[keyof typeof AssessmentPackageVersionSummaryLatestTargetStatus];
+
+
+export const AssessmentPackageVersionSummaryLatestTargetStatus = {
+  pending: 'pending',
+  validating: 'validating',
+  validated: 'validated',
+  importing: 'importing',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AssessmentPackageVersionSummaryLatestTarget = {
+  target: string;
+  organizationId: string;
+  category: string;
+  status: AssessmentPackageVersionSummaryLatestTargetStatus;
+} | null;
+
+export interface AssessmentPackageVersionSummary {
+  id: string;
+  packageId: string;
+  /** @minimum 1 */
+  version: number;
+  contentHash: string;
+  validation: AssessmentValidationReport;
+  status: AssessmentPackageVersionSummaryStatus;
+  /** @nullable */
+  latestTarget: AssessmentPackageVersionSummaryLatestTarget;
+  /** @nullable */
+  createdBy?: string | null;
+  createdAt: string;
+}
+
+export type AssessmentPackageDetailStatus = typeof AssessmentPackageDetailStatus[keyof typeof AssessmentPackageDetailStatus];
+
+
+export const AssessmentPackageDetailStatus = {
+  draft: 'draft',
+  validated: 'validated',
+  approved: 'approved',
+  published: 'published',
+  archived: 'archived',
+} as const;
+
+export type AssessmentPackageDetailLatestTargetStatus = typeof AssessmentPackageDetailLatestTargetStatus[keyof typeof AssessmentPackageDetailLatestTargetStatus];
+
+
+export const AssessmentPackageDetailLatestTargetStatus = {
+  pending: 'pending',
+  validating: 'validating',
+  validated: 'validated',
+  importing: 'importing',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AssessmentPackageDetailLatestTarget = {
+  target: string;
+  organizationId: string;
+  category: string;
+  status: AssessmentPackageDetailLatestTargetStatus;
+} | null;
+
+export type AssessmentPublicationRecordStatus = typeof AssessmentPublicationRecordStatus[keyof typeof AssessmentPublicationRecordStatus];
+
+
+export const AssessmentPublicationRecordStatus = {
+  pending: 'pending',
+  validating: 'validating',
+  validated: 'validated',
+  importing: 'importing',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+export type AssessmentPublicationRecordResponse = { [key: string]: unknown };
+
+export interface AssessmentPublicationRecord {
+  id: string;
+  packageId: string;
+  packageVersion: number;
+  target: string;
+  organizationId: string;
+  category: string;
+  idempotencyKey: string;
+  attempt: number;
+  status: AssessmentPublicationRecordStatus;
+  response?: AssessmentPublicationRecordResponse;
+  /** @nullable */
+  errorCode?: string | null;
+  /** @nullable */
+  errorMessage?: string | null;
+  createdAt: string;
+  /** @nullable */
+  completedAt?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+}
+
+export interface AssessmentPackageDetail {
+  id: string;
+  packageKey: string;
+  title: string;
+  description: string;
+  sourceType: string;
+  sourceId: string;
+  status: AssessmentPackageDetailStatus;
+  /** @minimum 0 */
+  currentVersion: number;
+  /** @minimum 0 */
+  scenarioCount: number;
+  /** @minimum 0 */
+  competencyCount: number;
+  /** @nullable */
+  latestTarget: AssessmentPackageDetailLatestTarget;
+  createdAt: string;
+  updatedAt: string;
+  versions: AssessmentPackageVersionSummary[];
+  publicationHistory: AssessmentPublicationRecord[];
+}
+
 export interface AssessmentPublishInput {
   /** @minLength 1 */
   organizationId: string;
@@ -675,42 +865,6 @@ export interface AssessmentPublishResult {
   diagnostics?: AssessmentDiagnostic[];
   errorCategory?: AssessmentPublishResultErrorCategory;
   response?: AssessmentPublishResultResponse;
-}
-
-export type AssessmentPublicationRecordStatus = typeof AssessmentPublicationRecordStatus[keyof typeof AssessmentPublicationRecordStatus];
-
-
-export const AssessmentPublicationRecordStatus = {
-  pending: 'pending',
-  validating: 'validating',
-  validated: 'validated',
-  importing: 'importing',
-  succeeded: 'succeeded',
-  failed: 'failed',
-} as const;
-
-export type AssessmentPublicationRecordResponse = { [key: string]: unknown };
-
-export interface AssessmentPublicationRecord {
-  id: string;
-  packageId: string;
-  packageVersion: number;
-  target: string;
-  organizationId: string;
-  category: string;
-  idempotencyKey: string;
-  attempt: number;
-  status: AssessmentPublicationRecordStatus;
-  response?: AssessmentPublicationRecordResponse;
-  /** @nullable */
-  errorCode?: string | null;
-  /** @nullable */
-  errorMessage?: string | null;
-  createdAt: string;
-  /** @nullable */
-  completedAt?: string | null;
-  /** @nullable */
-  publishedAt?: string | null;
 }
 
 export type EntityAttributes = { [key: string]: unknown };

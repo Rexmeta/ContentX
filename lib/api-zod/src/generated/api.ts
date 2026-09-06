@@ -4364,6 +4364,119 @@ export const PostV1CommercialValidationPackagesIdVerifyResponse = zod.object({
 
 
 /**
+ * @summary List assessment packages without immutable package payloads
+ */
+export const listAssessmentsResponseCurrentVersionMin = 0;
+
+export const listAssessmentsResponseScenarioCountMin = 0;
+
+export const listAssessmentsResponseCompetencyCountMin = 0;
+
+
+
+export const ListAssessmentsResponseItem = zod.object({
+  "id": zod.string(),
+  "packageKey": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "sourceType": zod.string(),
+  "sourceId": zod.string(),
+  "status": zod.enum(['draft', 'validated', 'approved', 'published', 'archived']),
+  "currentVersion": zod.int().min(listAssessmentsResponseCurrentVersionMin),
+  "scenarioCount": zod.int().min(listAssessmentsResponseScenarioCountMin),
+  "competencyCount": zod.int().min(listAssessmentsResponseCompetencyCountMin),
+  "latestTarget": zod.object({
+  "target": zod.string(),
+  "organizationId": zod.string(),
+  "category": zod.string(),
+  "status": zod.enum(['pending', 'validating', 'validated', 'importing', 'succeeded', 'failed'])
+}).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListAssessmentsResponse = zod.array(ListAssessmentsResponseItem)
+
+
+/**
+ * @summary Get an assessment package with immutable version and publication summaries
+ */
+export const GetAssessmentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const getAssessmentResponseCurrentVersionMin = 0;
+
+export const getAssessmentResponseScenarioCountMin = 0;
+
+export const getAssessmentResponseCompetencyCountMin = 0;
+
+
+
+
+export const GetAssessmentResponse = zod.object({
+  "id": zod.string(),
+  "packageKey": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "sourceType": zod.string(),
+  "sourceId": zod.string(),
+  "status": zod.enum(['draft', 'validated', 'approved', 'published', 'archived']),
+  "currentVersion": zod.int().min(getAssessmentResponseCurrentVersionMin),
+  "scenarioCount": zod.int().min(getAssessmentResponseScenarioCountMin),
+  "competencyCount": zod.int().min(getAssessmentResponseCompetencyCountMin),
+  "latestTarget": zod.object({
+  "target": zod.string(),
+  "organizationId": zod.string(),
+  "category": zod.string(),
+  "status": zod.enum(['pending', 'validating', 'validated', 'importing', 'succeeded', 'failed'])
+}).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "versions": zod.array(zod.object({
+  "id": zod.string(),
+  "packageId": zod.string(),
+  "version": zod.int().min(1),
+  "contentHash": zod.string(),
+  "validation": zod.object({
+  "valid": zod.boolean(),
+  "diagnostics": zod.array(zod.object({
+  "severity": zod.enum(['error', 'warning']),
+  "code": zod.string(),
+  "path": zod.string(),
+  "message": zod.string()
+}))
+}),
+  "status": zod.enum(['draft', 'validated', 'published']),
+  "latestTarget": zod.object({
+  "target": zod.string(),
+  "organizationId": zod.string(),
+  "category": zod.string(),
+  "status": zod.enum(['pending', 'validating', 'validated', 'importing', 'succeeded', 'failed'])
+}).nullable(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "publicationHistory": zod.array(zod.object({
+  "id": zod.string(),
+  "packageId": zod.string(),
+  "packageVersion": zod.int(),
+  "target": zod.string(),
+  "organizationId": zod.string(),
+  "category": zod.string(),
+  "idempotencyKey": zod.string(),
+  "attempt": zod.int(),
+  "status": zod.enum(['pending', 'validating', 'validated', 'importing', 'succeeded', 'failed']),
+  "response": zod.record(zod.string(), zod.unknown()).optional(),
+  "errorCode": zod.string().nullish(),
+  "errorMessage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "publishedAt": zod.coerce.date().nullish()
+}))
+})
+
+
+/**
  * @summary Compile saved scenarios into an immutable RoleplayX assessment package version
  */
 export const CreateAssessmentPackageVersionParams = zod.object({

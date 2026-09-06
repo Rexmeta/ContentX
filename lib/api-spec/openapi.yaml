@@ -2026,6 +2026,37 @@ paths:
                   storedChecksum: { type: string }
                   calculatedChecksum: { type: string }
         "404": { description: Evidence package not found }
+  /v1/assessments:
+    get:
+      operationId: listAssessments
+      tags: [assessment]
+      summary: List assessment packages without immutable package payloads
+      responses:
+        "200":
+          description: Assessment package list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AssessmentPackageSummary" }
+  /v1/assessments/{id}:
+    get:
+      operationId: getAssessment
+      tags: [assessment]
+      summary: Get an assessment package with immutable version and publication summaries
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Assessment package detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssessmentPackageDetail" }
+        "404":
+          description: Assessment package not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiMessage" }
   /v1/assessments/{id}/versions:
     post:
       operationId: createAssessmentPackageVersion
@@ -2415,6 +2446,82 @@ components:
         contentHash: { type: string }
         validation: { $ref: "#/components/schemas/AssessmentValidationReport" }
         createdAt: { type: string, format: date-time }
+    AssessmentPackageSummary:
+      type: object
+      additionalProperties: false
+      required: [id, packageKey, title, description, sourceType, sourceId, status, currentVersion, scenarioCount, competencyCount, latestTarget, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        packageKey: { type: string }
+        title: { type: string }
+        description: { type: string }
+        sourceType: { type: string }
+        sourceId: { type: string }
+        status: { type: string, enum: [draft, validated, approved, published, archived] }
+        currentVersion: { type: integer, minimum: 0 }
+        scenarioCount: { type: integer, minimum: 0 }
+        competencyCount: { type: integer, minimum: 0 }
+        latestTarget:
+          type: ["object", "null"]
+          additionalProperties: false
+          required: [target, organizationId, category, status]
+          properties:
+            target: { type: string }
+            organizationId: { type: string }
+            category: { type: string }
+            status: { type: string, enum: [pending, validating, validated, importing, succeeded, failed] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    AssessmentPackageVersionSummary:
+      type: object
+      additionalProperties: false
+      required: [id, packageId, version, contentHash, validation, status, latestTarget, createdAt]
+      properties:
+        id: { type: string }
+        packageId: { type: string }
+        version: { type: integer, minimum: 1 }
+        contentHash: { type: string }
+        validation: { $ref: "#/components/schemas/AssessmentValidationReport" }
+        status: { type: string, enum: [draft, validated, published] }
+        latestTarget:
+          type: ["object", "null"]
+          additionalProperties: false
+          required: [target, organizationId, category, status]
+          properties:
+            target: { type: string }
+            organizationId: { type: string }
+            category: { type: string }
+            status: { type: string, enum: [pending, validating, validated, importing, succeeded, failed] }
+        createdBy: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    AssessmentPackageDetail:
+      type: object
+      additionalProperties: false
+      required: [id, packageKey, title, description, sourceType, sourceId, status, currentVersion, scenarioCount, competencyCount, latestTarget, createdAt, updatedAt, versions, publicationHistory]
+      properties:
+        id: { type: string }
+        packageKey: { type: string }
+        title: { type: string }
+        description: { type: string }
+        sourceType: { type: string }
+        sourceId: { type: string }
+        status: { type: string, enum: [draft, validated, approved, published, archived] }
+        currentVersion: { type: integer, minimum: 0 }
+        scenarioCount: { type: integer, minimum: 0 }
+        competencyCount: { type: integer, minimum: 0 }
+        latestTarget:
+          type: ["object", "null"]
+          additionalProperties: false
+          required: [target, organizationId, category, status]
+          properties:
+            target: { type: string }
+            organizationId: { type: string }
+            category: { type: string }
+            status: { type: string, enum: [pending, validating, validated, importing, succeeded, failed] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        versions: { type: array, items: { $ref: "#/components/schemas/AssessmentPackageVersionSummary" } }
+        publicationHistory: { type: array, items: { $ref: "#/components/schemas/AssessmentPublicationRecord" } }
     AssessmentValidationReport:
       type: object
       additionalProperties: false

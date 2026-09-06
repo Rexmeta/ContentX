@@ -63,6 +63,13 @@ export type PublicationTransition = {
   publishedBy?: string | null;
 };
 
+export type AssessmentPublicationTargetSummary = {
+  target: string;
+  organizationId: string;
+  category: string;
+  status: AssessmentPublicationStatus;
+};
+
 export const DEFAULT_PUBLICATION_LEASE_MS = 5 * 60 * 1000;
 
 function leaseExpiry(durationMs: number) {
@@ -134,6 +141,20 @@ export async function listAssessmentPackages(): Promise<AssessmentPackageRow[]> 
     .orderBy(desc(assessmentPackagesTable.updatedAt));
 }
 
+/**
+ * Read the package's audit-facing state from its immutable version and
+ * publication ledgers. Callers deliberately receive no derived package JSON.
+ */
+function packageCounts(packageJson: unknown): { scenarioCount: number; competencyCount: number } {
+  if (!packageJson || typeof packageJson !== "object" || Array.isArray(packageJson)) {
+    return { scenarioCount: 0, competencyCount: 0 };
+  }
+  const value = packageJson as { scenarios?: unknown; competencies?: unknown };
+  return {
+    scenarioCount: Array.isArray(value.scenarios) ? value.scenarios.length : 0,
+    competencyCount: Array.isArray(value.competencies) ? value.competencies.length : 0,
+  };
+}
 /** Compare-and-swap package lifecycle state; a stale publisher cannot regress it. */
 export async function transitionAssessmentPackageStatus(
   id: string,
@@ -522,3 +543,100 @@ export async function listAssessmentPackagePublicationHistory(
 /** Exported for tests and service-level transition guards. */
 export const assessmentPublicationTransitionMap = legalPublicationTransitions;
 export const assessmentPackageTransitionMap = legalPackageTransitions;
+
+export type AssessmentPackageReadModel = {
+  assessmentPackage: AssessmentPackageRow;
+  scenarioCount: number;
+  competencyCount: number;
+  latestTarget: AssessmentPublicationTargetSummary | null;
+  versions: AssessmentPackageVersionReadSummary[];
+  publicationHistory: AssessmentPublicationRow[];
+};
+
+export type AssessmentPackageVersionReadSummary = {
+  id: string;
+  packageId: string;
+  version: number;
+  contentHash: string;
+  validation: unknown;
+  status: "draft" | "validated" | "published";
+  latestTarget: AssessmentPublicationTargetSummary | null;
+  createdBy: string | null;
+  createdAt: Date;
+};
+
+function publicationTarget(
+  publication: AssessmentPublicationRow | undefined,
+): AssessmentPublicationTargetSummary | null {
+  if (!publication) return null;
+  return {
+    target: publication.target,
+    organizationId: publication.targetOrganizationId,
+    category: publication.targetCategoryId,
+    status: publication.status as AssessmentPublicationStatus,
+  };
+}
+
+function validationPassed(validationReport: unknown): boolean {
+  return (
+    !!validationReport &&
+    typeof validationReport === "object" &&
+    (validationReport as { valid?: unknown }).valid === true
+  );
+}
+
+export async function getAssessmentPackageReadModel(
+  packageId: string,
+): Promise<AssessmentPackageReadModel | undefined> {
+  const assessmentPackage = await getAssessmentPackage(packageId);
+  return assessmentPackage ? buildAssessmentPackageReadModel(assessmentPackage) : undefined;
+}
+
+/** List audit-facing package summaries derived from immutable evidence ledgers. */
+export async function listAssessmentPackageReadModels(): Promise<AssessmentPackageReadModel[]> {
+  const packages = await listAssessmentPackages();
+  return Promise.all(packages.map(buildAssessmentPackageReadModel));
+}
+
+async function buildAssessmentPackageReadModel(
+  assessmentPackage: AssessmentPackageRow,
+): Promise<AssessmentPackageReadModel> {
+  const [versions, publicationHistory] = await Promise.all([
+    listAssessmentPackageVersions(assessmentPackage.id),
+    listAssessmentPackagePublicationHistory(assessmentPackage.id),
+  ]);
+  const publicationsByVersion = new Map<number, AssessmentPublicationRow[]>();
+  for (const publication of publicationHistory) {
+    const entries = publicationsByVersion.get(publication.packageVersion) ?? [];
+    entries.push(publication);
+    publicationsByVersion.set(publication.packageVersion, entries);
+  }
+  const currentVersion =
+    versions.find((version) => version.version === assessmentPackage.currentVersion) ??
+    versions.at(-1);
+  const counts = packageCounts(currentVersion?.packageJson);
+  return {
+    assessmentPackage,
+    ...counts,
+    latestTarget: publicationTarget(publicationHistory[0]),
+    versions: versions.map((version) => {
+      const publications = publicationsByVersion.get(version.version) ?? [];
+      return {
+        id: version.id,
+        packageId: version.packageId,
+        version: version.version,
+        contentHash: version.contentHash,
+        validation: version.validationReport,
+        status: publications.some((publication) => publication.status === "succeeded")
+          ? "published"
+          : validationPassed(version.validationReport)
+            ? "validated"
+            : "draft",
+        latestTarget: publicationTarget(publications[0]),
+        createdBy: version.createdBy,
+        createdAt: version.createdAt,
+      };
+    }),
+    publicationHistory,
+  };
+}

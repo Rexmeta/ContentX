@@ -26,6 +26,8 @@ import type {
   AgentStateUpdate,
   AgentWithState,
   ApiMessage,
+  AssessmentPackageDetail,
+  AssessmentPackageSummary,
   AssessmentPackageVersionCreateInput,
   AssessmentPackageVersionRecord,
   AssessmentPublicationRecord,
@@ -6757,6 +6759,160 @@ export const usePostV1CommercialValidationPackagesIdVerify = <TError = ErrorType
       > => {
       return useMutation(getPostV1CommercialValidationPackagesIdVerifyMutationOptions(options));
     }
+
+export const getListAssessmentsUrl = () => {
+
+
+
+
+  return `/api/v1/assessments`
+}
+
+/**
+ * @summary List assessment packages without immutable package payloads
+ */
+export const listAssessments = async ( options?: Parameters<typeof customFetch>[1]): Promise<AssessmentPackageSummary[]> => {
+
+  return customFetch<AssessmentPackageSummary[]>(getListAssessmentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAssessmentsQueryKey = () => {
+    return [
+    `/api/v1/assessments`
+    ] as const;
+    }
+
+
+export const getListAssessmentsQueryOptions = <TData = Awaited<ReturnType<typeof listAssessments>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssessmentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssessments>>> = ({ signal }) => listAssessments({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAssessmentsQueryResult = NonNullable<Awaited<ReturnType<typeof listAssessments>>>
+export type ListAssessmentsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List assessment packages without immutable package payloads
+ */
+
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAssessmentsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAssessmentUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}`
+}
+
+/**
+ * @summary Get an assessment package with immutable version and publication summaries
+ */
+export const getAssessment = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentPackageDetail> => {
+
+  return customFetch<AssessmentPackageDetail>(getGetAssessmentUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssessmentQueryKey = (id: string,) => {
+    return [
+    `/api/v1/assessments/${id}`
+    ] as const;
+    }
+
+
+export const getGetAssessmentQueryOptions = <TData = Awaited<ReturnType<typeof getAssessment>>, TError = ErrorType<ApiMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessment>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessmentQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessment>>> = ({ signal }) => getAssessment(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessment>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssessmentQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessment>>>
+export type GetAssessmentQueryError = ErrorType<ApiMessage>
+
+
+/**
+ * @summary Get an assessment package with immutable version and publication summaries
+ */
+
+export function useGetAssessment<TData = Awaited<ReturnType<typeof getAssessment>>, TError = ErrorType<ApiMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessment>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssessmentQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getCreateAssessmentPackageVersionUrl = (id: string,) => {
 

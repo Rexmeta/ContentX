@@ -9,3 +9,4 @@
 - [Postgres timestamp CAS precision](postgres-timestamp-cas.md) — JS Date loses PostgreSQL microseconds; timestamp equality alone is unsafe for optimistic ownership claims.
 - [Commercial validation persistence](commercial-validation-persistence.md) — canonicalize JSONB before checksumming and never generate tenant IDs from Date.now() alone.
 - [Lease-fenced publication recovery](lease-fenced-publication-recovery.md) — stale workers must be fenced from both attempt state and related lifecycle mutations.
+- [Orval client EOF formatting](orval-client-eof-formatting.md) — React client codegen may append blank EOF lines; normalize generated output before enforcing `git diff --check`.

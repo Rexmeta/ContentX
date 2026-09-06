@@ -19,6 +19,8 @@ import SimulationsList from '@/pages/simulations/list';
 import SimulationDetail from '@/pages/simulations/detail';
 import EvaluationsList from '@/pages/evaluations/list';
 import EvaluationDetail from '@/pages/evaluations/detail';
+import AssessmentsList from '@/pages/assessments/list';
+import AssessmentDetail from '@/pages/assessments/detail';
 import Explorer from '@/pages/explorer';
 import Examples from '@/pages/examples';
 import Benchmark from '@/pages/benchmark';
@@ -68,6 +70,8 @@ function Router() {
       
       <Route path="/evaluations" component={EvaluationsList} />
       <Route path="/evaluations/:id" component={EvaluationDetail} />
+      <Route path="/assessments" component={AssessmentsList} />
+      <Route path="/assessments/:id" component={AssessmentDetail} />
       
       <Route path="/explorer" component={Explorer} />
       <Route path="/benchmark" component={Benchmark} />

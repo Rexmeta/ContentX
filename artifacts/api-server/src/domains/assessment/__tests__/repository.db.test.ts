@@ -227,6 +227,49 @@ d("assessment repository (real DB)", () => {
       ),
     ).resolves.toMatchObject({ status: "succeeded", packageVersion: 2 });
 
+    await repository.createAssessmentPackageVersion({
+      id: `${runTag}-version-3`,
+      packageId,
+      version: 3,
+      packageJson: { scenarios: [{ key: "validated-only" }], competencies: [{ key: "support" }] },
+      contentHash: "d".repeat(64),
+      validationReport: { valid: true, diagnostics: [] },
+    });
+    await repository.createAssessmentPackageVersion({
+      id: `${runTag}-version-4`,
+      packageId,
+      version: 4,
+      packageJson: {
+        scenarios: [{ key: "draft-a" }, { key: "draft-b" }],
+        competencies: [{ key: "support" }, { key: "quality" }],
+      },
+      contentHash: "e".repeat(64),
+      validationReport: { valid: false, diagnostics: [{ code: "invalid" }] },
+    });
+
+    // The API read model derives counts/status/targets from immutable snapshots
+    // and the publication ledger, never by exposing packageJson itself.
+    const readModel = await repository.getAssessmentPackageReadModel(packageId);
+    expect(readModel).toMatchObject({
+      scenarioCount: 2,
+      competencyCount: 2,
+      latestTarget: {
+        target: "roleplayx",
+        organizationId: publicationInput.targetOrganizationId,
+        category: publicationInput.targetCategoryId,
+        status: "succeeded",
+      },
+    });
+    expect(readModel?.versions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ version: 1, status: "published" }),
+        expect.objectContaining({ version: 2, status: "published" }),
+        expect.objectContaining({ version: 3, status: "validated", latestTarget: null }),
+        expect.objectContaining({ version: 4, status: "draft", latestTarget: null }),
+      ]),
+    );
+    expect(readModel?.versions[0]).not.toHaveProperty("packageJson");
+
     // The version-row lock ensures concurrent publishers acquire only one
     // active attempt for a target; the other observes it as in progress.
     const concurrentTarget = {
