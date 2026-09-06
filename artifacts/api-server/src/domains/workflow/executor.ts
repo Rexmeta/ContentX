@@ -925,6 +925,7 @@ export async function recoverStaleRun(row: {
   if (row.status !== "running") return false;
   if (Date.now() - row.updatedAt.getTime() < STALE_RUNNING_MS) return false;
   const steps = row.steps as WorkflowStep[];
+  const observedSteps = structuredClone(steps);
   const runningSteps = steps.filter((s) => s.status === "running");
   if (runningSteps.length === 0) return false;
   for (const step of runningSteps) {
@@ -937,10 +938,18 @@ export async function recoverStaleRun(row: {
   // Conditional on the observed updatedAt: progress/completion/failure writes
   // all touch the row, so this only lands when the run really is abandoned.
   // A lost race is a no-op.
-  const updated = await repo.updateWorkflowIfUntouched(row.id, row.updatedAt, {
-    steps,
-    status: overallStatus(steps),
-  });
+  const updated = await repo.updateWorkflowIfUntouched(
+    row.id,
+    {
+      updatedAt: row.updatedAt,
+      steps: observedSteps,
+      status: "running",
+    },
+    {
+      steps,
+      status: overallStatus(steps),
+    },
+  );
   return updated !== null;
 }
 

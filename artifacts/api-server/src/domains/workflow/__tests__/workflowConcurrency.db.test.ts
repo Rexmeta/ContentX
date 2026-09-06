@@ -6,11 +6,11 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
-import type { WorkflowRow } from "@workspace/db";
+import { pool, type WorkflowRow } from "@workspace/db";
 import app from "../../../app";
 import * as scenarioRepo from "../../scenario/repository";
 import * as repo from "../repository";
-import { runStep } from "../executor";
+import { recoverStaleRun, runStep, STALE_RUNNING_MS } from "../executor";
 import type { WorkflowStep } from "../model";
 
 const amplifyIdeaWithLLM = vi.hoisted(() => vi.fn());
@@ -89,6 +89,54 @@ function workflowSteps(row: WorkflowRow | null): WorkflowStep[] {
   return (row?.steps as WorkflowStep[] | undefined) ?? [];
 }
 
+function runningStep(id: string, runId: string): WorkflowStep {
+  const step = inputStep(id, "running");
+  step.progress = {
+    runId,
+    startedAt: new Date(0).toISOString(),
+    updatedAt: new Date(0).toISOString(),
+    events: [],
+    checkpoints: [],
+    review: null,
+  };
+  return step;
+}
+
+async function createStaleRunningWorkflow(): Promise<WorkflowRow> {
+  const row = await createWorkflow([runningStep("input", "stale-run")]);
+  const staleAt = new Date(Date.now() - STALE_RUNNING_MS - 60_000);
+  await pool.query(
+    `UPDATE workflows SET status = 'running', updated_at = $2 WHERE id = $1`,
+    [row.id, staleAt],
+  );
+  return (await repo.getWorkflow(row.id))!;
+}
+
+async function raceAfterRowLock<T, U>(
+  workflowId: string,
+  first: () => Promise<T>,
+  second: () => Promise<U>,
+): Promise<[T, U]> {
+  const blocker = await pool.connect();
+  try {
+    await blocker.query("BEGIN");
+    await blocker.query("SELECT id FROM workflows WHERE id = $1 FOR UPDATE", [
+      workflowId,
+    ]);
+    const firstResult = first();
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    const secondResult = second();
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    await blocker.query("COMMIT");
+    return await Promise.all([firstResult, secondResult]);
+  } catch (error) {
+    await blocker.query("ROLLBACK").catch(() => undefined);
+    throw error;
+  } finally {
+    blocker.release();
+  }
+}
+
 const scenario = {
   title: "경합 테스트 이야기",
   logline: "동시에 시작된 실행 중 하나만 저장된다.",
@@ -104,8 +152,10 @@ const scenario = {
 
 afterEach(async () => {
   amplifyIdeaWithLLM.mockReset();
-  for (const id of createdWorkflowIds) {
-    await repo.deleteWorkflow(id).catch(() => false);
+  if (createdWorkflowIds.size > 0) {
+    await pool.query("DELETE FROM workflows WHERE id = ANY($1::text[])", [
+      [...createdWorkflowIds],
+    ]);
   }
   for (const id of createdScenarioIds) {
     await scenarioRepo.deleteScenario(id).catch(() => false);
@@ -115,6 +165,61 @@ afterEach(async () => {
 });
 
 d("workflow concurrency (real PostgreSQL)", () => {
+  it("does not let stale recovery overwrite a completion that wins the row race", async () => {
+    const observed = await createStaleRunningWorkflow();
+    const completedSteps = structuredClone(observed.steps) as WorkflowStep[];
+    completedSteps[0]!.status = "complete";
+    completedSteps[0]!.result = { value: "완료 결과" };
+
+    const [completion, recovered] = await raceAfterRowLock(
+      observed.id,
+      () =>
+        repo.updateWorkflowIfRunOwned(
+          observed.id,
+          "input",
+          "stale-run",
+          { steps: completedSteps, artifacts: { value: "완료 결과" }, status: "complete" },
+        ),
+      () => recoverStaleRun(observed),
+    );
+
+    expect(completion).not.toBeNull();
+    expect(recovered).toBe(false);
+    const current = await repo.getWorkflow(observed.id);
+    expect(current?.status).toBe("complete");
+    expect(workflowSteps(current)[0]).toMatchObject({
+      status: "complete",
+      result: { value: "완료 결과" },
+    });
+  });
+
+  it("keeps a retryable failure when stale recovery wins the row race", async () => {
+    const observed = await createStaleRunningWorkflow();
+    const completedSteps = structuredClone(observed.steps) as WorkflowStep[];
+    completedSteps[0]!.status = "complete";
+
+    const [recovered, completion] = await raceAfterRowLock(
+      observed.id,
+      () => recoverStaleRun(observed),
+      () =>
+        repo.updateWorkflowIfRunOwned(
+          observed.id,
+          "input",
+          "stale-run",
+          { steps: completedSteps, status: "complete" },
+        ),
+    );
+
+    expect(recovered).toBe(true);
+    expect(completion).toBeNull();
+    const current = await repo.getWorkflow(observed.id);
+    expect(current?.status).toBe("failed");
+    expect(workflowSteps(current)[0]).toMatchObject({
+      status: "failed",
+      error: expect.stringContaining("다시 실행"),
+    });
+  });
+
   it("allows only one of two simultaneous ready steps to own the workflow", async () => {
     let release!: (value: typeof scenario) => void;
     amplifyIdeaWithLLM.mockImplementation(

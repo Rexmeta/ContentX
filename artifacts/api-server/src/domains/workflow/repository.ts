@@ -91,7 +91,11 @@ export async function updateWorkflow(
  */
 export async function updateWorkflowIfUntouched(
   id: string,
-  observedUpdatedAt: Date,
+  observed: {
+    updatedAt: Date;
+    steps: WorkflowStep[];
+    status: WorkflowStatus;
+  },
   patch: Partial<{
     title: string;
     steps: WorkflowStep[];
@@ -99,7 +103,7 @@ export async function updateWorkflowIfUntouched(
     status: WorkflowStatus;
   }>,
 ): Promise<WorkflowRow | null> {
-  const observedMillisecondEnd = new Date(observedUpdatedAt.getTime() + 1);
+  const observedMillisecondEnd = new Date(observed.updatedAt.getTime() + 1);
   const [row] = await db
     .update(workflowsTable)
     .set(patch)
@@ -107,9 +111,12 @@ export async function updateWorkflowIfUntouched(
       and(
         eq(workflowsTable.id, id),
         // PostgreSQL stores microseconds while JavaScript Date preserves only
-        // milliseconds. Match the exact millisecond observed by the caller.
-        sql`${workflowsTable.updatedAt} >= ${observedUpdatedAt}`,
+        // milliseconds. Match the observed millisecond, then use exact domain
+        // state predicates so a same-millisecond writer still loses the CAS.
+        sql`${workflowsTable.updatedAt} >= ${observed.updatedAt}`,
         sql`${workflowsTable.updatedAt} < ${observedMillisecondEnd}`,
+        sql`${workflowsTable.steps} = ${JSON.stringify(observed.steps)}::jsonb`,
+        eq(workflowsTable.status, observed.status),
       ),
     )
     .returning();

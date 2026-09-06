@@ -52,10 +52,18 @@ describe("recoverStaleRun", () => {
     expect(s[1]!.status).toBe("failed");
     expect(s[1]!.error).toContain("중단");
     // Conditional write keyed on the observed updatedAt — never a blind update.
-    expect(mockUpdate).toHaveBeenCalledWith("workflow_1", observed, {
-      steps: s,
-      status: "failed",
-    });
+    expect(mockUpdate).toHaveBeenCalledWith(
+      "workflow_1",
+      {
+        updatedAt: observed,
+        steps: expect.any(Array),
+        status: "running",
+      },
+      {
+        steps: s,
+        status: "failed",
+      },
+    );
   });
 
   it("does not touch a recently-updated running workflow", async () => {
