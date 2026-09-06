@@ -23,13 +23,15 @@ interface LayoutProps {
 }
 
 const primaryItems = [
-  { href: "/", label: "만들기", icon: PlusCircle },
-  { href: "/workflows", label: "내 작업", icon: ListTodo },
-  { href: "/world", label: "라이브러리", icon: Library },
-  { href: "/examples", label: "예시", icon: Lightbulb },
+  { href: "/", label: "스튜디오 홈", icon: Box },
+  { href: "/assessments/new", label: "새 시나리오", icon: PlusCircle },
+  { href: "/assessments", label: "시나리오 관리", icon: ClipboardCheck },
 ];
 
 const advancedItems = [
+  { href: "/workflows", label: "내 작업 (레거시)", icon: ListTodo },
+  { href: "/world", label: "라이브러리", icon: Library },
+  { href: "/examples", label: "예시", icon: Lightbulb },
   { href: "/benchmark", label: "벤치마크", icon: Layers },
   { href: "/commercial-validation", label: "상용 검증", icon: FlaskConical },
   { href: "/formats", label: "JSON 포맷", icon: Code },
@@ -38,25 +40,27 @@ const advancedItems = [
   { href: "/agents", label: "에이전트", icon: Terminal },
   { href: "/simulations", label: "시뮬레이션", icon: PlayCircle },
   { href: "/evaluations", label: "평가", icon: BarChart },
-  { href: "/assessments", label: "Assessment", icon: ClipboardCheck },
   { href: "/explorer", label: "그래프 탐색기", icon: Network },
-  { href: "/overview", label: "대시보드", icon: Settings2 },
+  { href: "/overview", label: "시스템 대시보드", icon: Settings2 },
 ];
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const [location] = useLocation();
-  const [advancedOpen, setAdvancedOpen] = useState(() =>
-    typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 768px)").matches
-  );
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   return (
     <div className="flex h-full flex-col bg-[hsl(var(--sidebar))] text-[hsl(var(--sidebar-foreground))]">
       <div className="h-14 border-b border-[hsl(var(--sidebar-border))] flex items-center px-5 shrink-0">
         <div className="flex items-center gap-2">
           <Box className="h-4 w-4 text-[hsl(var(--sidebar-primary))]" />
-          <span className="font-mono font-semibold text-sm tracking-[0.14em]">
-            CONTENT<span className="text-[hsl(var(--sidebar-primary))]">X</span>
-          </span>
+          <div className="flex flex-col">
+            <span className="font-mono font-semibold text-sm tracking-[0.14em] leading-none">
+              CONTENT<span className="text-[hsl(var(--sidebar-primary))]">X</span>
+            </span>
+            <span className="text-[9px] text-[hsl(var(--sidebar-foreground))]/50 font-medium tracking-tight mt-0.5">
+              Assessment Studio
+            </span>
+          </div>
         </div>
       </div>
 

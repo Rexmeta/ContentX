@@ -10,9 +10,16 @@ import type {
 vi.mock("../../domains/assessment/repository", () => ({
   listAssessmentPackageReadModels: vi.fn(),
   getAssessmentPackageReadModel: vi.fn(),
+  createAssessmentPackage: vi.fn(),
+  createAssessmentPackageVersion: vi.fn(),
+}));
+
+vi.mock("../../domains/scenario/repository", () => ({
+  insertScenario: vi.fn(),
 }));
 
 import * as assessmentRepository from "../../domains/assessment/repository";
+import * as scenarioRepository from "../../domains/scenario/repository";
 import assessmentsRouter from "../assessments";
 
 const createdAt = new Date("2026-01-01T00:00:00.000Z");
@@ -183,5 +190,65 @@ describe("assessment read routes", () => {
       .get("/api/v1/assessments/missing")
       .expect(404)
       .expect({ error: "Assessment package not found." });
+  });
+
+  it("lists scenario templates", async () => {
+    const response = await request(app).get("/api/v1/assessments/templates").expect(200);
+    expect(response.body).toBeInstanceOf(Array);
+    expect(response.body.length).toBe(3);
+    expect(response.body[0].id).toBe("tmpl-ldr-01");
+  });
+
+  it("retrieves a single template by id", async () => {
+    const response = await request(app).get("/api/v1/assessments/templates/tmpl-ldr-01").expect(200);
+    expect(response.body.id).toBe("tmpl-ldr-01");
+    expect(response.body.title).toBe("성과 부진 팀원 면담");
+  });
+
+  it("returns 404 for unknown template id", async () => {
+    await request(app)
+      .get("/api/v1/assessments/templates/unknown-template")
+      .expect(404)
+      .expect({ error: 'Assessment template "unknown-template" not found.' });
+  });
+
+  it("creates a draft assessment from template", async () => {
+    const insertScenario = vi.mocked(scenarioRepository.insertScenario);
+    const createAssessmentPackage = vi.mocked(assessmentRepository.createAssessmentPackage);
+    const createAssessmentPackageVersion = vi.mocked(assessmentRepository.createAssessmentPackageVersion);
+
+    insertScenario.mockResolvedValue({} as any);
+    createAssessmentPackage.mockResolvedValue({} as any);
+    createAssessmentPackageVersion.mockResolvedValue({
+      id: "version-1",
+      packageId: "assessment-1",
+      version: 1,
+      packageJson: {},
+      contentHash: "c".repeat(64),
+      validationReport: { valid: true, diagnostics: [] },
+      createdBy: "ContentX HR Studio",
+      createdAt,
+    } as any);
+
+    const response = await request(app)
+      .post("/api/v1/assessments/from-template")
+      .send({
+        templateId: "tmpl-ldr-01",
+        companyContext: "반도체 생산기술팀",
+        participantRole: "신임 파트장",
+      })
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      version: 1,
+      status: "draft",
+      contentHash: "c".repeat(64),
+    });
+    expect(response.body.assessmentId).toBeDefined();
+    expect(response.body.title).toContain("반도체 생산기술팀");
+
+    expect(insertScenario).toHaveBeenCalledTimes(1);
+    expect(createAssessmentPackage).toHaveBeenCalledTimes(1);
+    expect(createAssessmentPackageVersion).toHaveBeenCalledTimes(1);
   });
 });

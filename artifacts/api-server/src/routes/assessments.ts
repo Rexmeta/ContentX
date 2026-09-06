@@ -20,6 +20,12 @@ import { createHttpAssessmentPublishingService } from "../domains/assessment/htt
 import type { AssessmentScenarioConfiguration } from "../domains/assessment/model";
 import type { DramaticScenario } from "../domains/scenario/model";
 import { newId } from "../shared/id";
+import { z } from "zod";
+import {
+  listScenarioTemplates,
+  getScenarioTemplate,
+} from "../domains/assessment/scenarioTemplateCatalog";
+import { instantiateAssessmentTemplate } from "../domains/assessment/templateInstantiator";
 
 const router: IRouter = Router();
 
@@ -297,6 +303,115 @@ async function listPackagePublications(req: Request, res: Response): Promise<voi
   res.json(ListAssessmentPackagePublicationHistoryResponse.parse(history.map(publicationRecord)));
 }
 
+const FromTemplateBodySchema = z.object({
+  templateId: z.string().trim().min(1),
+  companyContext: z.string().trim().min(1),
+  participantRole: z.string().trim().optional(),
+  situation: z.string().trim().optional(),
+  counterpartName: z.string().trim().optional(),
+  counterpartRole: z.string().trim().optional(),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+  passingScore: z.number().min(0).max(100).optional(),
+});
+
+async function listTemplates(_req: Request, res: Response): Promise<void> {
+  res.json(listScenarioTemplates());
+}
+
+async function getTemplate(req: Request, res: Response): Promise<void> {
+  const template = getScenarioTemplate(req.params.id);
+  if (!template) {
+    res.status(404).json({ error: `Assessment template "${req.params.id}" not found.` });
+    return;
+  }
+  res.json(template);
+}
+
+async function createFromTemplate(req: Request, res: Response): Promise<void> {
+  const parsed = FromTemplateBodySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const {
+    templateId,
+    companyContext,
+    participantRole,
+    situation,
+    counterpartName,
+    counterpartRole,
+    difficulty,
+    passingScore,
+  } = parsed.data;
+
+  try {
+    const scenarioId = newId("scenario");
+    const packageId = newId("assessment");
+
+    const instantiated = instantiateAssessmentTemplate({
+      templateId,
+      companyContext,
+      participantRole,
+      situation,
+      counterpartName,
+      counterpartRole,
+      difficulty,
+      passingScore,
+      packageId,
+    });
+
+    const compiled = compileAssessmentScenarioPackage(instantiated.compilationInput);
+    if (!compiled.package) {
+      res.status(400).json({ error: "Failed to compile assessment template.", diagnostics: compiled.diagnostics });
+      return;
+    }
+
+    await scenarioRepository.insertScenario({
+      id: scenarioId,
+      title: instantiated.title,
+      idea: `Assessment Template: ${instantiated.template.title}`,
+      scenario: instantiated.dramaticScenario,
+      classification: null,
+      lineage: null,
+    });
+
+    await assessmentRepository.createAssessmentPackage({
+      id: packageId,
+      packageKey: compiled.package.packageKey,
+      title: instantiated.title,
+      description: instantiated.description,
+      sourceType: "scenario-template",
+      sourceId: scenarioId,
+    });
+
+    const row = await assessmentRepository.createAssessmentPackageVersion({
+      id: newId("assessmentversion"),
+      packageId,
+      version: 1,
+      packageJson: compiled.package,
+      contentHash: compiled.package.provenance.contentHash,
+      validationReport: { valid: true, diagnostics: compiled.diagnostics },
+      createdBy: "ContentX HR Studio",
+    });
+
+    res.status(201).json({
+      assessmentId: packageId,
+      version: 1,
+      status: "draft",
+      title: instantiated.title,
+      packageKey: compiled.package.packageKey,
+      contentHash: row.contentHash,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to instantiate assessment from template.";
+    res.status(500).json({ error: message });
+  }
+}
+
+router.get("/v1/assessments/templates", listTemplates);
+router.get("/v1/assessments/templates/:id", getTemplate);
+router.post("/v1/assessments/from-template", createFromTemplate);
 router.get("/v1/assessments", listAssessments);
 router.get("/v1/assessments/:id", getAssessment);
 router.post("/v1/assessments/:id/versions", (req, res) => createVersion(req, res, req.params.id));
