@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, PlusCircle, ShieldCheck } from "lucide-react";
 import { AssessmentVersionForm } from "./assessment-version-form";
+import { trackEvent } from "@/lib/analytics";
 
 export default function AssessmentsList() {
   const [, setLocation] = useLocation();
@@ -20,6 +21,11 @@ export default function AssessmentsList() {
   const create = (packageId: string, data: AssessmentPackageVersionCreateInput) => {
     createVersion.mutate({ id: packageId, data }, {
       onSuccess: (version) => {
+        trackEvent("assessment_version_created", {
+          version_number: version.version,
+          scenario_count: data.scenarios.length,
+          success: true,
+        });
         queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(version.packageId) });
         queryClient.invalidateQueries({ queryKey: getGetAssessmentPackageVersionQueryKey(version.packageId, version.version) });
@@ -28,7 +34,14 @@ export default function AssessmentsList() {
         toast({ title: "불변 버전이 생성되었습니다", description: `v${version.version}은 이후 편집할 수 없습니다.` });
         setLocation(`/assessments/${version.packageId}?version=${version.version}`);
       },
-      onError: (error) => toast({ variant: "destructive", title: "버전을 저장하지 못했습니다", description: error.message }),
+      onError: (error) => {
+        trackEvent("assessment_version_created", {
+          version_number: data.version,
+          scenario_count: data.scenarios.length,
+          success: false,
+        });
+        toast({ variant: "destructive", title: "버전을 저장하지 못했습니다", description: error.message });
+      },
     });
   };
 

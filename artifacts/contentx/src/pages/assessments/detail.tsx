@@ -11,6 +11,7 @@ import { getGetAssessmentPackageVersionQueryKey, getGetAssessmentQueryKey, getLi
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, PlusCircle, Send, ShieldAlert } from "lucide-react";
 import { AssessmentVersionForm } from "./assessment-version-form";
+import { trackEvent } from "@/lib/analytics";
 
 export default function AssessmentDetail() {
   const [, params] = useRoute("/assessments/:id");
@@ -34,8 +35,8 @@ export default function AssessmentDetail() {
   const validate = useValidateAssessmentPackageVersion();
   const publish = usePublishAssessmentPackageVersionToRoleplayX();
   const createVersion = useCreateAssessmentPackageVersion();
-  const runValidation = () => validate.mutate({ id, version }, { onSuccess: (report) => { setValidation(report.valid); setDiagnostics(report.diagnostics); queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentPackageVersionQueryKey(id, version) }); queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() }); toast({ title: report.valid ? "검증을 통과했습니다" : "검증 실패", description: report.valid ? "RoleplayX 발행을 진행할 수 있습니다." : report.diagnostics.map((d) => `${d.path}: ${d.message}`).join(" · ") }); }, onError: (error) => toast({ variant: "destructive", title: "검증을 실행하지 못했습니다", description: error.message }) });
-  const runPublish = () => publish.mutate({ id, version, data: { organizationId, category } }, { onSuccess: (result) => { setPublishResult(result); queryClient.invalidateQueries({ queryKey: getListAssessmentPackagePublicationHistoryQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentPackageVersionQueryKey(id, version) }); queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() }); if (result.status === "published") toast({ title: "RoleplayX 발행 완료", description: "최신 발행 이력에서 결과를 확인하세요." }); else toast({ variant: "destructive", title: "발행 실패 — 재시도할 수 있습니다", description: result.errorCategory ?? "unknown" }); }, onError: (error) => { queryClient.invalidateQueries({ queryKey: getListAssessmentPackagePublicationHistoryQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() }); setPublishResult({ status: "failed", errorCategory: error.message }); toast({ variant: "destructive", title: "발행 실패 — 재시도할 수 있습니다", description: error.message }); } });
+  const runValidation = () => validate.mutate({ id, version }, { onSuccess: (report) => { trackEvent("assessment_validation_completed", { version_number: version, scenario_count: packageQuery.data?.scenarios.length ?? 0, success: report.valid }); setValidation(report.valid); setDiagnostics(report.diagnostics); queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentPackageVersionQueryKey(id, version) }); queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() }); toast({ title: report.valid ? "검증을 통과했습니다" : "검증 실패", description: report.valid ? "RoleplayX 발행을 진행할 수 있습니다." : report.diagnostics.map((d) => `${d.path}: ${d.message}`).join(" · ") }); }, onError: (error) => { trackEvent("assessment_validation_completed", { version_number: version, scenario_count: packageQuery.data?.scenarios.length ?? 0, success: false }); toast({ variant: "destructive", title: "검증을 실행하지 못했습니다", description: error.message }); } });
+  const runPublish = () => publish.mutate({ id, version, data: { organizationId, category } }, { onSuccess: (result) => { trackEvent("assessment_publish_completed", { version_number: version, scenario_count: packageQuery.data?.scenarios.length ?? 0, success: result.status === "published" }); setPublishResult(result); queryClient.invalidateQueries({ queryKey: getListAssessmentPackagePublicationHistoryQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentPackageVersionQueryKey(id, version) }); queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() }); if (result.status === "published") toast({ title: "RoleplayX 발행 완료", description: "최신 발행 이력에서 결과를 확인하세요." }); else toast({ variant: "destructive", title: "발행 실패 — 재시도할 수 있습니다", description: result.errorCategory ?? "unknown" }); }, onError: (error) => { trackEvent("assessment_publish_completed", { version_number: version, scenario_count: packageQuery.data?.scenarios.length ?? 0, success: false }); queryClient.invalidateQueries({ queryKey: getListAssessmentPackagePublicationHistoryQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() }); setPublishResult({ status: "failed", errorCategory: error.message }); toast({ variant: "destructive", title: "발행 실패 — 재시도할 수 있습니다", description: error.message }); } });
 
   if (packageQuery.isLoading) return <Layout breadcrumbs={[{ label: "ContentX" }, { label: "Assessments", href: "/assessments" }, { label: "Loading" }]}><div className="p-12 flex justify-center"><Loader2 className="animate-spin" /></div></Layout>;
   if (!packageQuery.data) return <Layout breadcrumbs={[{ label: "ContentX" }, { label: "Assessments", href: "/assessments" }, { label: id }]}><div className="p-8 text-muted-foreground">Assessment version을 찾을 수 없습니다.</div></Layout>;
@@ -45,6 +46,11 @@ export default function AssessmentDetail() {
   const nextVersion = latestVersion + 1;
   const createNewVersion = (packageId: string, data: AssessmentPackageVersionCreateInput) => createVersion.mutate({ id: packageId, data }, {
     onSuccess: (created) => {
+      trackEvent("assessment_version_created", {
+        version_number: created.version,
+        scenario_count: data.scenarios.length,
+        success: true,
+      });
       queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(packageId) });
       queryClient.invalidateQueries({ queryKey: getGetAssessmentPackageVersionQueryKey(packageId, created.version) });
@@ -53,7 +59,14 @@ export default function AssessmentDetail() {
       toast({ title: "새 immutable version이 생성되었습니다", description: `v${created.version}을 검증하세요.` });
       setLocation(`/assessments/${packageId}?version=${created.version}`);
     },
-    onError: (error) => toast({ variant: "destructive", title: "새 버전을 저장하지 못했습니다", description: error.message }),
+    onError: (error) => {
+      trackEvent("assessment_version_created", {
+        version_number: data.version,
+        scenario_count: data.scenarios.length,
+        success: false,
+      });
+      toast({ variant: "destructive", title: "새 버전을 저장하지 못했습니다", description: error.message });
+    },
   });
   return <Layout breadcrumbs={[{ label: "ContentX" }, { label: "Assessments", href: "/assessments" }, { label: assessment.metadata.title }]} title={<span className="font-mono text-sm">v{assessment.version}</span>}>
     <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-5">
