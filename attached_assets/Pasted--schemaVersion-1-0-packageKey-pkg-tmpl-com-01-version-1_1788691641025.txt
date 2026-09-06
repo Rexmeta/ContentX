@@ -1,0 +1,210 @@
+{
+  "schemaVersion": "1.0",
+  "packageKey": "pkg-tmpl-com-01",
+  "version": "1",
+  "publishedAt": "2026-09-06T10:25:29.845Z",
+  "metadata": {
+    "title": "어려운 피드백 전달 [가전 제조/ 세탁기 개발팀]",
+    "description": "개인 업무 성과는 뛰어나지만 회의 중 동료를 무시하거나 독단적인 태도로 팀 분위기를 해치는 핵심 인재에게 행동 개선을 요구하는 고난도 피드백 면담입니다. (조직: 가전 제조/ 세탁기 개발팀, 응시자: 중간관리자 / 팀장)",
+    "locale": "ko-KR",
+    "tags": [
+      "contentx",
+      "assessment-center",
+      "communication",
+      "tmpl-com-01"
+    ]
+  },
+  "competencies": [
+    {
+      "key": "sbi_feedback",
+      "name": "객관적 피드백(SBI)",
+      "description": "상황(Situation), 행동(Behavior), 영향(Impact)을 객관적으로 분리하여 전달하는 기술"
+    },
+    {
+      "key": "handling_resistance",
+      "name": "저항 및 반발 관리",
+      "description": "상대방의 방어적 감정을 가라앉히고 핵심 메시지를 관철시키는 능력"
+    },
+    {
+      "key": "assertive_communication",
+      "name": "단호한 기준 제시",
+      "description": "배려심을 잃지 않으면서도 조직의 양보할 수 없는 원칙을 단호히 표명하는 능력"
+    },
+    {
+      "key": "change_commitment",
+      "name": "변화 합의 도출",
+      "description": "상대방의 자발적 반성과 구체적 행동 개선 약속을 이끌어내는 역량"
+    }
+  ],
+  "scenarios": [
+    {
+      "key": "scen-tmpl-com-01-scenario",
+      "title": "어려운 피드백 전달 [가전 제조/ 세탁기 개발팀]",
+      "description": "[조직 및 배경: 가전 제조/ 세탁기 개발팀]\n팀 내 에이스로 불리지만, 코드 리뷰와 기획 회의에서 동료들에게 공격적인 언사를 쏟아내며 퇴사 직전까지 몰고 간 팀원이 있습니다. 팀장은 성과를 인정하되 용납될 수 없는 태도의 한계를 명확히 그어야 합니다.",
+      "locale": "ko-KR",
+      "categoryKey": "communication",
+      "competencies": [
+        "sbi_feedback",
+        "handling_resistance",
+        "assertive_communication",
+        "change_commitment"
+      ],
+      "difficulty": "advanced",
+      "estimatedTime": 15,
+      "objectiveType": "roleplay",
+      "context": {
+        "situation": "[조직 및 배경: 가전 제조/ 세탁기 개발팀]\n팀 내 에이스로 불리지만, 코드 리뷰와 기획 회의에서 동료들에게 공격적인 언사를 쏟아내며 퇴사 직전까지 몰고 간 팀원이 있습니다. 팀장은 성과를 인정하되 용납될 수 없는 태도의 한계를 명확히 그어야 합니다.",
+        "timeline": "면담 진행 중 (약 15분 소요)",
+        "stakes": "면담 실패 시 우수 인재의 감정적 이탈 또는 팀 내 동료들의 연쇄 퇴사",
+        "playerRole": "중간관리자 / 팀장"
+      },
+      "objectives": [
+        "인격 모독 없이 관찰된 구체적 행동(SBI 모델)에 집중하여 피드백한다.",
+        "팀원의 방어와 반발을 수용하면서도 개선의 필요성을 명확히 견지한다.",
+        "팀원이 스스로 동료와의 협업 방식을 재정립하도록 서약을 이끌어낸다."
+      ],
+      "successCriteria": [
+        "'태도가 문제다' 식의 모호한 비판 대신 구체적인 사건과 발언을 지목하였는가?",
+        "그 행동이 동료와 팀에 미친 실질적 영향을 명확히 설명하였는가?",
+        "팀원의 억울한 감정 표출에 흥분하지 않고 냉정하게 공감해주었는가?",
+        "팀원의 높은 성과와 의도를 인정해주며 방어벽을 낮추었는가?",
+        "성과가 뛰어나더라도 협업 방식을 훼손하는 것은 용납될 수 없음을 분명히 밝혔는가?",
+        "우물쭈물 타협하지 않고 리더로서의 명확한 기준을 견지하였는가?",
+        "팀원 본인이 앞으로 다르게 행동할 소통 방안을 스스로 말하게 하였는가?",
+        "주기적인 체크인과 피드백 과정을 정례화하기로 합의하였는가?"
+      ],
+      "personas": [
+        {
+          "key": "item-1",
+          "name": "정수진",
+          "role": "테크 리드 / 시니어 전문가 (5년차)",
+          "background": "높은 완성도를 추구하다 보니 기준에 못 미치는 동료들의 실수를 참지 못하며, 자신의 솔직함이 미덕이라 생각함 (소속: 가전 제조/ 세탁기 개발팀)",
+          "traits": [],
+          "isPrimary": true
+        }
+      ],
+      "recommendedFlow": [
+        "item-1",
+        "sbi-2",
+        "item-3"
+      ],
+      "flow": [
+        {
+          "key": "item-1",
+          "title": "성과 인정 및 피드백 목적 안내",
+          "description": "팀원의 뛰어난 기여를 충분히 인정하며 대화를 시작한다.",
+          "beats": [
+            "최근 프로젝트 기여 칭찬",
+            "면담 주제(협업 방식) 예고",
+            "경계심 완화"
+          ]
+        },
+        {
+          "key": "sbi-2",
+          "title": "구체적 사례(SBI) 전달 및 저항 다루기",
+          "description": "관찰된 언행과 그것이 동료 및 팀에 미친 영향을 객관적으로 제시한다.",
+          "beats": [
+            "구체적 회의 발언 사례 인용",
+            "동료들의 위축과 프로젝트 지연 영향 설명",
+            "팀원의 억울함 경청 및 반박 대응"
+          ]
+        },
+        {
+          "key": "item-3",
+          "title": "행동 변화 약속 및 기준 합의",
+          "description": "조직 내 수용 가능한 협업 기준을 제시하고 자발적 개선을 약속받는다.",
+          "beats": [
+            "팀 규범 재확인",
+            "팀원의 대안적 소통 방식 모색",
+            "상호 피드백 루틴 합의"
+          ]
+        }
+      ],
+      "personaSwitches": [],
+      "personaSwitchMode": "disabled",
+      "constraints": [
+        "인신공격이나 비하 발언 없이 상호 존중하는 대화를 유지합니다.",
+        "주어진 면담 시간과 목표에 집중하여 현실적인 대안을 도출합니다."
+      ],
+      "difficultyProfile": {
+        "level": "advanced",
+        "rationale": "소통 / 피드백 advanced 수준 평가 프로필"
+      },
+      "evaluation": {
+        "dimensions": [
+          {
+            "key": "sbi_feedback",
+            "label": "사실 기반 객관적 피드백",
+            "weight": 0.25,
+            "criteria": [
+              "'태도가 문제다' 식의 모호한 비판 대신 구체적인 사건과 발언을 지목하였는가?",
+              "그 행동이 동료와 팀에 미친 실질적 영향을 명확히 설명하였는가?"
+            ]
+          },
+          {
+            "key": "handling_resistance",
+            "label": "저항 및 방어 심리 다루기",
+            "weight": 0.25,
+            "criteria": [
+              "팀원의 억울한 감정 표출에 흥분하지 않고 냉정하게 공감해주었는가?",
+              "팀원의 높은 성과와 의도를 인정해주며 방어벽을 낮추었는가?"
+            ]
+          },
+          {
+            "key": "assertive_communication",
+            "label": "원칙과 기준의 단호함",
+            "weight": 0.25,
+            "criteria": [
+              "성과가 뛰어나더라도 협업 방식을 훼손하는 것은 용납될 수 없음을 분명히 밝혔는가?",
+              "우물쭈물 타협하지 않고 리더로서의 명확한 기준을 견지하였는가?"
+            ]
+          },
+          {
+            "key": "change_commitment",
+            "label": "행동 변화 서약",
+            "weight": 0.25,
+            "criteria": [
+              "팀원 본인이 앞으로 다르게 행동할 소통 방안을 스스로 말하게 하였는가?",
+              "주기적인 체크인과 피드백 과정을 정례화하기로 합의하였는가?"
+            ]
+          }
+        ],
+        "passingScore": 75
+      },
+      "termination": {
+        "conditions": [
+          "협업 방식 개선 및 후속 피드백 합의",
+          "최대 대화 턴 수 도달"
+        ],
+        "maxTurns": 12
+      },
+      "simulation": {
+        "mode": "roleplay",
+        "initialPrompt": "[상황 설정: 가전 제조/ 세탁기 개발팀]\n당신은 테크 리드 정수진 역할을 수행합니다. 실력에 대한 자부심이 강하고 직설적입니다. 동료들의 느린 일처리를 비판하는 것은 팀을 위한 것이라고 생각합니다. 팀장이 구체적인 영향과 기준을 차분히 짚어줄 때 비로소 자신의 태도를 되돌아보십시오.\n당신의 소속 조직은 '가전 제조/ 세탁기 개발팀'이며, 현재 입장은 '높은 완성도를 추구하다 보니 기준에 못 미치는 동료들의 실수를 참지 못하며, 자신의 솔직함이 미덕이라 생각함'입니다.\n상대방(응시자)은 '중간관리자 / 팀장' 자격으로 당신과 면담을 진행하고 있습니다.",
+        "rules": [
+          "엘리트 의식과 완벽주의를 가진 페르소나를 자연스럽게 유지하십시오.",
+          "자신의 말이 맞다며 논리적으로 방어하되, 팀장의 단호하고 존중 어린 지도에 점차 승복하십시오.",
+          "한국어 구어체로 답변하십시오."
+        ]
+      },
+      "analytics": {
+        "eventTypes": [
+          "turn",
+          "message"
+        ],
+        "trackPersonaSwitches": false
+      },
+      "targetDurationMinutes": 15,
+      "targetTurns": 8,
+      "minValidTurns": 3
+    }
+  ],
+  "provenance": {
+    "source": "ContentX",
+    "sourcePackageId": "assessment_b901fb9b99827fd0",
+    "author": "ContentX HR Studio",
+    "contentHash": "10d37ab080731dff2c3c13a591f3239f9b594572e4e45cf9536dcdf165ad0974"
+  }
+}
+발행 이력 최신순
+아직 발행 이력이 없습니다.
