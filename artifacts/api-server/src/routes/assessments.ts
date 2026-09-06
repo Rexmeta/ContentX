@@ -339,6 +339,8 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
     situation,
     counterpartName,
     counterpartRole,
+    counterpartOrganization,
+    counterpartStance,
     difficulty,
     passingScore,
   } = parsed.data;
@@ -360,6 +362,8 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
       situation,
       counterpartName,
       counterpartRole,
+      counterpartOrganization,
+      counterpartStance,
       difficulty,
       passingScore,
       packageId,

@@ -2599,6 +2599,8 @@ components:
         situation: { type: string, minLength: 1 }
         counterpartName: { type: string, minLength: 1 }
         counterpartRole: { type: string, minLength: 1 }
+        counterpartOrganization: { type: string, minLength: 1 }
+        counterpartStance: { type: string, minLength: 1 }
         difficulty: { type: string, enum: [beginner, intermediate, advanced] }
         passingScore: { type: number, minimum: 0, maximum: 100 }
     AssessmentTemplateInstantiationResult:

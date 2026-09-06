@@ -237,6 +237,8 @@ describe("assessment read routes", () => {
         templateId: "tmpl-ldr-01",
         companyContext: "반도체 생산기술팀",
         participantRole: "신임 파트장",
+        counterpartOrganization: "품질보증팀",
+        counterpartStance: "재발 방지 대책이 먼저 확정되어야 한다",
       })
       .expect(201);
 
@@ -251,5 +253,16 @@ describe("assessment read routes", () => {
     expect(insertScenario).toHaveBeenCalledTimes(1);
     expect(createAssessmentPackage).toHaveBeenCalledTimes(1);
     expect(createAssessmentPackageVersion).toHaveBeenCalledTimes(1);
+    expect(insertScenario).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scenario: expect.objectContaining({
+          characters: [
+            expect.objectContaining({
+              motivation: expect.stringContaining("품질보증팀"),
+            }),
+          ],
+        }),
+      }),
+    );
   });
 });

@@ -130,8 +130,14 @@ describe("Scenario wizard", () => {
     await screen.findByText("성과 부진 팀원 면담");
 
     fireEvent.click(screen.getByRole("button", { name: /다음: 회사 상황 입력/ }));
-    fireEvent.change(screen.getByLabelText(/회사 \/ 조직명/), {
+    fireEvent.change(screen.getByLabelText(/^회사 \/ 조직명/), {
       target: { value: "반도체 생산기술팀" },
+    });
+    fireEvent.change(screen.getByLabelText("상대역 회사 / 조직명"), {
+      target: { value: "품질보증팀" },
+    });
+    fireEvent.change(screen.getByLabelText("상대역의 입장"), {
+      target: { value: "재발 방지 대책이 먼저 확정되어야 한다" },
     });
     fireEvent.click(screen.getByRole("button", { name: /다음: 시나리오 확인/ }));
 
@@ -139,6 +145,12 @@ describe("Scenario wizard", () => {
     fireEvent.click(createButton);
     fireEvent.click(createButton);
     expect(mutateAsync).toHaveBeenCalledTimes(1);
+    expect(mutateAsync).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        counterpartOrganization: "품질보증팀",
+        counterpartStance: "재발 방지 대책이 먼저 확정되어야 한다",
+      }),
+    });
 
     await act(async () => {
       resolveCreation({

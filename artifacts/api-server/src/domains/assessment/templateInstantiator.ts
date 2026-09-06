@@ -10,6 +10,8 @@ export interface InstantiateTemplateOptions {
   situation?: string;
   counterpartName?: string;
   counterpartRole?: string;
+  counterpartOrganization?: string;
+  counterpartStance?: string;
   difficulty?: "beginner" | "intermediate" | "advanced";
   packageId?: string;
   packageKey?: string;
@@ -72,12 +74,14 @@ export function instantiateAssessmentTemplate(options: InstantiateTemplateOption
   const baseCharacter = template.dramatic.characters[0]!;
   const counterpartName = options.counterpartName?.trim() || baseCharacter.name;
   const counterpartRole = options.counterpartRole?.trim() || baseCharacter.role;
+  const counterpartOrganization = options.counterpartOrganization?.trim() || companyContext;
+  const counterpartStance = options.counterpartStance?.trim() || baseCharacter.motivation;
 
   const characters = [
     {
       name: counterpartName,
       role: counterpartRole,
-      motivation: `${baseCharacter.motivation} (소속: ${companyContext})`,
+      motivation: `${counterpartStance} (소속: ${counterpartOrganization})`,
     },
   ];
 
@@ -146,7 +150,12 @@ export function instantiateAssessmentTemplate(options: InstantiateTemplateOption
     },
     simulation: {
       mode: template.simulation.mode,
-      initialPrompt: `[상황 설정: ${companyContext}]\n${template.simulation.defaultInitialPrompt}\n상대방(응시자)은 '${participantRole}' 자격으로 당신과 면담을 진행하고 있습니다.`,
+      initialPrompt: [
+        `[상황 설정: ${companyContext}]`,
+        template.simulation.defaultInitialPrompt,
+        `당신의 소속 조직은 '${counterpartOrganization}'이며, 현재 입장은 '${counterpartStance}'입니다.`,
+        `상대방(응시자)은 '${participantRole}' 자격으로 당신과 면담을 진행하고 있습니다.`,
+      ].join("\n"),
       rules: [...template.simulation.rules],
     },
     analytics: {

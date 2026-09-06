@@ -43,7 +43,8 @@ function isScenarioTemplate(value: unknown): value is ScenarioTemplate {
       (character) =>
         isRecord(character) &&
         typeof character.name === "string" &&
-        typeof character.role === "string",
+        typeof character.role === "string" &&
+        typeof character.motivation === "string",
     ) &&
     Array.isArray(value.competencies) &&
     value.competencies.every(
@@ -113,6 +114,8 @@ export default function ScenarioWizard() {
   const [situation, setSituation] = useState("");
   const [counterpartName, setCounterpartName] = useState("");
   const [counterpartRole, setCounterpartRole] = useState("");
+  const [counterpartOrganization, setCounterpartOrganization] = useState("");
+  const [counterpartStance, setCounterpartStance] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const templatePayload = templateQuery.data as unknown;
@@ -138,6 +141,7 @@ export default function ScenarioWizard() {
     if (initial.dramatic.characters[0]) {
       setCounterpartName(initial.dramatic.characters[0].name);
       setCounterpartRole(initial.dramatic.characters[0].role);
+      setCounterpartStance(initial.dramatic.characters[0].motivation);
     }
   }, [templates]);
 
@@ -151,6 +155,7 @@ export default function ScenarioWizard() {
     if (template.dramatic.characters[0]) {
       setCounterpartName(template.dramatic.characters[0].name);
       setCounterpartRole(template.dramatic.characters[0].role);
+      setCounterpartStance(template.dramatic.characters[0].motivation);
     }
   };
 
@@ -176,6 +181,8 @@ export default function ScenarioWizard() {
           situation: situation.trim() || undefined,
           counterpartName: counterpartName.trim() || undefined,
           counterpartRole: counterpartRole.trim() || undefined,
+          counterpartOrganization: counterpartOrganization.trim() || undefined,
+          counterpartStance: counterpartStance.trim() || undefined,
         },
       });
       if (!isInstantiationResult(result)) {
@@ -449,6 +456,35 @@ export default function ScenarioWizard() {
                       onChange={(e) => setCounterpartRole(e.target.value)}
                     />
                   </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="input-counterpart-organization" className="text-xs text-muted-foreground">
+                      상대역 회사 / 조직명
+                    </Label>
+                    <Input
+                      id="input-counterpart-organization"
+                      placeholder={companyContext || "응시자와 동일 조직"}
+                      value={counterpartOrganization}
+                      onChange={(e) => setCounterpartOrganization(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      비워두면 응시자의 회사 / 조직명과 동일하게 적용됩니다.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label htmlFor="input-counterpart-stance" className="text-xs text-muted-foreground">
+                      상대역의 입장
+                    </Label>
+                    <Textarea
+                      id="input-counterpart-stance"
+                      rows={3}
+                      placeholder="예: 일정 준수보다 품질 검증과 재발 방지 대책이 먼저 확정되어야 한다고 생각합니다."
+                      value={counterpartStance}
+                      onChange={(e) => setCounterpartStance(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      AI 상대역이 대화에서 유지할 이해관계와 주장입니다.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -518,9 +554,20 @@ export default function ScenarioWizard() {
                       </p>
                     </div>
                     <div>
+                      <span className="text-xs text-muted-foreground">상대역 소속</span>
+                      <p className="font-medium">{counterpartOrganization || companyContext}</p>
+                    </div>
+                    <div>
                       <span className="text-xs text-muted-foreground">예상 소요 시간</span>
                       <p className="font-medium">{selectedTemplate.estimatedTime}분 (최대 12턴)</p>
                     </div>
+                  </div>
+
+                  <div className="pt-2 border-t">
+                    <span className="text-xs text-muted-foreground">상대역의 입장</span>
+                    <p className="text-sm mt-1 text-muted-foreground/90 whitespace-pre-line leading-relaxed">
+                      {counterpartStance}
+                    </p>
                   </div>
 
                   <div className="pt-2 border-t">

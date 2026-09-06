@@ -54,18 +54,24 @@ describe("templateInstantiator", () => {
     }
   );
 
-  it("supports character name and role overrides", () => {
+  it("supports counterpart identity, organization, and stance overrides", () => {
     const instantiated = instantiateAssessmentTemplate({
       templateId: "tmpl-ldr-01",
       companyContext: "AI 연구소",
       participantRole: "랩장",
       counterpartName: "홍길동",
       counterpartRole: "수석 연구원",
+      counterpartOrganization: "플랫폼개발실",
+      counterpartStance: "일정 지연은 요구사항 변경 때문이며 추가 인력 없이는 납기를 맞출 수 없다고 본다",
     });
 
     const scenario = instantiated.compilationInput.scenarios[0]!;
     expect(scenario.dramaticScenario.characters[0]!.name).toBe("홍길동");
     expect(scenario.dramaticScenario.characters[0]!.role).toBe("수석 연구원");
+    expect(scenario.dramaticScenario.characters[0]!.motivation).toContain("플랫폼개발실");
+    expect(scenario.dramaticScenario.characters[0]!.motivation).toContain("추가 인력 없이는 납기를 맞출 수 없다");
+    expect(scenario.configuration.simulation.initialPrompt).toContain("플랫폼개발실");
+    expect(scenario.configuration.simulation.initialPrompt).toContain("현재 입장은");
 
     const compileResult = compileAssessmentScenarioPackage(instantiated.compilationInput);
     expect(compileResult.diagnostics).toEqual([]);

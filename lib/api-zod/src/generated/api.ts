@@ -4634,6 +4634,8 @@ export const GetAssessmentTemplateResponse = zod.object({
 
 
 
+
+
 export const createAssessmentFromTemplateBodyPassingScoreMin = 0;
 export const createAssessmentFromTemplateBodyPassingScoreMax = 100;
 
@@ -4646,6 +4648,8 @@ export const CreateAssessmentFromTemplateBody = zod.object({
   "situation": zod.string().min(1).optional(),
   "counterpartName": zod.string().min(1).optional(),
   "counterpartRole": zod.string().min(1).optional(),
+  "counterpartOrganization": zod.string().min(1).optional(),
+  "counterpartStance": zod.string().min(1).optional(),
   "difficulty": zod.enum(['beginner', 'intermediate', 'advanced']).optional(),
   "passingScore": zod.number().min(createAssessmentFromTemplateBodyPassingScoreMin).max(createAssessmentFromTemplateBodyPassingScoreMax).optional()
 })

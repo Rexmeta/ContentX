@@ -788,6 +788,10 @@ export interface AssessmentTemplateInstantiationInput {
   counterpartName?: string;
   /** @minLength 1 */
   counterpartRole?: string;
+  /** @minLength 1 */
+  counterpartOrganization?: string;
+  /** @minLength 1 */
+  counterpartStance?: string;
   difficulty?: AssessmentTemplateInstantiationInputDifficulty;
   /**
      * @minimum 0
