@@ -10,7 +10,8 @@ function dependencies(): AssessmentPublishingDependencies {
   return {
     loadVersion: vi.fn().mockResolvedValue({ ...input, payload: { packageVersion: 1 }, hash: "hash", status: "draft" }),
     findSuccessfulPublication: vi.fn().mockResolvedValue(undefined),
-    beginPublication: vi.fn().mockResolvedValue("acquired"),
+    beginPublication: vi.fn().mockImplementation((_input, idempotencyKey) =>
+      Promise.resolve({ disposition: "acquired", idempotencyKey })),
     recordAttempt: vi.fn().mockResolvedValue(undefined),
     markPublished: vi.fn().mockResolvedValue(undefined),
     validateLocal: vi.fn().mockResolvedValue([]),
@@ -118,7 +119,7 @@ describe("assessment publishing service", () => {
   it("does not call RoleplayX when the same target is already in progress", async () => {
     const deps = dependencies();
     (deps.beginPublication as ReturnType<typeof vi.fn>).mockResolvedValue(
-      "in_progress",
+      { disposition: "in_progress", idempotencyKey: "existing-key" },
     );
 
     await expect(
@@ -126,6 +127,29 @@ describe("assessment publishing service", () => {
     ).resolves.toMatchObject({ status: "failed", errorCategory: "conflict" });
     expect(deps.roleplayX.validate).not.toHaveBeenCalled();
     expect(deps.roleplayX.import).not.toHaveBeenCalled();
+  });
+
+  it("reuses the persisted remote idempotency key after acquiring an expired attempt", async () => {
+    const deps = dependencies();
+    (deps.beginPublication as ReturnType<typeof vi.fn>).mockResolvedValue({
+      disposition: "acquired",
+      idempotencyKey: "persisted-takeover-key",
+    });
+
+    await expect(
+      createAssessmentPublishingService(deps).publish(input),
+    ).resolves.toMatchObject({
+      status: "published",
+      idempotencyKey: "persisted-takeover-key",
+    });
+    expect(deps.roleplayX.validate).toHaveBeenCalledWith(
+      expect.anything(),
+      "persisted-takeover-key",
+    );
+    expect(deps.roleplayX.import).toHaveBeenCalledWith(
+      expect.anything(),
+      "persisted-takeover-key",
+    );
   });
 
   it("records remote categories and leaves package unpublished on an import error", async () => {

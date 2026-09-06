@@ -51,6 +51,8 @@ export type CreatePublicationAttemptInput = {
   targetOrganizationId: string;
   targetCategoryId: string;
   idempotencyKey: string;
+  leaseOwnerToken: string;
+  leaseDurationMs: number;
 };
 
 export type PublicationTransition = {
@@ -60,6 +62,15 @@ export type PublicationTransition = {
   requestId?: string | null;
   publishedBy?: string | null;
 };
+
+export const DEFAULT_PUBLICATION_LEASE_MS = 5 * 60 * 1000;
+
+function leaseExpiry(durationMs: number) {
+  if (!Number.isFinite(durationMs) || durationMs <= 0) {
+    throw new Error("Publication lease duration must be positive");
+  }
+  return sql`now() + (${Math.floor(durationMs)} * interval '1 millisecond')`;
+}
 
 const legalPublicationTransitions: Readonly<
   Record<AssessmentPublicationStatus, readonly AssessmentPublicationStatus[]>
@@ -316,6 +327,26 @@ export async function createPublicationAttempt(
       .orderBy(desc(assessmentPublicationsTable.attempt))
       .limit(1);
     if (inProgress) {
+      const [takenOver] = await tx
+        .update(assessmentPublicationsTable)
+        .set({
+          status: "pending",
+          leaseOwnerToken: input.leaseOwnerToken,
+          leaseExpiresAt: leaseExpiry(input.leaseDurationMs),
+          errorCode: null,
+          errorMessage: null,
+          completedAt: null,
+        })
+        .where(
+          and(
+            eq(assessmentPublicationsTable.id, inProgress.id),
+            sql`(${assessmentPublicationsTable.leaseExpiresAt} is null or ${assessmentPublicationsTable.leaseExpiresAt} <= now())`,
+          ),
+        )
+        .returning();
+      if (takenOver) {
+        return { publication: takenOver, disposition: "acquired" };
+      }
       return { publication: inProgress, disposition: "in_progress" };
     }
 
@@ -327,7 +358,19 @@ export async function createPublicationAttempt(
       .limit(1);
     const [publication] = await tx
       .insert(assessmentPublicationsTable)
-      .values({ ...input, attempt: (latest?.attempt ?? 0) + 1 })
+      .values({
+        id: input.id,
+        packageId: input.packageId,
+        packageVersion: input.packageVersion,
+        target: input.target,
+        targetUrl: input.targetUrl,
+        targetOrganizationId: input.targetOrganizationId,
+        targetCategoryId: input.targetCategoryId,
+        idempotencyKey: input.idempotencyKey,
+        leaseOwnerToken: input.leaseOwnerToken,
+        leaseExpiresAt: leaseExpiry(input.leaseDurationMs),
+        attempt: (latest?.attempt ?? 0) + 1,
+      })
       .returning();
     if (!publication) throw new Error("Failed to create publication attempt");
     return { publication, disposition: "acquired" };
@@ -341,6 +384,8 @@ export async function createPublicationAttempt(
  */
 export async function transitionPublication(
   id: string,
+  leaseOwnerToken: string,
+  leaseDurationMs: number,
   from: AssessmentPublicationStatus,
   to: AssessmentPublicationStatus,
   detail: PublicationTransition = {},
@@ -357,11 +402,14 @@ export async function transitionPublication(
       ...detail,
       ...(completedAt ? { completedAt } : {}),
       ...(publishedAt ? { publishedAt } : {}),
+        leaseExpiresAt: leaseExpiry(leaseDurationMs),
     })
     .where(
       and(
         eq(assessmentPublicationsTable.id, id),
         eq(assessmentPublicationsTable.status, from),
+        eq(assessmentPublicationsTable.leaseOwnerToken, leaseOwnerToken),
+        sql`${assessmentPublicationsTable.leaseExpiresAt} > now()`,
       ),
     )
     .returning();
@@ -376,6 +424,7 @@ export async function transitionPublication(
 export async function finalizeSuccessfulPublication(
   publicationId: string,
   packageId: string,
+  leaseOwnerToken: string,
   detail: PublicationTransition = {},
 ): Promise<AssessmentPublicationRow | undefined> {
   return db.transaction(async (tx) => {
@@ -392,33 +441,43 @@ export async function finalizeSuccessfulPublication(
           eq(assessmentPublicationsTable.id, publicationId),
           eq(assessmentPublicationsTable.packageId, packageId),
           eq(assessmentPublicationsTable.status, "importing"),
+          eq(assessmentPublicationsTable.leaseOwnerToken, leaseOwnerToken),
+          sql`${assessmentPublicationsTable.leaseExpiresAt} > now()`,
         ),
       )
       .returning();
     if (!publication) return undefined;
 
-    const [packageRow] = await tx
+    let [packageRow] = await tx
       .select({ status: assessmentPackagesTable.status })
       .from(assessmentPackagesTable)
       .where(eq(assessmentPackagesTable.id, packageId))
       .for("update");
-    if (packageRow?.status === "approved") {
-      const [publishedPackage] = await tx
+    if (!packageRow) {
+      throw new Error(`Assessment package "${packageId}" does not exist`);
+    }
+    for (const [from, to] of [
+      ["draft", "validated"],
+      ["validated", "approved"],
+      ["approved", "published"],
+    ] as const) {
+      if (packageRow.status !== from) continue;
+      const [advanced] = await tx
         .update(assessmentPackagesTable)
-        .set({ status: "published" })
+        .set({ status: to })
         .where(
           and(
             eq(assessmentPackagesTable.id, packageId),
-            eq(assessmentPackagesTable.status, "approved"),
+            eq(assessmentPackagesTable.status, from),
           ),
         )
-        .returning({ id: assessmentPackagesTable.id });
-      if (!publishedPackage) {
+        .returning({ status: assessmentPackagesTable.status });
+      if (!advanced) {
         throw new Error(
           `Assessment package "${packageId}" changed state during publication`,
         );
       }
-      return publication;
+      packageRow = advanced;
     }
     if (packageRow?.status !== "published") {
       throw new Error(

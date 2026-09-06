@@ -56,7 +56,10 @@ export interface AssessmentPublishingDependencies {
       category: string;
     },
     idempotencyKey: string,
-  ): Promise<"acquired" | "succeeded" | "in_progress">;
+  ): Promise<{
+    disposition: "acquired" | "succeeded" | "in_progress";
+    idempotencyKey: string;
+  }>;
   recordAttempt(attempt: PublicationAttempt): Promise<void>;
   markPublished(input: {
     packageId: string;
@@ -113,7 +116,7 @@ export function createAssessmentPublishingService(deps: AssessmentPublishingDepe
       organizationId: string;
       category: string;
     }): Promise<PublishAssessmentResult> {
-      const idempotencyKey = roleplayXIdempotencyKey(input);
+      let idempotencyKey = roleplayXIdempotencyKey(input);
       const previous = await deps.findSuccessfulPublication(input);
       if (previous) return { status: "published", reused: true, idempotencyKey };
 
@@ -135,7 +138,9 @@ export function createAssessmentPublishingService(deps: AssessmentPublishingDepe
         return { status: "failed", reused: false, idempotencyKey, diagnostics: local, errorCategory: "validation" };
       }
 
-      const disposition = await deps.beginPublication(input, idempotencyKey);
+      const acquisition = await deps.beginPublication(input, idempotencyKey);
+      const disposition = acquisition.disposition;
+      idempotencyKey = acquisition.idempotencyKey;
       if (disposition === "succeeded") {
         return { status: "published", reused: true, idempotencyKey };
       }

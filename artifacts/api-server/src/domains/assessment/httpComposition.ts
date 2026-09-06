@@ -24,10 +24,17 @@ const asDiagnostics = (payload: unknown): AssessmentDiagnostic[] =>
  */
 export function createHttpAssessmentPublishingService() {
   let activePublicationId: string | undefined;
+  let activeLeaseOwnerToken: string | undefined;
+  const leaseDurationMs = repository.DEFAULT_PUBLICATION_LEASE_MS;
+  const requireTransition = <T>(row: T | undefined): T => {
+    if (!row) throw new Error("Publication lease ownership was lost");
+    return row;
+  };
   let successfulImportResponse: Record<string, unknown> | undefined;
 
   const fail = async (attempt: PublicationAttempt, current: "pending" | "validating" | "validated" | "importing") => {
     if (!activePublicationId) {
+      const leaseOwnerToken = crypto.randomUUID();
       const created = await repository.createPublicationAttempt({
         id: `publication_${crypto.randomUUID()}`,
         packageId: attempt.packageId,
@@ -36,10 +43,15 @@ export function createHttpAssessmentPublishingService() {
         targetOrganizationId: attempt.organizationId,
         targetCategoryId: attempt.category,
         idempotencyKey: attempt.idempotencyKey,
+        leaseOwnerToken,
+        leaseDurationMs,
       });
       activePublicationId = created.publication.id;
+      activeLeaseOwnerToken =
+        created.disposition === "acquired" ? leaseOwnerToken : undefined;
     }
-    await repository.transitionPublication(activePublicationId, current, "failed", {
+    if (!activeLeaseOwnerToken) return;
+    await repository.transitionPublication(activePublicationId, activeLeaseOwnerToken, leaseDurationMs, current, "failed", {
       response: attempt.remoteResponse,
       errorCode: attempt.errorCategory ?? attempt.diagnostics?.[0]?.code ?? null,
       errorMessage: attempt.diagnostics?.[0]?.message ?? null,
@@ -68,6 +80,7 @@ export function createHttpAssessmentPublishingService() {
       } : undefined;
     },
     async beginPublication(input: PublishTarget, idempotencyKey: string) {
+      const leaseOwnerToken = crypto.randomUUID();
       const created = await repository.createPublicationAttempt({
         id: `publication_${crypto.randomUUID()}`,
         packageId: input.packageId,
@@ -76,22 +89,31 @@ export function createHttpAssessmentPublishingService() {
         targetOrganizationId: input.organizationId,
         targetCategoryId: input.category,
         idempotencyKey,
+        leaseOwnerToken,
+        leaseDurationMs,
       });
       activePublicationId = created.publication.id;
-      return created.disposition;
+      activeLeaseOwnerToken = created.disposition === "acquired" ? leaseOwnerToken : undefined;
+      return {
+        disposition: created.disposition,
+        idempotencyKey: created.publication.idempotencyKey,
+      };
     },
     async recordAttempt(attempt) {
       if (attempt.outcome === "started" && attempt.stage === "remote_validation") {
         if (!activePublicationId) throw new Error("Publication attempt is missing");
-        await repository.transitionPublication(activePublicationId, "pending", "validating");
+        if (!activeLeaseOwnerToken) throw new Error("Publication lease is missing");
+        requireTransition(await repository.transitionPublication(activePublicationId, activeLeaseOwnerToken, leaseDurationMs, "pending", "validating"));
         return;
       }
       if (attempt.outcome === "succeeded" && attempt.stage === "remote_validation" && activePublicationId) {
-        await repository.transitionPublication(activePublicationId, "validating", "validated", { response: attempt.remoteResponse });
+        if (!activeLeaseOwnerToken) throw new Error("Publication lease is missing");
+        requireTransition(await repository.transitionPublication(activePublicationId, activeLeaseOwnerToken, leaseDurationMs, "validating", "validated", { response: attempt.remoteResponse }));
         return;
       }
       if (attempt.outcome === "started" && attempt.stage === "import" && activePublicationId) {
-        await repository.transitionPublication(activePublicationId, "validated", "importing");
+        if (!activeLeaseOwnerToken) throw new Error("Publication lease is missing");
+        requireTransition(await repository.transitionPublication(activePublicationId, activeLeaseOwnerToken, leaseDurationMs, "validated", "importing"));
         return;
       }
       if (attempt.outcome === "succeeded" && attempt.stage === "import" && activePublicationId) {
@@ -104,13 +126,12 @@ export function createHttpAssessmentPublishingService() {
     async markPublished(input) {
       const item = await repository.getAssessmentPackage(input.packageId);
       if (!item) return;
-      if (item.status === "draft") await repository.transitionAssessmentPackageStatus(item.id, "draft", "validated");
-      const afterValidation = await repository.getAssessmentPackage(item.id);
-      if (afterValidation?.status === "validated") await repository.transitionAssessmentPackageStatus(item.id, "validated", "approved");
       if (!activePublicationId) throw new Error("Publication attempt is missing");
+      if (!activeLeaseOwnerToken) throw new Error("Publication lease is missing");
       const finalized = await repository.finalizeSuccessfulPublication(
         activePublicationId,
         item.id,
+        activeLeaseOwnerToken,
         { response: successfulImportResponse },
       );
       if (!finalized) throw new Error("Publication attempt could not be finalized");

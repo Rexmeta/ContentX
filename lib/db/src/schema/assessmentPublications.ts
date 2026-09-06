@@ -33,6 +33,9 @@ export const assessmentPublicationsTable = pgTable(
     targetCategoryId: text("target_category_id").notNull(),
     /** Deterministic key supplied to both remote validate and import calls. */
     idempotencyKey: text("idempotency_key").notNull(),
+    /** Ephemeral worker ownership; remote idempotency identity remains separate. */
+    leaseOwnerToken: text("lease_owner_token"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
     requestId: text("request_id"),
     attempt: integer("attempt").notNull(),
     status: text("status").notNull().default("pending"),
