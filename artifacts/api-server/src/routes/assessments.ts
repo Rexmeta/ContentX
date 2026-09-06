@@ -319,9 +319,10 @@ async function listTemplates(_req: Request, res: Response): Promise<void> {
 }
 
 async function getTemplate(req: Request, res: Response): Promise<void> {
-  const template = getScenarioTemplate(req.params.id);
+  const id = typeof req.params.id === "string" ? req.params.id : "";
+  const template = getScenarioTemplate(id);
   if (!template) {
-    res.status(404).json({ error: `Assessment template "${req.params.id}" not found.` });
+    res.status(404).json({ error: `Assessment template "${id}" not found.` });
     return;
   }
   res.json(template);
