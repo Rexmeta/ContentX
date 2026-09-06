@@ -56,6 +56,20 @@ import LineageTree from "@/components/lineage-tree";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 
+type SynthesisElement = "characters" | "conflict" | "setting" | "twist" | "structure" | "relationship" | "goal" | "event" | "ending";
+
+const SYNTHESIS_ELEMENT_OPTIONS: { value: SynthesisElement; label: string; description: string }[] = [
+  { value: "characters", label: "인물", description: "등장인물과 특징" },
+  { value: "conflict", label: "갈등", description: "핵심 대립과 긴장" },
+  { value: "setting", label: "배경", description: "시간·장소와 세계관" },
+  { value: "twist", label: "반전", description: "예상을 뒤집는 전개" },
+  { value: "structure", label: "구조", description: "이야기의 구성과 흐름" },
+  { value: "relationship", label: "관계", description: "인물 사이의 관계 역학" },
+  { value: "goal", label: "목표", description: "인물의 목표와 동기" },
+  { value: "event", label: "사건", description: "핵심 사건과 전환점" },
+  { value: "ending", label: "결말", description: "이야기의 결말과 해소 방식" },
+];
+
 export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading, refetch: refetchSummary } = useGetDashboardSummary();
   const { data: contents, isLoading: isContentsLoading, refetch: refetchContents } = useListContent();
@@ -92,7 +106,7 @@ export default function Dashboard() {
   const [isSynthesizeMode, setIsSynthesizeMode] = useState(false);
   const [selectedForSynthesis, setSelectedForSynthesis] = useState<string[]>([]);
   const [isSynthesisPanelOpen, setIsSynthesisPanelOpen] = useState(false);
-  const [synthesisElements, setSynthesisElements] = useState<Record<string, ("characters"|"conflict"|"setting"|"twist"|"structure"|"relationship"|"goal"|"event"|"ending")[]>>({});
+  const [synthesisElements, setSynthesisElements] = useState<Record<string, SynthesisElement[]>>({});
   const [synthesisInstruction, setSynthesisInstruction] = useState("");
 
   // Bridge mode state: pick source (A) then target (B), analyze the gap,
@@ -105,7 +119,6 @@ export default function Dashboard() {
   const [bridgeInstruction, setBridgeInstruction] = useState("");
 
   // Re-roll & candidate comparison state
-  type SynthesisElement = "characters"|"conflict"|"setting"|"twist"|"structure"|"relationship"|"goal"|"event"|"ending";
   const [synthesisRecipe, setSynthesisRecipe] = useState<{ sources: { scenarioId: string, elements: SynthesisElement[] }[], instruction?: string } | null>(null);
   const [bridgeRecipe, setBridgeRecipe] = useState<{ sourceScenarioId: string, targetScenarioId: string, requirements: string[], instruction?: string } | null>(null);
   const [candidates, setCandidates] = useState<{ scenario: any, lineage: Lineage }[]>([]);
@@ -1594,20 +1607,23 @@ export default function Dashboard() {
                           {selectedCount} SELECTED
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {(["characters", "conflict", "setting", "twist", "structure", "relationship", "goal", "event", "ending"] as const).map(el => {
-                          const isSelected = (synthesisElements[id] || []).includes(el);
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {SYNTHESIS_ELEMENT_OPTIONS.map(option => {
+                          const isSelected = (synthesisElements[id] || []).includes(option.value);
                           return (
                             <button
-                              key={el}
-                              onClick={() => toggleElement(el)}
-                              className={`rounded-full px-3 py-1.5 text-xs font-mono uppercase tracking-wider border transition-colors ${
+                              key={option.value}
+                              type="button"
+                              aria-pressed={isSelected}
+                              onClick={() => toggleElement(option.value)}
+                              className={`rounded-lg px-3 py-2 text-left border transition-colors ${
                                 isSelected 
                                   ? 'bg-primary/20 border-primary text-primary' 
                                   : 'bg-background border-border text-muted-foreground hover:border-primary/50'
                               }`}
                             >
-                              {el}
+                              <span className="block text-xs font-bold">{option.label}</span>
+                              <span className="mt-0.5 block text-[11px] leading-snug opacity-80">{option.description}</span>
                             </button>
                           );
                         })}
