@@ -6,6 +6,8 @@ import { defineConfig } from 'vite';
 const rawPort = process.env.PORT || '5173';
 const port = Number(rawPort);
 const basePath = process.env.BASE_PATH || '/';
+const apiProxyTarget =
+  process.env.API_PROXY_TARGET || 'http://localhost:80';
 
 export default defineConfig({
   base: basePath,
@@ -50,7 +52,10 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        // Direct Vite previews do not pass through artifact routing first.
+        // Forward them to the shared router so the API workflow's actual PORT
+        // remains an artifact concern rather than a frontend hardcode.
+        target: apiProxyTarget,
         changeOrigin: true,
       },
     },

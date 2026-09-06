@@ -2,7 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureSeedDimensions } from "./domains/population/dimensionService";
 
-const rawPort = process.env["PORT"] || "3000";
+const rawPort = process.env["PORT"] || "8080";
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
