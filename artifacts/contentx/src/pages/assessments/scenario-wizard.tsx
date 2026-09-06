@@ -79,23 +79,46 @@ function isInstantiationResult(value: unknown): value is AssessmentTemplateInsta
   );
 }
 
-function getApiErrorMessage(error: unknown, fallback: string): string {
+type GenerationError = {
+  kind: "quality" | "provider" | "generic";
+  message: string;
+  diagnostics: string[];
+};
+
+function getGenerationError(error: unknown, fallback: string): GenerationError {
+  const diagnostics = isRecord(error) && isRecord(error.data) && Array.isArray(error.data.diagnostics)
+    ? error.data.diagnostics.filter((item): item is string => typeof item === "string")
+    : [];
   if (isRecord(error)) {
+    if (error.status === 422) {
+      return {
+        kind: "quality",
+        message: "AI가 만든 초안이 평가 품질 기준을 충족하지 못했습니다. 입력은 그대로 보존되어 있으니 다시 생성하거나 상황을 더 구체적으로 보완해 주세요.",
+        diagnostics,
+      };
+    }
+    if (error.status === 502) {
+      return {
+        kind: "provider",
+        message: "AI 생성 제공자가 일시적으로 응답하지 않았습니다. 저장된 내용은 없으며, 입력은 그대로 보존되어 있습니다. 잠시 후 다시 시도해 주세요.",
+        diagnostics,
+      };
+    }
     if (error.status === 404) {
-      return "시나리오 템플릿 서비스를 찾을 수 없습니다. 잠시 후 다시 시도해 주세요.";
+      return { kind: "generic", message: "시나리오 템플릿 서비스를 찾을 수 없습니다. 잠시 후 다시 시도해 주세요.", diagnostics };
     }
     if (typeof error.status === "number" && error.status >= 500) {
-      return "시나리오 서비스가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.";
+      return { kind: "provider", message: "시나리오 서비스가 일시적으로 응답하지 않습니다. 입력은 그대로 보존되어 있습니다. 잠시 후 다시 시도해 주세요.", diagnostics };
     }
     if (isRecord(error.data) && typeof error.data.error === "string") {
       const message = error.data.error.trim();
-      if (message) return message;
+      if (message) return { kind: "generic", message, diagnostics };
     }
     if (typeof error.message === "string" && error.message.trim()) {
-      return error.message;
+      return { kind: "generic", message: error.message, diagnostics };
     }
   }
-  return fallback;
+  return { kind: "generic", message: fallback, diagnostics };
 }
 
 export default function ScenarioWizard() {
@@ -117,12 +140,16 @@ export default function ScenarioWizard() {
   const [counterpartOrganization, setCounterpartOrganization] = useState("");
   const [counterpartStance, setCounterpartStance] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generationState, setGenerationState] = useState<"idle" | "generating" | "failed">("idle");
+  const [generationError, setGenerationError] = useState<GenerationError | null>(null);
+  const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
+  const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0);
 
   const templatePayload = templateQuery.data as unknown;
   const templates = isScenarioTemplateList(templatePayload) ? templatePayload : [];
   const loadingTemplates = templateQuery.isLoading || templateQuery.isFetching;
   const templateLoadError = templateQuery.isError
-    ? getApiErrorMessage(templateQuery.error, "템플릿 목록을 불러오지 못했습니다.")
+    ? getGenerationError(templateQuery.error, "템플릿 목록을 불러오지 못했습니다.").message
     : templateQuery.isSuccess && !isScenarioTemplateList(templatePayload)
       ? "템플릿 응답 형식이 올바르지 않습니다. 다시 시도해 주세요."
       : templateQuery.isSuccess && templates.length === 0
@@ -144,6 +171,14 @@ export default function ScenarioWizard() {
       setCounterpartStance(initial.dramatic.characters[0].motivation);
     }
   }, [templates]);
+
+  useEffect(() => {
+    if (generationState !== "generating" || !generationStartedAt) return;
+    const updateElapsed = () => setGenerationElapsedSeconds(Math.floor((Date.now() - generationStartedAt) / 1000));
+    updateElapsed();
+    const timer = window.setInterval(updateElapsed, 1_000);
+    return () => window.clearInterval(timer);
+  }, [generationState, generationStartedAt]);
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0];
 
@@ -172,6 +207,10 @@ export default function ScenarioWizard() {
 
     submitLock.current = true;
     setIsSubmitting(true);
+    setGenerationState("generating");
+    setGenerationError(null);
+    setGenerationStartedAt(Date.now());
+    setGenerationElapsedSeconds(0);
     try {
       const result = await createFromTemplate.mutateAsync({
         data: {
@@ -199,10 +238,13 @@ export default function ScenarioWizard() {
       // Redirect to assessment details page
       setLocation(`/assessments/${result.assessmentId}?version=${result.version}`);
     } catch (error: unknown) {
+      const resolvedError = getGenerationError(error, "시나리오를 생성하는 중 오류가 발생했습니다.");
+      setGenerationState("failed");
+      setGenerationError(resolvedError);
       toast({
         variant: "destructive",
         title: "생성 실패",
-        description: getApiErrorMessage(error, "시나리오를 생성하는 중 오류가 발생했습니다."),
+        description: resolvedError.message,
       });
     } finally {
       submitLock.current = false;
@@ -224,7 +266,7 @@ export default function ScenarioWizard() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight">AI Assessment 시나리오 마법사</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                검증된 Assessment Center 템플릿에 우리 회사 맥락을 더해 RoleplayX 실전 시나리오를 완성합니다.
+                템플릿과 회사 맥락을 바탕으로 AI가 시간선, 이해관계, 인물별 대화 전략, 3막 흐름과 운영 규칙까지 깊이 설계합니다.
               </p>
             </div>
             <Badge variant="outline" className="px-3 py-1 font-mono text-xs">
@@ -521,7 +563,7 @@ export default function ScenarioWizard() {
                 <Sparkles className="h-5 w-5 text-primary" /> 시나리오 확인 및 Draft 생성
               </h2>
               <p className="text-sm text-muted-foreground mt-0.5">
-                생성 버튼을 누르면 불변 Assessment Package Version 1이 생성되어 검토 및 RoleplayX로 발행할 수 있습니다.
+                생성에는 최대 1~2분이 걸릴 수 있습니다. AI가 고밀도 상황·페르소나·대화 흐름·시뮬레이션 규칙을 만들고 품질 계약을 통과한 결과만 저장합니다.
               </p>
             </div>
 
@@ -643,6 +685,50 @@ export default function ScenarioWizard() {
                     </>
                   )}
                 </Button>
+                {(generationState === "generating" || generationState === "failed") && (
+                  <div
+                    data-testid="scenario-generation-state"
+                    role={generationState === "failed" ? "alert" : "status"}
+                    className={`rounded-xl border p-4 text-sm space-y-2 ${
+                      generationState === "failed"
+                        ? "border-destructive/40 bg-destructive/5"
+                        : "border-primary/30 bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 font-semibold">
+                      {generationState === "generating"
+                        ? <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        : <ShieldAlert className="h-4 w-4 text-destructive" />}
+                      {generationState === "generating"
+                        ? `깊이 있는 AI 시나리오 생성 중 · ${generationElapsedSeconds}초`
+                        : generationError?.kind === "quality"
+                          ? "품질 검토에서 초안이 보류되었습니다 (422)"
+                          : generationError?.kind === "provider"
+                            ? "AI 제공자 연결에 실패했습니다 (502)"
+                            : "시나리오 생성에 실패했습니다"}
+                    </div>
+                    {generationState === "generating" ? (
+                      <ol className="space-y-1 text-xs text-muted-foreground">
+                        <li>1. 회사 맥락과 평가 템플릿을 결합하고 있습니다.</li>
+                        <li>2. 시간선·stakes·목표·성공/실패 기준을 설계하고 있습니다.</li>
+                        <li>3. 페르소나, 3막 대화 비트, 운영 규칙을 품질 검토 중입니다.</li>
+                      </ol>
+                    ) : (
+                      <>
+                        <p className="text-xs leading-relaxed text-muted-foreground">{generationError?.message}</p>
+                        {generationError?.diagnostics.length ? (
+                          <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                            {generationError.diagnostics.slice(0, 3).map((diagnostic, index) => <li key={index}>{diagnostic}</li>)}
+                          </ul>
+                        ) : null}
+                        <p className="text-xs text-muted-foreground">입력한 회사 상황과 상대역 설정은 유지됩니다. 수정 후 또는 그대로 재시도할 수 있습니다.</p>
+                        <Button data-testid="button-retry-scenario-generation" size="sm" variant="outline" onClick={handleCreateScenario} disabled={isSubmitting}>
+                          다시 생성
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
                 <p className="text-center text-[11px] text-muted-foreground">
                   생성 즉시 미리보기 및 RoleplayX 발행이 가능합니다.
                 </p>

@@ -168,4 +168,25 @@ describe("Scenario wizard", () => {
     });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["assessments"] });
   });
+
+  it("keeps entered values and offers a retry when deep generation fails quality validation", async () => {
+    mutateAsync.mockRejectedValue({
+      status: 422,
+      data: { error: "quality contract failed", diagnostics: ["synopsis: Too short"] },
+    });
+
+    render(<ScenarioWizard />);
+    await screen.findByText("성과 부진 팀원 면담");
+    fireEvent.click(screen.getByRole("button", { name: /다음: 회사 상황 입력/ }));
+    fireEvent.change(screen.getByLabelText(/^회사 \/ 조직명/), { target: { value: "품질혁신실" } });
+    fireEvent.click(screen.getByRole("button", { name: /다음: 시나리오 확인/ }));
+    fireEvent.click(screen.getByRole("button", { name: /시나리오 만들기/ }));
+
+    await waitFor(() => expect(screen.getByTestId("scenario-generation-state")).toHaveTextContent("품질 검토에서 초안이 보류되었습니다 (422)"));
+    expect(screen.getByTestId("scenario-generation-state")).toHaveTextContent("synopsis: Too short");
+    expect(screen.getByTestId("scenario-generation-state")).toHaveTextContent("입력한 회사 상황과 상대역 설정은 유지됩니다");
+    expect(screen.getAllByText("품질혁신실").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByTestId("button-retry-scenario-generation"));
+    expect(mutateAsync).toHaveBeenCalledTimes(2);
+  });
 });

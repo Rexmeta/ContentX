@@ -14,9 +14,22 @@ const immutablePackage = {
     title: "Refund request",
     description: "A customer requests a refund.",
     competencies: ["Empathy"],
-    personas: [{ key: "concerned-customer-1", name: "Concerned customer", isPrimary: true }],
-    simulation: { mode: "roleplay" },
-    termination: { maxTurns: 10 },
+    context: { situation: "A customer requests a refund after a service failure.", timeline: "Today, before 17:00", stakes: "A renewal contract is at risk.", playerRole: "Support lead" },
+    objectives: ["Clarify the incident and agree an owner."],
+    successCriteria: ["Confirm a written resolution and follow-up time."],
+    personas: [{ key: "concerned-customer-1", name: "Concerned customer", role: "Customer", background: "Wants a refund; will accept a verified recovery plan.", traits: ["frustrated", "precise"], isPrimary: true }],
+    flow: [{ key: "listen", title: "Listen", description: "Understand the issue.", beats: ["Acknowledge impact", "Ask for evidence", "Confirm priority"] }],
+    recommendedFlow: ["listen"],
+    personaSwitches: [],
+    personaSwitchMode: "disabled",
+    constraints: ["Do not promise an unapproved refund."],
+    difficultyProfile: { level: "intermediate", rationale: "The customer needs evidence." },
+    simulation: { mode: "roleplay", initialPrompt: "Open with the service impact.", rules: ["Remain in character.", "Ask for evidence."] },
+    termination: { maxTurns: 10, conditions: ["Plan agreed"] },
+    targetTurns: 5,
+    minValidTurns: 3,
+    targetDurationMinutes: 15,
+    analytics: { eventTypes: [], trackPersonaSwitches: false },
     evaluation: { dimensions: [{ key: "quality", label: "Quality", weight: 1, criteria: [] }] },
   }],
 };
@@ -136,5 +149,19 @@ describe("Assessment center", () => {
         scenarios: [expect.objectContaining({ scenarioId: "scenario-1", primaryPersonaKey: "concerned-customer-1" })],
       }),
     }), expect.any(Object));
+  });
+
+  it("shows the generated scenario context, persona traits, all beats, and simulation rules", () => {
+    render(<AssessmentDetail />);
+
+    expect(screen.getByTestId("tab-human-preview")).toBeVisible();
+    expect(screen.getByText("Today, before 17:00")).toBeVisible();
+    expect(screen.getByText("A renewal contract is at risk.")).toBeVisible();
+    expect(screen.getByText("Confirm a written resolution and follow-up time.")).toBeVisible();
+    expect(screen.getByTestId("persona-preview-concerned-customer-1")).toHaveTextContent("Wants a refund");
+    expect(screen.getByTestId("persona-preview-concerned-customer-1")).toHaveTextContent("frustrated");
+    expect(screen.getByTestId("flow-preview-listen")).toHaveTextContent("Ask for evidence");
+    expect(screen.getByTestId("scenario-constraints-refund")).toHaveTextContent("Do not promise an unapproved refund.");
+    expect(screen.getByTestId("simulation-rules-refund")).toHaveTextContent("Remain in character.");
   });
 });

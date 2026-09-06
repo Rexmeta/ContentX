@@ -62,6 +62,21 @@ describe("assessment package compiler", () => {
       "INVALID_EVALUATION_WEIGHT", "INVALID_FLOW", "INVALID_PRIMARY_PERSONA",
     ]));
   });
+
+  it("preserves rich generated persona material in the RoleplayX package", () => {
+    const source = input();
+    source.scenarios[0]!.configuration.personaProfiles = [{
+      name: "Customer", role: "customer", background: "배송 지연으로 생산 라인이 멈출 위험에 처한 고객 담당자",
+      traits: ["불안함", "단호함", "합리적"], initialDialogue: "오늘 안에 납품되지 않으면 계약을 재검토해야 합니다.",
+      behaviorGuidelines: ["초반에는 구체적인 ETA를 요구한다.", "검증 가능한 계획이 제시되면 협조한다.", "근거 없는 약속에는 동의하지 않는다."],
+    }];
+    const result = compileAssessmentScenarioPackage(source);
+    expect(result.package?.scenarios[0]?.personas[0]).toMatchObject({
+      traits: ["불안함", "단호함", "합리적"],
+      background: expect.stringContaining("첫 발화: 오늘 안에 납품되지 않으면"),
+    });
+    expect(result.package?.scenarios[0]?.personas[0]?.background).toContain("행동 지침:");
+  });
 });
 
 describe("assessment package hashing", () => {

@@ -113,11 +113,23 @@ export default function AssessmentDetail() {
                     </div>
                   </div>
 
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground block mb-1">상황 설명</span>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">상황 설명</span>
                     <p className="text-xs text-muted-foreground/90 whitespace-pre-line leading-relaxed bg-background p-3 rounded border">
                       {scenario.context.situation}
                     </p>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="rounded bg-background p-3 border">
+                        <span className="text-xs font-medium text-muted-foreground block mb-1">시간선</span>
+                        <p className="text-xs text-muted-foreground/90 whitespace-pre-line leading-relaxed">{scenario.context.timeline}</p>
+                      </div>
+                      <div className="rounded bg-background p-3 border">
+                        <span className="text-xs font-medium text-muted-foreground block mb-1">걸린 이해관계와 위험</span>
+                        <p className="text-xs text-muted-foreground/90 whitespace-pre-line leading-relaxed">{scenario.context.stakes}</p>
+                      </div>
+                    </div>
                   </div>
 
                   {scenario.objectives.length > 0 && (
@@ -133,42 +145,67 @@ export default function AssessmentDetail() {
                       </ul>
                     </div>
                   )}
+                  {scenario.successCriteria.length > 0 && (
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">성공 기준</span>
+                      <ul className="grid sm:grid-cols-2 gap-1.5 text-xs text-muted-foreground">
+                        {scenario.successCriteria.map((criterion, i) => (
+                          <li key={i} className="flex items-center gap-1.5 bg-background p-1.5 rounded border">
+                            <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+                            <span>{criterion}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {scenario.termination.conditions.length > 0 && (
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">종료 / 실패 기준</span>
+                      <ul className="grid sm:grid-cols-2 gap-1.5 text-xs text-muted-foreground">
+                        {scenario.termination.conditions.map((condition, i) => (
+                          <li key={i} className="flex items-center gap-1.5 bg-background p-1.5 rounded border">
+                            <span className="h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
+                            <span>{condition}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. AI Persona & Simulation Settings */}
                 {primaryPersona && (
                   <div className="rounded-lg border p-4 space-y-3 bg-muted/10">
                     <div className="border-b pb-2">
-                      <h3 className="font-bold text-sm">AI 상대역 페르소나 설정</h3>
+                      <h3 className="font-bold text-sm">AI 상대역 페르소나 및 시뮬레이션 설정</h3>
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3 text-xs">
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">캐릭터</span>
-                        <div className="font-bold text-foreground">
-                          {primaryPersona.name} ({primaryPersona.role})
+                      {scenario.personas.map((persona) => (
+                        <div key={persona.key} data-testid={`persona-preview-${persona.key}`} className="rounded bg-background p-3 border space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-foreground">{persona.name} ({persona.role})</span>
+                            {persona.isPrimary && <span className="text-[10px] text-primary">주 상대역</span>}
+                          </div>
+                          <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{persona.background}</p>
+                          {persona.traits.length > 0 && <div className="flex flex-wrap gap-1">{persona.traits.map((trait) => <span key={trait} className="rounded bg-muted px-1.5 py-0.5 text-[10px]">{trait}</span>)}</div>}
                         </div>
-                        <p className="text-muted-foreground mt-1 leading-relaxed">
-                          {primaryPersona.background}
-                        </p>
-                      </div>
-                      {scenario.simulation.initialPrompt && (
-                        <div className="rounded bg-background p-2.5 border">
-                          <span className="text-primary font-medium block mb-1">AI 지침 프롬프트</span>
-                          <p className="text-[11px] text-muted-foreground line-clamp-3 leading-relaxed">
-                            {scenario.simulation.initialPrompt}
-                          </p>
-                        </div>
-                      )}
+                      ))}
                     </div>
+                    {scenario.simulation.initialPrompt && <div className="rounded bg-background p-3 border"><span className="text-xs text-primary font-medium block mb-1">시뮬레이션 시작 지침</span><p className="text-xs text-muted-foreground whitespace-pre-line leading-relaxed">{scenario.simulation.initialPrompt}</p></div>}
+                    {scenario.simulation.rules?.length ? <div data-testid={`simulation-rules-${scenario.key}`} className="rounded bg-background p-3 border"><span className="text-xs font-medium text-muted-foreground block mb-1">시뮬레이션 규칙 / 제약</span><ul className="space-y-1 text-xs text-muted-foreground">{scenario.simulation.rules.map((rule, index) => <li key={index}>· {rule}</li>)}</ul></div> : null}
+                    {scenario.constraints.length > 0 && <div data-testid={`scenario-constraints-${scenario.key}`} className="rounded bg-background p-3 border"><span className="text-xs font-medium text-muted-foreground block mb-1">운영 제약</span><ul className="space-y-1 text-xs text-muted-foreground">{scenario.constraints.map((constraint, index) => <li key={index}>· {constraint}</li>)}</ul></div>}
 
                     {scenario.flow.length > 0 && (
                       <div className="pt-2 border-t">
-                        <span className="text-xs font-medium text-muted-foreground block mb-1.5">권장 대화 흐름 (Recommended Flow)</span>
+                        <span className="text-xs font-medium text-muted-foreground block mb-1.5">권장 대화 흐름과 단계별 비트</span>
                         <div className="grid sm:grid-cols-3 gap-2">
                           {scenario.flow.map((stage, idx) => (
-                            <div key={stage.key} className="rounded bg-background p-2 border text-xs">
+                            <div key={stage.key} data-testid={`flow-preview-${stage.key}`} className="rounded bg-background p-2 border text-xs">
                               <span className="font-bold text-primary block mb-0.5">{idx + 1}. {stage.title}</span>
-                              <p className="text-[11px] text-muted-foreground">{stage.description}</p>
+                              <p className="text-[11px] text-muted-foreground leading-relaxed">{stage.description}</p>
+                              <ul className="mt-2 space-y-1 border-t pt-2 text-[11px] text-muted-foreground">
+                                {stage.beats.map((beat, beatIndex) => <li key={beatIndex}>• {beat}</li>)}
+                              </ul>
                             </div>
                           ))}
                         </div>

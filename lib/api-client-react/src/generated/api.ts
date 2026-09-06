@@ -7003,7 +7003,7 @@ export const getCreateAssessmentFromTemplateUrl = () => {
 }
 
 /**
- * @summary Create a draft assessment package from a verified scenario template
+ * @summary Generate, quality-validate, and create a draft assessment package from a verified scenario template
  */
 export const createAssessmentFromTemplate = async (assessmentTemplateInstantiationInput: AssessmentTemplateInstantiationInput, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentTemplateInstantiationResult> => {
 
@@ -7052,7 +7052,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateAssessmentFromTemplateMutationError = ErrorType<ApiMessage>
 
     /**
- * @summary Create a draft assessment package from a verified scenario template
+ * @summary Generate, quality-validate, and create a draft assessment package from a verified scenario template
  */
 export const useCreateAssessmentFromTemplate = <TError = ErrorType<ApiMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentFromTemplate>>, TError,{data: BodyType<AssessmentTemplateInstantiationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

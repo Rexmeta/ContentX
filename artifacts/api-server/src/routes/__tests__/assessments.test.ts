@@ -18,8 +18,23 @@ vi.mock("../../domains/scenario/repository", () => ({
   insertScenario: vi.fn(),
 }));
 
+vi.mock("../../domains/assessment/scenarioGenerator", () => ({
+  AssessmentScenarioGenerationError: class AssessmentScenarioGenerationError extends Error {
+    kind: "provider" | "validation";
+    issues?: string[];
+    constructor(kind: "provider" | "validation", message: string, issues?: string[]) {
+      super(message); this.kind = kind; this.issues = issues;
+    }
+  },
+  generateAssessmentScenario: vi.fn(async (input: any) => ({
+    dramaticScenario: input.dramaticScenario,
+    configuration: input.configuration,
+  })),
+}));
+
 import * as assessmentRepository from "../../domains/assessment/repository";
 import * as scenarioRepository from "../../domains/scenario/repository";
+import { generateAssessmentScenario, AssessmentScenarioGenerationError } from "../../domains/assessment/scenarioGenerator";
 import assessmentsRouter from "../assessments";
 
 const createdAt = new Date("2026-01-01T00:00:00.000Z");
@@ -65,6 +80,8 @@ const publication: AssessmentPublicationRow = {
   response: { importId: "remote-1" },
   errorCode: null,
   errorMessage: null,
+  leaseOwnerToken: null,
+  leaseExpiresAt: null,
   createdAt,
   completedAt: createdAt,
   publishedAt: createdAt,
@@ -217,6 +234,30 @@ describe("assessment read routes", () => {
     const insertScenario = vi.mocked(scenarioRepository.insertScenario);
     const createAssessmentPackage = vi.mocked(assessmentRepository.createAssessmentPackage);
     const createAssessmentPackageVersion = vi.mocked(assessmentRepository.createAssessmentPackageVersion);
+    vi.mocked(generateAssessmentScenario).mockImplementationOnce(async (input: any) => {
+      const characters = [
+        { name: "AI Counterpart", role: "품질보증 책임자", motivation: "검증 가능한 안전 조건을 요구한다." },
+        { name: "Operations Lead", role: "운영 책임자", motivation: "고객 영향의 즉시 축소를 요구한다." },
+      ];
+      return {
+        dramaticScenario: {
+          ...input.dramaticScenario,
+          title: `AI 심화 시나리오 [${input.compilationInput.metadata.title}]`,
+          characters,
+        },
+        configuration: {
+          ...input.configuration,
+          primaryPersonaKey: "ai-counterpart-1",
+          personaProfiles: characters.map((character) => ({
+            ...character,
+            background: character.motivation,
+            traits: ["단호함", "책임감", "협상 가능"],
+            initialDialogue: "안전 조건이 확인되기 전에는 동의할 수 없습니다.",
+            behaviorGuidelines: ["근거를 요구한다.", "조건부로 협상한다.", "쉬운 양보를 피한다."],
+          })),
+        },
+      };
+    });
 
     insertScenario.mockResolvedValue({} as any);
     createAssessmentPackage.mockResolvedValue({} as any);
@@ -256,13 +297,40 @@ describe("assessment read routes", () => {
     expect(insertScenario).toHaveBeenCalledWith(
       expect.objectContaining({
         scenario: expect.objectContaining({
-          characters: [
+          characters: expect.arrayContaining([
+            expect.objectContaining({ name: "AI Counterpart" }),
+          ]),
+        }),
+      }),
+    );
+    expect(createAssessmentPackageVersion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        packageJson: expect.objectContaining({
+          scenarios: [
             expect.objectContaining({
-              motivation: expect.stringContaining("품질보증팀"),
+              personas: expect.arrayContaining([
+                expect.objectContaining({ name: "AI Counterpart", isPrimary: true }),
+              ]),
             }),
           ],
         }),
       }),
     );
+  });
+
+  it("does not persist when generated output fails the quality gate", async () => {
+    vi.mocked(generateAssessmentScenario).mockRejectedValueOnce(
+      new AssessmentScenarioGenerationError("validation", "AI output did not meet the required assessment quality contract.", ["synopsis: too short"]),
+    );
+
+    const response = await request(app)
+      .post("/api/v1/assessments/from-template")
+      .send({ templateId: "tmpl-ldr-01", companyContext: "반도체 생산기술팀" })
+      .expect(422);
+
+    expect(response.body).toMatchObject({ error: "AI output did not meet the required assessment quality contract.", diagnostics: ["synopsis: too short"] });
+    expect(scenarioRepository.insertScenario).not.toHaveBeenCalled();
+    expect(assessmentRepository.createAssessmentPackage).not.toHaveBeenCalled();
+    expect(assessmentRepository.createAssessmentPackageVersion).not.toHaveBeenCalled();
   });
 });

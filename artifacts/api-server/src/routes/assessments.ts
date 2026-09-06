@@ -30,6 +30,10 @@ import {
   getScenarioTemplate,
 } from "../domains/assessment/scenarioTemplateCatalog";
 import { instantiateAssessmentTemplate } from "../domains/assessment/templateInstantiator";
+import {
+  AssessmentScenarioGenerationError,
+  generateAssessmentScenario,
+} from "../domains/assessment/scenarioGenerator";
 
 const router: IRouter = Router();
 
@@ -369,17 +373,30 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
       packageId,
     });
 
-    const compiled = compileAssessmentScenarioPackage(instantiated.compilationInput);
+    // Generation and both quality gates deliberately precede the first write.
+    const generated = await generateAssessmentScenario(instantiated);
+    const compiled = compileAssessmentScenarioPackage({
+      ...instantiated.compilationInput,
+      metadata: {
+        ...instantiated.compilationInput.metadata,
+        title: generated.dramaticScenario.title,
+        description: generated.dramaticScenario.synopsis,
+      },
+      scenarios: [{
+        dramaticScenario: generated.dramaticScenario,
+        configuration: generated.configuration,
+      }],
+    });
     if (!compiled.package) {
-      res.status(400).json({ error: "Failed to compile assessment template.", diagnostics: compiled.diagnostics });
+      res.status(422).json({ error: "Generated assessment could not be compiled.", diagnostics: compiled.diagnostics });
       return;
     }
 
     await scenarioRepository.insertScenario({
       id: scenarioId,
-      title: instantiated.title,
+      title: generated.dramaticScenario.title,
       idea: `Assessment Template: ${instantiated.template.title}`,
-      scenario: instantiated.dramaticScenario,
+      scenario: generated.dramaticScenario,
       classification: null,
       lineage: null,
     });
@@ -387,8 +404,8 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
     await assessmentRepository.createAssessmentPackage({
       id: packageId,
       packageKey: compiled.package.packageKey,
-      title: instantiated.title,
-      description: instantiated.description,
+      title: compiled.package.metadata.title,
+      description: compiled.package.metadata.description,
       sourceType: "scenario-template",
       sourceId: scenarioId,
     });
@@ -408,12 +425,19 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
         assessmentId: packageId,
         version: 1,
         status: "draft",
-        title: instantiated.title,
+        title: compiled.package.metadata.title,
         packageKey: compiled.package.packageKey,
         contentHash: row.contentHash,
       }),
     );
   } catch (error) {
+    if (error instanceof AssessmentScenarioGenerationError) {
+      res.status(error.kind === "validation" ? 422 : 502).json({
+        error: error.message,
+        diagnostics: error.issues,
+      });
+      return;
+    }
     const message = error instanceof Error ? error.message : "Unable to instantiate assessment from template.";
     res.status(500).json({ error: message });
   }

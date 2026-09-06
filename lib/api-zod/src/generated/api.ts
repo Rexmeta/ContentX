@@ -4626,7 +4626,7 @@ export const GetAssessmentTemplateResponse = zod.object({
 
 
 /**
- * @summary Create a draft assessment package from a verified scenario template
+ * @summary Generate, quality-validate, and create a draft assessment package from a verified scenario template
  */
 
 

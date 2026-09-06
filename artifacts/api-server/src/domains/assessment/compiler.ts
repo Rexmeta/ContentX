@@ -42,14 +42,25 @@ function compileScenario(
   const title = nonBlank(dramatic.title, diagnostics, "MISSING_TITLE", `${path}.dramaticScenario.title`);
   const synopsis = nonBlank(dramatic.synopsis, diagnostics, "MISSING_SYNOPSIS", `${path}.dramaticScenario.synopsis`);
   const stakes = nonBlank(dramatic.stakes, diagnostics, "MISSING_STAKES", `${path}.dramaticScenario.stakes`);
-  const personas = dramatic.characters.map((character, characterIndex) => ({
-    key: assessmentElementKey(character.name, characterIndex),
-    name: nonBlank(character.name, diagnostics, "MISSING_PERSONA_NAME", `${path}.dramaticScenario.characters[${characterIndex}].name`),
-    role: nonBlank(character.role, diagnostics, "MISSING_PERSONA_ROLE", `${path}.dramaticScenario.characters[${characterIndex}].role`),
-    background: nonBlank(character.motivation, diagnostics, "MISSING_PERSONA_BACKGROUND", `${path}.dramaticScenario.characters[${characterIndex}].motivation`),
-    traits: [],
-    isPrimary: false,
-  }));
+  const personas = dramatic.characters.map((character, characterIndex) => {
+    const profile = config.personaProfiles?.find((item) => item.name === character.name);
+    if (profile && profile.role !== character.role) {
+      diagnostic(diagnostics, "INVALID_PERSONA_PROFILE", `${path}.configuration.personaProfiles`, "Persona profile role must match its dramatic character.");
+    }
+    const backgroundParts = [
+      profile?.background || character.motivation,
+      profile?.initialDialogue ? `첫 발화: ${profile.initialDialogue}` : "",
+      profile?.behaviorGuidelines?.length ? `행동 지침: ${profile.behaviorGuidelines.join(" ")}` : "",
+    ].filter(Boolean);
+    return {
+      key: assessmentElementKey(character.name, characterIndex),
+      name: nonBlank(character.name, diagnostics, "MISSING_PERSONA_NAME", `${path}.dramaticScenario.characters[${characterIndex}].name`),
+      role: nonBlank(character.role, diagnostics, "MISSING_PERSONA_ROLE", `${path}.dramaticScenario.characters[${characterIndex}].role`),
+      background: nonBlank(backgroundParts.join("\n"), diagnostics, "MISSING_PERSONA_BACKGROUND", `${path}.dramaticScenario.characters[${characterIndex}].motivation`),
+      traits: profile?.traits ?? [],
+      isPrimary: false,
+    };
+  });
   if (!personas.length) diagnostic(diagnostics, "MISSING_PRIMARY_PERSONA", `${path}.dramaticScenario.characters`, "At least one character is required.");
   const primary = config.primaryPersonaKey;
   const primaryIndex = personas.findIndex((persona) => persona.key === primary);

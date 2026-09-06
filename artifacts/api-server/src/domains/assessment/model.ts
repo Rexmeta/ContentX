@@ -37,6 +37,15 @@ export interface AssessmentScenarioConfiguration {
   objectives?: string[];
   successCriteria?: string[];
   primaryPersonaKey?: string;
+  /** Rich persona material supplied by the authoring/generation boundary. */
+  personaProfiles?: Array<{
+    name: string;
+    role: string;
+    background: string;
+    traits: string[];
+    initialDialogue?: string;
+    behaviorGuidelines?: string[];
+  }>;
   personaSwitchMode: "manual" | "automatic" | "disabled";
   personaSwitches?: Array<{
     fromPersonaKey: string;

@@ -2074,7 +2074,7 @@ paths:
     post:
       operationId: createAssessmentFromTemplate
       tags: [assessment]
-      summary: Create a draft assessment package from a verified scenario template
+      summary: Generate, quality-validate, and create a draft assessment package from a verified scenario template
       requestBody:
         required: true
         content:
@@ -2088,6 +2088,16 @@ paths:
               schema: { $ref: "#/components/schemas/AssessmentTemplateInstantiationResult" }
         "400":
           description: Invalid template input
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiMessage" }
+        "422":
+          description: Generated scenario failed the strict Korean assessment quality contract
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiMessage" }
+        "502":
+          description: AI scenario generation provider failed before persistence
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiMessage" }
