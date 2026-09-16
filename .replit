@@ -20,6 +20,10 @@ author = "agent"
 task = "workflow.run"
 args = "assessment-db"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "merge"
+
 [[workflows.workflow]]
 name = "assessment-db"
 author = "agent"
@@ -27,6 +31,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pnpm run test:assessment-db:ci"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "merge"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run validate:merge"
 
 [workflows.workflow.metadata]
 isValidation = true
