@@ -120,6 +120,23 @@ describe("Scenario wizard", () => {
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeEnabled();
   });
 
+  it("identifies an unavailable API server without blaming the AI provider", () => {
+    templateQuery = {
+      ...templateQuery,
+      data: undefined,
+      isError: true,
+      isSuccess: false,
+      error: { status: 502 },
+    };
+
+    render(<ScenarioWizard />);
+
+    expect(screen.getByTestId("scenario-template-error")).toHaveTextContent(
+      "시나리오 API 서버에 연결할 수 없습니다",
+    );
+    expect(screen.queryByText(/AI 생성 제공자/)).not.toBeInTheDocument();
+  });
+
   it("creates one draft and navigates to its detail page", async () => {
     let resolveCreation!: (value: unknown) => void;
     mutateAsync.mockReturnValue(new Promise((resolve) => {

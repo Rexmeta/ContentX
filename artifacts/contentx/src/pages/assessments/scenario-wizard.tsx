@@ -121,6 +121,13 @@ function getGenerationError(error: unknown, fallback: string): GenerationError {
   return { kind: "generic", message: fallback, diagnostics };
 }
 
+function getTemplateLoadError(error: unknown): string {
+  if (isRecord(error) && error.status === 502) {
+    return "시나리오 API 서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+  }
+  return getGenerationError(error, "템플릿 목록을 불러오지 못했습니다.").message;
+}
+
 export default function ScenarioWizard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -149,7 +156,7 @@ export default function ScenarioWizard() {
   const templates = isScenarioTemplateList(templatePayload) ? templatePayload : [];
   const loadingTemplates = templateQuery.isLoading || templateQuery.isFetching;
   const templateLoadError = templateQuery.isError
-    ? getGenerationError(templateQuery.error, "템플릿 목록을 불러오지 못했습니다.").message
+    ? getTemplateLoadError(templateQuery.error)
     : templateQuery.isSuccess && !isScenarioTemplateList(templatePayload)
       ? "템플릿 응답 형식이 올바르지 않습니다. 다시 시도해 주세요."
       : templateQuery.isSuccess && templates.length === 0
