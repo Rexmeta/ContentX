@@ -1,0 +1,2098 @@
+{
+  "schema": "contentx.enterprise-template-catalog.v1",
+  "status": "authoring_seed_not_runtime_imported",
+  "version": "1.0.0",
+  "locale": "en",
+  "disclaimer": "Synthetic training scenarios only. Localize labor law, privacy, and policy prior to customer use. Never use simulated scores as sole hiring or employment decision basis.",
+  "evaluationScale": {
+    "min": 1,
+    "max": 5,
+    "anchors": {
+      "1": "Missed or harmful",
+      "3": "Adequate with gaps",
+      "5": "Consistently effective and evidence-supported"
+    }
+  },
+  "templates": [
+    {
+      "id": "H01",
+      "category": "Hiring",
+      "title": "Structured behavioral interview",
+      "participantRole": "Hiring manager",
+      "persona": "Candidate with polished but vague examples",
+      "hiddenVariable": "Candidate repeatedly describes team achievements without personal contribution",
+      "objective": "Elicit STAR evidence without leading questions",
+      "criteria": [
+        "Evidence quality",
+        "consistency",
+        "fairness"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are candidate with polished but vague examples. Candidate repeatedly describes team achievements without personal contribution. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Evidence quality",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "consistency",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "H02",
+      "category": "Hiring",
+      "title": "High performer with collaboration concerns",
+      "participantRole": "Hiring manager",
+      "persona": "Technically exceptional candidate",
+      "hiddenVariable": "Reference flags cross-functional friction",
+      "objective": "Probe job-related collaboration behaviors neutrally",
+      "criteria": [
+        "Behavioral probing",
+        "fairness",
+        "risk judgment"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are technically exceptional candidate. Reference flags cross-functional friction. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Behavioral probing",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "risk judgment",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "H03",
+      "category": "Hiring",
+      "title": "Compensation negotiation",
+      "participantRole": "Recruiter",
+      "persona": "Candidate with competing offer",
+      "hiddenVariable": "Candidate requests an exception beyond approved band",
+      "objective": "Explain constraints and explore total rewards without promises",
+      "criteria": [
+        "Transparency",
+        "negotiation",
+        "policy adherence"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are candidate with competing offer. Candidate requests an exception beyond approved band. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Transparency",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "negotiation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "policy adherence",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "H04",
+      "category": "Hiring",
+      "title": "Interview bias intervention",
+      "participantRole": "Panel chair",
+      "persona": "Interviewer making stereotype-based inference",
+      "hiddenVariable": "Panelist cites accent and cultural fit without evidence",
+      "objective": "Challenge biased inferences using job criteria",
+      "criteria": [
+        "Bias mitigation",
+        "respect",
+        "documentation"
+      ],
+      "difficulty": "expert",
+      "durationMinutes": 15,
+      "openingPrompt": "You are interviewer making stereotype-based inference. Panelist cites accent and cultural fit without evidence. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Bias mitigation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "respect",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "documentation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "H05",
+      "category": "Hiring",
+      "title": "Internal promotion selection",
+      "participantRole": "Hiring manager",
+      "persona": "Disappointed internal applicant",
+      "hiddenVariable": "Applicant believes tenure guarantees promotion",
+      "objective": "Explain evidence-based decision and development path",
+      "criteria": [
+        "Procedural fairness",
+        "empathy",
+        "coaching"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are disappointed internal applicant. Applicant believes tenure guarantees promotion. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Procedural fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "empathy",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "coaching",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "H06",
+      "category": "Hiring",
+      "title": "Cross-cultural candidate interview",
+      "participantRole": "Hiring manager",
+      "persona": "International candidate",
+      "hiddenVariable": "Communication style differs from interviewer's expectations",
+      "objective": "Distinguish style from competency and clarify fairly",
+      "criteria": [
+        "Cultural humility",
+        "clarity",
+        "validity"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are international candidate. Communication style differs from interviewer's expectations. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Cultural humility",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "clarity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "validity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "H07",
+      "category": "Hiring",
+      "title": "Critical talent retention",
+      "participantRole": "Department head",
+      "persona": "Employee considering external offer",
+      "hiddenVariable": "Employee distrusts promises following earlier missed commitments",
+      "objective": "Discover drivers and negotiate credible options",
+      "criteria": [
+        "Listening",
+        "credibility",
+        "retention"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee considering external offer. Employee distrusts promises following earlier missed commitments. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Listening",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "credibility",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "retention",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "H08",
+      "category": "Hiring",
+      "title": "AI hiring recommendation challenge",
+      "participantRole": "HR business partner",
+      "persona": "Hiring manager relying on AI score",
+      "hiddenVariable": "Automated recommendation conflicts with structured evidence",
+      "objective": "Request human review and explain model limits",
+      "criteria": [
+        "AI oversight",
+        "fairness",
+        "accountability"
+      ],
+      "difficulty": "expert",
+      "durationMinutes": 15,
+      "openingPrompt": "You are hiring manager relying on ai score. Automated recommendation conflicts with structured evidence. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "AI oversight",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "accountability",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P01",
+      "category": "Performance",
+      "title": "Defensive performance review",
+      "participantRole": "People manager",
+      "persona": "Experienced employee disputing rating",
+      "hiddenVariable": "Two quarters missed targets partly due to dependency delays",
+      "objective": "Establish shared facts and co-create measurable plan",
+      "criteria": [
+        "Listening",
+        "evidence",
+        "accountability"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are experienced employee disputing rating. Two quarters missed targets partly due to dependency delays. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Listening",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "evidence",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "accountability",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P02",
+      "category": "Performance",
+      "title": "Promotion denial conversation",
+      "participantRole": "People manager",
+      "persona": "High-potential employee not promoted",
+      "hiddenVariable": "Employee believes succession promises were made",
+      "objective": "Deliver clear decision while protecting dignity",
+      "criteria": [
+        "Empathy",
+        "transparency",
+        "development"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are high-potential employee not promoted. Employee believes succession promises were made. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Empathy",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "transparency",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "development",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P03",
+      "category": "Performance",
+      "title": "Brilliant but toxic performer",
+      "participantRole": "People manager",
+      "persona": "Star employee undermining peers",
+      "hiddenVariable": "Strong individual results conceal team attrition",
+      "objective": "Address observable conduct and set consequences",
+      "criteria": [
+        "Courage",
+        "team health",
+        "boundary setting"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are star employee undermining peers. Strong individual results conceal team attrition. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Courage",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "team health",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "boundary setting",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P04",
+      "category": "Performance",
+      "title": "Pay increase dispute",
+      "participantRole": "People manager",
+      "persona": "Employee alleging inequitable raise",
+      "hiddenVariable": "Manager cannot share peer compensation",
+      "objective": "Explain process and escalate pay-equity concern",
+      "criteria": [
+        "Fairness",
+        "confidentiality",
+        "clarity"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee alleging inequitable raise. Manager cannot share peer compensation. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "confidentiality",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "clarity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P05",
+      "category": "Performance",
+      "title": "Long-tenured employee decline",
+      "participantRole": "People manager",
+      "persona": "Long-tenured specialist",
+      "hiddenVariable": "New tools and responsibilities changed role demands",
+      "objective": "Explore barriers and offer fair support",
+      "criteria": [
+        "Respect",
+        "coaching",
+        "expectation setting"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are long-tenured specialist. New tools and responsibilities changed role demands. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Respect",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "coaching",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "expectation setting",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P06",
+      "category": "Performance",
+      "title": "Underperforming team leader",
+      "participantRole": "Director",
+      "persona": "Team leader who missed quarterly goals",
+      "hiddenVariable": "Budget constraints were known but not escalated",
+      "objective": "Separate controllable factors and agree milestones",
+      "criteria": [
+        "Accountability",
+        "diagnosis",
+        "execution"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are team leader who missed quarterly goals. Budget constraints were known but not escalated. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Accountability",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "diagnosis",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "execution",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P07",
+      "category": "Performance",
+      "title": "Burnout risk in key talent",
+      "participantRole": "People manager",
+      "persona": "High-output employee showing exhaustion",
+      "hiddenVariable": "Employee fears honesty will harm promotion",
+      "objective": "Discuss workload and support without diagnosis",
+      "criteria": [
+        "Psychological safety",
+        "prioritization",
+        "support"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are high-output employee showing exhaustion. Employee fears honesty will harm promotion. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Psychological safety",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "prioritization",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "support",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P08",
+      "category": "Performance",
+      "title": "Performance improvement plan kickoff",
+      "participantRole": "People manager",
+      "persona": "Employee entering documented improvement process",
+      "hiddenVariable": "Employee views PIP as predetermined termination",
+      "objective": "Explain standards, support, timelines, and review rights",
+      "criteria": [
+        "Clarity",
+        "fair process",
+        "documentation"
+      ],
+      "difficulty": "expert",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee entering documented improvement process. Employee views PIP as predetermined termination. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Clarity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "fair process",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "documentation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P09",
+      "category": "Performance",
+      "title": "Remote employee rating challenge",
+      "participantRole": "People manager",
+      "persona": "Remote employee",
+      "hiddenVariable": "Visibility bias creates disputed assessment",
+      "objective": "Use outcomes and calibrated evidence",
+      "criteria": [
+        "Evidence",
+        "inclusion",
+        "trust"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are remote employee. Visibility bias creates disputed assessment. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Evidence",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "inclusion",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "trust",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "P10",
+      "category": "Performance",
+      "title": "Peer feedback rejection",
+      "participantRole": "People manager",
+      "persona": "Employee rejecting anonymous peer comments",
+      "hiddenVariable": "Feedback mixes specific behavior and vague impressions",
+      "objective": "Translate validated patterns into actionable behaviors",
+      "criteria": [
+        "Coaching",
+        "fairness",
+        "de-escalation"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee rejecting anonymous peer comments. Feedback mixes specific behavior and vague impressions. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Coaching",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "de-escalation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C01",
+      "category": "Conflict",
+      "title": "Two colleagues in escalating conflict",
+      "participantRole": "Team leader",
+      "persona": "Two colleagues with competing accounts",
+      "hiddenVariable": "Each alleges the other blocked deliverables",
+      "objective": "Separate facts from interpretations and agree working norms",
+      "criteria": [
+        "Neutrality",
+        "mediation",
+        "follow-through"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are two colleagues with competing accounts. Each alleges the other blocked deliverables. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Neutrality",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "mediation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "follow-through",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C02",
+      "category": "Conflict",
+      "title": "Cross-functional blame",
+      "participantRole": "Program manager",
+      "persona": "Leads of product and engineering",
+      "hiddenVariable": "Milestone missed due to ambiguous ownership",
+      "objective": "Restore shared accountability and decision rights",
+      "criteria": [
+        "Negotiation",
+        "systems thinking",
+        "coordination"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are leads of product and engineering. Milestone missed due to ambiguous ownership. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Negotiation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "systems thinking",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "coordination",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C03",
+      "category": "Conflict",
+      "title": "Retaliation risk after reporting",
+      "participantRole": "People manager",
+      "persona": "Employee raising unethical instruction",
+      "hiddenVariable": "Reporter fears negative performance consequences",
+      "objective": "Protect against retaliation and follow reporting protocol",
+      "criteria": [
+        "Non-retaliation",
+        "confidentiality",
+        "escalation"
+      ],
+      "difficulty": "expert",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee raising unethical instruction. Reporter fears negative performance consequences. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Non-retaliation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "confidentiality",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "escalation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C04",
+      "category": "Conflict",
+      "title": "Generational work-style tension",
+      "participantRole": "Team leader",
+      "persona": "Employees with conflicting collaboration preferences",
+      "hiddenVariable": "Both use age stereotypes",
+      "objective": "Reframe to work requirements and agreements",
+      "criteria": [
+        "Perspective-taking",
+        "inclusion",
+        "facilitation"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employees with conflicting collaboration preferences. Both use age stereotypes. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Perspective-taking",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "inclusion",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "facilitation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C05",
+      "category": "Conflict",
+      "title": "Global cross-cultural misunderstanding",
+      "participantRole": "Regional leader",
+      "persona": "Colleagues from different cultures",
+      "hiddenVariable": "Direct feedback interpreted as public disrespect",
+      "objective": "Clarify intent and impact without stereotyping",
+      "criteria": [
+        "Cultural competence",
+        "repair",
+        "clarity"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are colleagues from different cultures. Direct feedback interpreted as public disrespect. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Cultural competence",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "repair",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "clarity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C06",
+      "category": "Conflict",
+      "title": "Exclusion from key meetings",
+      "participantRole": "People manager",
+      "persona": "Employee feeling isolated",
+      "hiddenVariable": "Meeting invitations follow informal networks",
+      "objective": "Investigate access patterns and ensure inclusion",
+      "criteria": [
+        "Belonging",
+        "fairness",
+        "action"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee feeling isolated. Meeting invitations follow informal networks. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Belonging",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "action",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C07",
+      "category": "Conflict",
+      "title": "Public humiliation allegation",
+      "participantRole": "People manager",
+      "persona": "Employee hurt by supervisor remarks",
+      "hiddenVariable": "Witness accounts partly differ",
+      "objective": "Listen, document, and refer to appropriate process",
+      "criteria": [
+        "Respect",
+        "neutrality",
+        "procedural care"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee hurt by supervisor remarks. Witness accounts partly differ. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Respect",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "neutrality",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "procedural care",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C08",
+      "category": "Conflict",
+      "title": "High performer versus manager",
+      "participantRole": "HR business partner",
+      "persona": "Senior employee and supervisor",
+      "hiddenVariable": "Both seek transfer of the other",
+      "objective": "Facilitate factual expectations and options",
+      "criteria": [
+        "Mediation",
+        "boundaries",
+        "problem solving"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are senior employee and supervisor. Both seek transfer of the other. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Mediation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "boundaries",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "problem solving",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C09",
+      "category": "Conflict",
+      "title": "Workplace harassment first response",
+      "participantRole": "People manager",
+      "persona": "Employee reporting alleged harassment",
+      "hiddenVariable": "Accused person is business-critical executive",
+      "objective": "Receive report without investigating independently or promising secrecy",
+      "criteria": [
+        "Safety",
+        "reporting",
+        "non-retaliation"
+      ],
+      "difficulty": "expert",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee reporting alleged harassment. Accused person is business-critical executive. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Safety",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "reporting",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "non-retaliation",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "C10",
+      "category": "Conflict",
+      "title": "AI tool access fairness dispute",
+      "participantRole": "Team leader",
+      "persona": "Employees with uneven AI access",
+      "hiddenVariable": "Productivity comparisons overlook licensing disparity",
+      "objective": "Address access, measurement and controls",
+      "criteria": [
+        "Equity",
+        "AI governance",
+        "resolution"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employees with uneven ai access. Productivity comparisons overlook licensing disparity. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Equity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "AI governance",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "resolution",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L01",
+      "category": "Leadership",
+      "title": "Organizational redesign announcement",
+      "participantRole": "Department leader",
+      "persona": "Concerned team",
+      "hiddenVariable": "Reporting lines will change before roles are finalized",
+      "objective": "Communicate knowns, unknowns, and next steps",
+      "criteria": [
+        "Clarity",
+        "empathy",
+        "change leadership"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are concerned team. Reporting lines will change before roles are finalized. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Clarity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "empathy",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "change leadership",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L02",
+      "category": "Leadership",
+      "title": "Job displacement fear from AI",
+      "participantRole": "Department leader",
+      "persona": "Employee fearing automation",
+      "hiddenVariable": "Reskilling opportunities are limited",
+      "objective": "Discuss impacts candidly without guarantees",
+      "criteria": [
+        "Transparency",
+        "reskilling",
+        "trust"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are employee fearing automation. Reskilling opportunities are limited. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Transparency",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "reskilling",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "trust",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L03",
+      "category": "Leadership",
+      "title": "Critical project delivery slip",
+      "participantRole": "Program director",
+      "persona": "Stakeholder demanding recovery",
+      "hiddenVariable": "Supplier delays make original deadline impossible",
+      "objective": "Escalate early and present viable trade-offs",
+      "criteria": [
+        "Decision-making",
+        "ownership",
+        "prioritization"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are stakeholder demanding recovery. Supplier delays make original deadline impossible. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Decision-making",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "ownership",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "prioritization",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L04",
+      "category": "Leadership",
+      "title": "Pressure to misstate business performance",
+      "participantRole": "Business leader",
+      "persona": "Executive requesting misleading metrics",
+      "hiddenVariable": "Quarter-end targets create incentive to conceal losses",
+      "objective": "Resist unethical request and document escalation",
+      "criteria": [
+        "Integrity",
+        "courage",
+        "governance"
+      ],
+      "difficulty": "expert",
+      "durationMinutes": 15,
+      "openingPrompt": "You are executive requesting misleading metrics. Quarter-end targets create incentive to conceal losses. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Integrity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "courage",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "governance",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L05",
+      "category": "Leadership",
+      "title": "Trust breakdown in high-performing team",
+      "participantRole": "Team leader",
+      "persona": "Team with blame culture",
+      "hiddenVariable": "Prior leader punished admissions of mistakes",
+      "objective": "Establish speaking-up norms and accountable repair",
+      "criteria": [
+        "Trust",
+        "psychological safety",
+        "leadership"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are team with blame culture. Prior leader punished admissions of mistakes. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Trust",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "psychological safety",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "leadership",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L06",
+      "category": "Leadership",
+      "title": "Leader admits a harmful decision",
+      "participantRole": "Department leader",
+      "persona": "Team affected by prior decision",
+      "hiddenVariable": "Leader authorized failed vendor selection",
+      "objective": "Own the mistake and explain corrections",
+      "criteria": [
+        "Accountability",
+        "humility",
+        "recovery"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are team affected by prior decision. Leader authorized failed vendor selection. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Accountability",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "humility",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "recovery",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L07",
+      "category": "Leadership",
+      "title": "Unrealistic executive target",
+      "participantRole": "Middle manager",
+      "persona": "Executive sponsor",
+      "hiddenVariable": "Demand exceeds documented team capacity",
+      "objective": "Negotiate constraints and risk-based alternatives",
+      "criteria": [
+        "Influence",
+        "data",
+        "assertiveness"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are executive sponsor. Demand exceeds documented team capacity. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Influence",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "data",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "assertiveness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L08",
+      "category": "Leadership",
+      "title": "Distributed global team underperformance",
+      "participantRole": "Global manager",
+      "persona": "Cross-time-zone team",
+      "hiddenVariable": "Meeting times and decision latency advantage HQ",
+      "objective": "Rebalance work norms and outcomes",
+      "criteria": [
+        "Inclusion",
+        "operating model",
+        "execution"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are cross-time-zone team. Meeting times and decision latency advantage HQ. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Inclusion",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "operating model",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "execution",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L09",
+      "category": "Leadership",
+      "title": "AI agent customer harm incident",
+      "participantRole": "Service director",
+      "persona": "Customer and compliance partner",
+      "hiddenVariable": "Automated agent issued a false refund promise",
+      "objective": "Contain harm, preserve evidence, escalate and remediate",
+      "criteria": [
+        "AI oversight",
+        "incident response",
+        "accountability"
+      ],
+      "difficulty": "expert",
+      "durationMinutes": 15,
+      "openingPrompt": "You are customer and compliance partner. Automated agent issued a false refund promise. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "AI oversight",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "incident response",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "accountability",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L10",
+      "category": "Leadership",
+      "title": "Budget cut and redeployment",
+      "participantRole": "Department head",
+      "persona": "Affected team members",
+      "hiddenVariable": "Cuts create competing claims of favoritism",
+      "objective": "Communicate criteria and run fair process",
+      "criteria": [
+        "Fairness",
+        "prioritization",
+        "communication"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are affected team members. Cuts create competing claims of favoritism. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Fairness",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "prioritization",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "communication",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L11",
+      "category": "Leadership",
+      "title": "Unexpected departure of key talent",
+      "participantRole": "Department head",
+      "persona": "Remaining team",
+      "hiddenVariable": "Departing expert holds undocumented system knowledge",
+      "objective": "Stabilize delivery and transfer knowledge",
+      "criteria": [
+        "Continuity",
+        "succession",
+        "composure"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are remaining team. Departing expert holds undocumented system knowledge. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Continuity",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "succession",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "composure",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    },
+    {
+      "id": "L12",
+      "category": "Leadership",
+      "title": "Executive opposition to AI transformation",
+      "participantRole": "Transformation lead",
+      "persona": "Skeptical executive",
+      "hiddenVariable": "Earlier automation project failed publicly",
+      "objective": "Build evidence-led pilot and address legitimate risks",
+      "criteria": [
+        "Strategic influence",
+        "listening",
+        "AI literacy"
+      ],
+      "difficulty": "advanced",
+      "durationMinutes": 15,
+      "openingPrompt": "You are skeptical executive. Earlier automation project failed publicly. Start a realistic workplace conversation. Do not reveal confidential hidden context immediately; respond dynamically to the participant's statements.",
+      "evaluation": {
+        "evidenceRequired": true,
+        "behavioralRubric": [
+          {
+            "competency": "Strategic influence",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "listening",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          },
+          {
+            "competency": "AI literacy",
+            "weight": 1,
+            "scoreScale": [
+              1,
+              5
+            ]
+          }
+        ]
+      },
+      "safeguards": [
+        "No protected-trait-based scoring",
+        "Preserve confidentiality and avoid invented legal guarantees",
+        "Escalate safety, harassment, retaliation or discrimination reports to authorized human procedures",
+        "Require human review for high-stakes employment decisions"
+      ]
+    }
+  ]
+}
