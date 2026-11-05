@@ -12,3 +12,4 @@
 - [Orval client EOF formatting](orval-client-eof-formatting.md) — React client codegen may append blank EOF lines; normalize generated output before enforcing `git diff --check`.
 - [Assessment v1 rich persona projection](assessment-v1-rich-persona.md) — preserve detailed persona guidance inside existing v1 fields until a package version change is explicitly approved.
 - [GitHub push authentication](github-push-auth.md) — connector OAuth may write GitHub APIs even when HTTPS Git credentials or a PAT reject git push.
+- [Dependency update compatibility](dependency-update-compatibility.md) — deduplicate tooling peers and editor models; catalog declarations may prevent generator API-version detection.

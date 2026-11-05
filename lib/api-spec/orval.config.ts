@@ -30,6 +30,10 @@ export default defineConfig({
       clean: true,
       prettier: true,
       override: {
+        // Dependencies use the pnpm catalog, which Orval cannot infer as v5.
+        query: {
+          version: 5,
+        },
         fetch: {
           includeHttpResponseReturnType: false,
         },
