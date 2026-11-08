@@ -5,7 +5,16 @@ import { validateAssessmentScenarioPackage } from "../validator";
 import { AssessmentScenarioPackageV1Schema } from "../schema";
 
 describe("templateInstantiator", () => {
-  const templates = ["tmpl-ldr-01", "tmpl-ldr-02", "tmpl-com-01"];
+  const templates = [
+    "tmpl-ldr-01",
+    "tmpl-ldr-02",
+    "tmpl-com-01",
+    "tmpl-ins-01",
+    "tmpl-sales-01",
+    "tmpl-cs-01",
+    "tmpl-svc-01",
+    "tmpl-neg-01",
+  ];
 
   it.each(templates)(
     "successfully instantiates template %s and compiles into a valid AssessmentScenarioPackageV1",

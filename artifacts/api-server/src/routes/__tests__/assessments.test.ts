@@ -212,8 +212,15 @@ describe("assessment read routes", () => {
   it("lists scenario templates", async () => {
     const response = await request(app).get("/api/v1/assessments/templates").expect(200);
     expect(response.body).toBeInstanceOf(Array);
-    expect(response.body.length).toBe(3);
+    expect(response.body.length).toBe(8);
     expect(response.body[0].id).toBe("tmpl-ldr-01");
+    expect(response.body.slice(3).map((template: { id: string }) => template.id)).toEqual([
+      "tmpl-ins-01",
+      "tmpl-sales-01",
+      "tmpl-cs-01",
+      "tmpl-svc-01",
+      "tmpl-neg-01",
+    ]);
     expect(getAssessmentPackageReadModel).not.toHaveBeenCalled();
   });
 

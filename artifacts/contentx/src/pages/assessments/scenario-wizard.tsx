@@ -308,7 +308,7 @@ export default function ScenarioWizard() {
                 <Target className="h-5 w-5 text-primary" /> 어떤 상황을 평가하시겠습니까?
               </h2>
               <p className="text-sm text-muted-foreground mt-0.5">
-                기업 현장에서 가장 검증된 3가지 핵심 롤플레이 템플릿 중 하나를 선택하세요.
+                보험·영업·고객 서비스 등 다양한 실무 분야의 롤플레이 템플릿 중 하나를 선택하세요.
               </p>
             </div>
 

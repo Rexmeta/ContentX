@@ -2510,7 +2510,9 @@ components:
         id: { type: string, minLength: 1 }
         title: { type: string, minLength: 1 }
         subtitle: { type: string, minLength: 1 }
-        category: { type: string, enum: [leadership, conflict_resolution, communication] }
+        category:
+          type: string
+          enum: [leadership, conflict_resolution, communication, insurance, sales, customer_success, customer_service, negotiation]
         categoryLabel: { type: string, minLength: 1 }
         targetRole: { type: string, minLength: 1 }
         difficulty: { type: string, enum: [beginner, intermediate, advanced] }
