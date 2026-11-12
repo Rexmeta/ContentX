@@ -105,8 +105,12 @@ import type {
   RoleplayXScenario,
   SamplingInput,
   SamplingRun,
+  ScenarioCompositionInput,
   ScenarioDraftInput,
+  ScenarioGraphDraft,
   ScenarioRecord,
+  ScenarioResearchInput,
+  ScenarioResearchResult,
   ScenarioSaveInput,
   ScenarioUpdateInput,
   Simulation,
@@ -151,6 +155,252 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getResearchScenarioMaterialUrl = () => {
+
+
+
+
+  return `/api/v1/scenario-studio/research`
+}
+
+export const researchScenarioMaterial = async (scenarioResearchInput: ScenarioResearchInput, options?: Parameters<typeof customFetch>[1]): Promise<ScenarioResearchResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ScenarioResearchResult>(getResearchScenarioMaterialUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(scenarioResearchInput)
+  }
+);}
+
+
+
+
+
+export const getResearchScenarioMaterialMutationKey = () => ['researchScenarioMaterial'] as const;
+
+export const getResearchScenarioMaterialMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof researchScenarioMaterial>>, TError,ResearchScenarioMaterialMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof researchScenarioMaterial>>, TError,ResearchScenarioMaterialMutationVariables, TContext> => {
+
+const mutationKey = getResearchScenarioMaterialMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof researchScenarioMaterial>>, ResearchScenarioMaterialMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  researchScenarioMaterial(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResearchScenarioMaterialMutationResult = NonNullable<Awaited<ReturnType<typeof researchScenarioMaterial>>>
+    export type ResearchScenarioMaterialMutationBody = BodyType<ScenarioResearchInput>
+    export type ResearchScenarioMaterialMutationError = ErrorType<unknown>
+    export type ResearchScenarioMaterialMutationVariables = {data: BodyType<ScenarioResearchInput>}
+
+    export const useResearchScenarioMaterial = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof researchScenarioMaterial>>, TError,ResearchScenarioMaterialMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof researchScenarioMaterial>>,
+        TError,
+        ResearchScenarioMaterialMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResearchScenarioMaterialMutationOptions(options), queryClient);
+    }
+
+export const getComposeScenarioGraphUrl = () => {
+
+
+
+
+  return `/api/v1/scenario-studio/draft`
+}
+
+export const composeScenarioGraph = async (scenarioCompositionInput: ScenarioCompositionInput, options?: Parameters<typeof customFetch>[1]): Promise<ScenarioGraphDraft> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ScenarioGraphDraft>(getComposeScenarioGraphUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(scenarioCompositionInput)
+  }
+);}
+
+
+
+
+
+export const getComposeScenarioGraphMutationKey = () => ['composeScenarioGraph'] as const;
+
+export const getComposeScenarioGraphMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof composeScenarioGraph>>, TError,ComposeScenarioGraphMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof composeScenarioGraph>>, TError,ComposeScenarioGraphMutationVariables, TContext> => {
+
+const mutationKey = getComposeScenarioGraphMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof composeScenarioGraph>>, ComposeScenarioGraphMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  composeScenarioGraph(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ComposeScenarioGraphMutationResult = NonNullable<Awaited<ReturnType<typeof composeScenarioGraph>>>
+    export type ComposeScenarioGraphMutationBody = BodyType<ScenarioCompositionInput>
+    export type ComposeScenarioGraphMutationError = ErrorType<unknown>
+    export type ComposeScenarioGraphMutationVariables = {data: BodyType<ScenarioCompositionInput>}
+
+    export const useComposeScenarioGraph = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof composeScenarioGraph>>, TError,ComposeScenarioGraphMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof composeScenarioGraph>>,
+        TError,
+        ComposeScenarioGraphMutationVariables,
+        TContext
+      > => {
+      return useMutation(getComposeScenarioGraphMutationOptions(options), queryClient);
+    }
+
+export const getCommitScenarioGraphUrl = () => {
+
+
+
+
+  return `/api/v1/scenario-studio/commit`
+}
+
+export const commitScenarioGraph = async (scenarioGraphDraft: ScenarioGraphDraft, options?: Parameters<typeof customFetch>[1]): Promise<ContentGraph> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ContentGraph>(getCommitScenarioGraphUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(scenarioGraphDraft)
+  }
+);}
+
+
+
+
+
+export const getCommitScenarioGraphMutationKey = () => ['commitScenarioGraph'] as const;
+
+export const getCommitScenarioGraphMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commitScenarioGraph>>, TError,CommitScenarioGraphMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof commitScenarioGraph>>, TError,CommitScenarioGraphMutationVariables, TContext> => {
+
+const mutationKey = getCommitScenarioGraphMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof commitScenarioGraph>>, CommitScenarioGraphMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  commitScenarioGraph(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CommitScenarioGraphMutationResult = NonNullable<Awaited<ReturnType<typeof commitScenarioGraph>>>
+    export type CommitScenarioGraphMutationBody = BodyType<ScenarioGraphDraft>
+    export type CommitScenarioGraphMutationError = ErrorType<unknown>
+    export type CommitScenarioGraphMutationVariables = {data: BodyType<ScenarioGraphDraft>}
+
+    export const useCommitScenarioGraph = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof commitScenarioGraph>>, TError,CommitScenarioGraphMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof commitScenarioGraph>>,
+        TError,
+        CommitScenarioGraphMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCommitScenarioGraphMutationOptions(options), queryClient);
+    }
 
 export const getHealthCheckUrl = () => {
 

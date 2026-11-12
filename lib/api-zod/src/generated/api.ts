@@ -8,6 +8,242 @@
 import * as zod from 'zod/v4';
 
 
+export const researchScenarioMaterialBodyIndustryMax = 100;
+
+export const researchScenarioMaterialBodyOrganizationMax = 120;
+
+export const researchScenarioMaterialBodyFocusMax = 2000;
+
+
+
+export const ResearchScenarioMaterialBody = zod.object({
+  "industry": zod.string().min(1).max(researchScenarioMaterialBodyIndustryMax),
+  "organization": zod.string().min(1).max(researchScenarioMaterialBodyOrganizationMax),
+  "focus": zod.string().max(researchScenarioMaterialBodyFocusMax)
+})
+
+export const researchScenarioMaterialResponseSourcesItemIdMax = 100;
+
+export const researchScenarioMaterialResponseSourcesItemTitleMax = 300;
+
+export const researchScenarioMaterialResponseSourcesItemUrlMax = 2000;
+
+
+export const researchScenarioMaterialResponseSourcesItemUrlRegExp = new RegExp('^https?:/');
+export const researchScenarioMaterialResponseSourcesItemExcerptMax = 1200;
+
+export const researchScenarioMaterialResponseSourcesMax = 12;
+
+export const researchScenarioMaterialResponseCandidatesItemTitleMax = 160;
+
+export const researchScenarioMaterialResponseCandidatesItemDetailMax = 1200;
+
+export const researchScenarioMaterialResponseCandidatesItemSourceIdsItemMax = 100;
+
+export const researchScenarioMaterialResponseCandidatesItemSourceIdsMax = 12;
+
+export const researchScenarioMaterialResponseCandidatesMax = 24;
+
+
+
+export const ResearchScenarioMaterialResponse = zod.object({
+  "sources": zod.array(zod.object({
+  "id": zod.string().min(1).max(researchScenarioMaterialResponseSourcesItemIdMax),
+  "title": zod.string().min(1).max(researchScenarioMaterialResponseSourcesItemTitleMax),
+  "url": zod.string().max(researchScenarioMaterialResponseSourcesItemUrlMax).regex(researchScenarioMaterialResponseSourcesItemUrlRegExp),
+  "excerpt": zod.string().min(1).max(researchScenarioMaterialResponseSourcesItemExcerptMax)
+})).max(researchScenarioMaterialResponseSourcesMax),
+  "candidates": zod.array(zod.object({
+  "kind": zod.enum(['event', 'situation', 'evidence', 'tradeoff', 'conflict', 'relationship', 'opposition']),
+  "title": zod.string().min(1).max(researchScenarioMaterialResponseCandidatesItemTitleMax),
+  "detail": zod.string().min(1).max(researchScenarioMaterialResponseCandidatesItemDetailMax),
+  "sourceIds": zod.array(zod.string().max(researchScenarioMaterialResponseCandidatesItemSourceIdsItemMax)).max(researchScenarioMaterialResponseCandidatesItemSourceIdsMax)
+})).min(1).max(researchScenarioMaterialResponseCandidatesMax),
+  "provider": zod.enum(['brave', 'wikipedia', 'unavailable'])
+})
+
+
+export const composeScenarioGraphBodyBriefIndustryMax = 100;
+
+export const composeScenarioGraphBodyBriefOrganizationMax = 120;
+
+export const composeScenarioGraphBodyBriefFocusMax = 2000;
+
+export const composeScenarioGraphBodyCandidatesItemTitleMax = 160;
+
+export const composeScenarioGraphBodyCandidatesItemDetailMax = 1200;
+
+export const composeScenarioGraphBodyCandidatesItemSourceIdsItemMax = 100;
+
+export const composeScenarioGraphBodyCandidatesItemSourceIdsMax = 12;
+
+export const composeScenarioGraphBodyCandidatesMax = 24;
+
+export const composeScenarioGraphBodySourcesItemIdMax = 100;
+
+export const composeScenarioGraphBodySourcesItemTitleMax = 300;
+
+export const composeScenarioGraphBodySourcesItemUrlMax = 2000;
+
+
+export const composeScenarioGraphBodySourcesItemUrlRegExp = new RegExp('^https?:/');
+export const composeScenarioGraphBodySourcesItemExcerptMax = 1200;
+
+export const composeScenarioGraphBodySourcesMax = 12;
+
+export const composeScenarioGraphBodyDirectionMax = 4000;
+
+
+
+export const ComposeScenarioGraphBody = zod.object({
+  "brief": zod.object({
+  "industry": zod.string().min(1).max(composeScenarioGraphBodyBriefIndustryMax),
+  "organization": zod.string().min(1).max(composeScenarioGraphBodyBriefOrganizationMax),
+  "focus": zod.string().max(composeScenarioGraphBodyBriefFocusMax)
+}),
+  "candidates": zod.array(zod.object({
+  "kind": zod.enum(['event', 'situation', 'evidence', 'tradeoff', 'conflict', 'relationship', 'opposition']),
+  "title": zod.string().min(1).max(composeScenarioGraphBodyCandidatesItemTitleMax),
+  "detail": zod.string().min(1).max(composeScenarioGraphBodyCandidatesItemDetailMax),
+  "sourceIds": zod.array(zod.string().max(composeScenarioGraphBodyCandidatesItemSourceIdsItemMax)).max(composeScenarioGraphBodyCandidatesItemSourceIdsMax)
+})).max(composeScenarioGraphBodyCandidatesMax),
+  "sources": zod.array(zod.object({
+  "id": zod.string().min(1).max(composeScenarioGraphBodySourcesItemIdMax),
+  "title": zod.string().min(1).max(composeScenarioGraphBodySourcesItemTitleMax),
+  "url": zod.string().max(composeScenarioGraphBodySourcesItemUrlMax).regex(composeScenarioGraphBodySourcesItemUrlRegExp),
+  "excerpt": zod.string().min(1).max(composeScenarioGraphBodySourcesItemExcerptMax)
+})).max(composeScenarioGraphBodySourcesMax),
+  "direction": zod.string().max(composeScenarioGraphBodyDirectionMax)
+})
+
+export const composeScenarioGraphResponseTitleMax = 200;
+
+export const composeScenarioGraphResponseSourcePromptMax = 7000;
+
+
+export const composeScenarioGraphResponseEntitiesMax = 70;
+
+export const composeScenarioGraphResponseRelationshipsMax = 160;
+
+
+
+export const ComposeScenarioGraphResponse = zod.object({
+  "title": zod.string().min(1).max(composeScenarioGraphResponseTitleMax),
+  "sourcePrompt": zod.string().min(1).max(composeScenarioGraphResponseSourcePromptMax),
+  "entities": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
+  "description": zod.string().nullish(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})).min(1).max(composeScenarioGraphResponseEntitiesMax),
+  "relationships": zod.array(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "type": zod.string(),
+  "target": zod.string(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})).max(composeScenarioGraphResponseRelationshipsMax)
+})
+
+
+export const commitScenarioGraphBodyTitleMax = 200;
+
+export const commitScenarioGraphBodySourcePromptMax = 7000;
+
+
+export const commitScenarioGraphBodyEntitiesMax = 70;
+
+export const commitScenarioGraphBodyRelationshipsMax = 160;
+
+
+
+export const CommitScenarioGraphBody = zod.object({
+  "title": zod.string().min(1).max(commitScenarioGraphBodyTitleMax),
+  "sourcePrompt": zod.string().min(1).max(commitScenarioGraphBodySourcePromptMax),
+  "entities": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
+  "description": zod.string().nullish(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})).min(1).max(commitScenarioGraphBodyEntitiesMax),
+  "relationships": zod.array(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "type": zod.string(),
+  "target": zod.string(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})).max(commitScenarioGraphBodyRelationshipsMax)
+})
+
+
+export const commitScenarioGraphResponseProvenanceLineageTwoParentsMin = 2;
+
+
+
+export const CommitScenarioGraphResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "sourcePrompt": zod.string().nullish(),
+  "version": zod.int(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "entities": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string().describe('Content primitive kind (character, person, value, trait, capability, population, organization, location, object, event, concept, theme, goal, conflict, emotion, action, dialogue, narrative, rule, constraint, outcome, world)'),
+  "name": zod.string(),
+  "canonicalName": zod.string().nullish().describe('Stable canonical identity name; `name` is the display name'),
+  "aliases": zod.array(zod.string().min(1)).optional().describe('Alternative names referring to the same canonical entity'),
+  "description": zod.string().nullish(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})),
+  "relationships": zod.array(zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "type": zod.string(),
+  "target": zod.string(),
+  "attributes": zod.record(zod.string(), zod.unknown()).optional()
+})),
+  "provenance": zod.object({
+  "operation": zod.string(),
+  "createdAt": zod.string(),
+  "sourceType": zod.string().nullish(),
+  "sourceUri": zod.string().nullish(),
+  "sourceTitle": zod.string().nullish(),
+  "sourceContentIds": zod.array(zod.string()).optional(),
+  "generatedByProvider": zod.string().nullish(),
+  "generatedByModel": zod.string().nullish(),
+  "lineage": zod.union([zod.null(),zod.object({
+  "kind": zod.union([zod.literal('synthesis'),zod.literal('bridge'),zod.literal(null)]).nullish().describe('How the child was derived; null/synthesis = element remix, bridge = connecting story'),
+  "parents": zod.array(zod.object({
+  "scenarioId": zod.string(),
+  "title": zod.string(),
+  "elements": zod.array(zod.enum(['characters', 'conflict', 'setting', 'twist', 'structure', 'relationship', 'goal', 'event', 'ending']).describe('Which element to borrow from a source scenario')),
+  "role": zod.union([zod.literal('source'),zod.literal('target'),zod.literal(null)]).nullish().describe('Bridge role — which side of the bridge this parent is (bridge lineage only)')
+})).min(commitScenarioGraphResponseProvenanceLineageTwoParentsMin),
+  "instruction": zod.string().nullish(),
+  "requirements": zod.array(zod.string()).nullish().describe('Transition requirements the bridge was generated against (bridge lineage only)'),
+  "synthesizedBy": zod.string().nullish(),
+  "bridgeAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('AI explanation of why (or why not) a bridge is needed'),
+  "gaps": zod.array(zod.object({
+  "dimension": zod.enum(['timeline', 'location', 'characters', 'goals', 'conflict', 'relationships', 'knowledge', 'threads', 'contradictions']).describe('Gap dimension between the source ending and the target beginning'),
+  "status": zod.enum(['compatible', 'transition', 'conflict']).describe('compatible = ✓, transition = ⚠ requires transition, conflict = ✕'),
+  "explanation": zod.string(),
+  "requirement": zod.string().nullish().describe('Draft transition requirement when status is transition/conflict')
+})),
+  "requirements": zod.array(zod.string()).describe('Draft transition requirements the user can adjust before generating')
+}),zod.null()]).optional().describe('Connection analysis stored with a bridge scenario; server-validated before persisting (bridge lineage only)')
+})]).optional().describe('Synthesis lineage carried from a synthesized scenario, when the graph was built from one')
+}).optional()
+})
+
+
 /**
  * Returns server health status
  * @summary Health check

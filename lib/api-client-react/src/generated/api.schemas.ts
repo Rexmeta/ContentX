@@ -1275,6 +1275,106 @@ export interface AssessmentPublishResult {
   response?: AssessmentPublishResultResponse;
 }
 
+export interface ScenarioResearchInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  industry: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  organization: string;
+  /** @maxLength 2000 */
+  focus: string;
+}
+
+export interface ScenarioResearchSource {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  title: string;
+  /**
+     * @maxLength 2000
+     * @pattern ^https?://
+     */
+  url: string;
+  /**
+     * @minLength 1
+     * @maxLength 1200
+     */
+  excerpt: string;
+}
+
+export type ScenarioMaterialKind = typeof ScenarioMaterialKind[keyof typeof ScenarioMaterialKind];
+
+
+export const ScenarioMaterialKind = {
+  event: 'event',
+  situation: 'situation',
+  evidence: 'evidence',
+  tradeoff: 'tradeoff',
+  conflict: 'conflict',
+  relationship: 'relationship',
+  opposition: 'opposition',
+} as const;
+
+export interface ScenarioMaterial {
+  kind: ScenarioMaterialKind;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 1200
+     */
+  detail: string;
+  /**
+     * @maxItems 12
+     * @items.maxLength 100
+     */
+  sourceIds: string[];
+}
+
+export type ScenarioResearchResultProvider = typeof ScenarioResearchResultProvider[keyof typeof ScenarioResearchResultProvider];
+
+
+export const ScenarioResearchResultProvider = {
+  brave: 'brave',
+  wikipedia: 'wikipedia',
+  unavailable: 'unavailable',
+} as const;
+
+export interface ScenarioResearchResult {
+  /** @maxItems 12 */
+  sources: ScenarioResearchSource[];
+  /**
+     * @minItems 1
+     * @maxItems 24
+     */
+  candidates: ScenarioMaterial[];
+  provider: ScenarioResearchResultProvider;
+}
+
+export interface ScenarioCompositionInput {
+  brief: ScenarioResearchInput;
+  /** @maxItems 24 */
+  candidates: ScenarioMaterial[];
+  /** @maxItems 12 */
+  sources: ScenarioResearchSource[];
+  /** @maxLength 4000 */
+  direction: string;
+}
+
 export type EntityAttributes = { [key: string]: unknown };
 
 export interface Entity {
@@ -1305,6 +1405,26 @@ export interface Relationship {
   type: string;
   target: string;
   attributes?: RelationshipAttributes;
+}
+
+export interface ScenarioGraphDraft {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 7000
+     */
+  sourcePrompt: string;
+  /**
+     * @minItems 1
+     * @maxItems 70
+     */
+  entities: Entity[];
+  /** @maxItems 160 */
+  relationships: Relationship[];
 }
 
 /**

@@ -25,6 +25,57 @@ tags:
   - name: assessment
     description: Immutable RoleplayX assessment package publishing
 paths:
+  /v1/scenario-studio/research:
+    post:
+      operationId: researchScenarioMaterial
+      tags: [content]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioResearchInput"
+      responses:
+        "200":
+          description: Scenario studio result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioResearchResult"
+  /v1/scenario-studio/draft:
+    post:
+      operationId: composeScenarioGraph
+      tags: [content]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioCompositionInput"
+      responses:
+        "200":
+          description: Scenario studio result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioGraphDraft"
+  /v1/scenario-studio/commit:
+    post:
+      operationId: commitScenarioGraph
+      tags: [content]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioGraphDraft"
+      responses:
+        "201":
+          description: Scenario studio result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentGraph"
   /healthz:
     get:
       operationId: healthCheck
@@ -2939,6 +2990,79 @@ components:
         createdAt: { type: string, format: date-time }
         completedAt: { type: ["string", "null"], format: date-time }
         publishedAt: { type: ["string", "null"], format: date-time }
+    ScenarioResearchInput:
+      type: object
+      required: [industry, organization, focus]
+      properties:
+        industry: { type: string, minLength: 1, maxLength: 100 }
+        organization: { type: string, minLength: 1, maxLength: 120 }
+        focus: { type: string, maxLength: 2000 }
+    ScenarioResearchSource:
+      type: object
+      required: [id, title, url, excerpt]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 100 }
+        title: { type: string, minLength: 1, maxLength: 300 }
+        url: { type: string, maxLength: 2000, pattern: '^https?://' }
+        excerpt: { type: string, minLength: 1, maxLength: 1200 }
+    ScenarioMaterial:
+      type: object
+      required: [kind, title, detail, sourceIds]
+      properties:
+        kind:
+          type: string
+          enum: [event, situation, evidence, tradeoff, conflict, relationship, opposition]
+        title: { type: string, minLength: 1, maxLength: 160 }
+        detail: { type: string, minLength: 1, maxLength: 1200 }
+        sourceIds:
+          type: array
+          maxItems: 12
+          items: { type: string, maxLength: 100 }
+    ScenarioResearchResult:
+      type: object
+      required: [sources, candidates, provider]
+      properties:
+        sources:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/ScenarioResearchSource" }
+        candidates:
+          type: array
+          minItems: 1
+          maxItems: 24
+          items: { $ref: "#/components/schemas/ScenarioMaterial" }
+        provider:
+          type: string
+          enum: [brave, wikipedia, unavailable]
+    ScenarioCompositionInput:
+      type: object
+      required: [brief, candidates, sources, direction]
+      properties:
+        brief: { $ref: "#/components/schemas/ScenarioResearchInput" }
+        candidates:
+          type: array
+          maxItems: 24
+          items: { $ref: "#/components/schemas/ScenarioMaterial" }
+        sources:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/ScenarioResearchSource" }
+        direction: { type: string, maxLength: 4000 }
+    ScenarioGraphDraft:
+      type: object
+      required: [title, sourcePrompt, entities, relationships]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        sourcePrompt: { type: string, minLength: 1, maxLength: 7000 }
+        entities:
+          type: array
+          minItems: 1
+          maxItems: 70
+          items: { $ref: "#/components/schemas/Entity" }
+        relationships:
+          type: array
+          maxItems: 160
+          items: { $ref: "#/components/schemas/Relationship" }
     Entity:
       type: object
       required: [id, kind, name]

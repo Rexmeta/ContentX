@@ -27,6 +27,7 @@ import EvaluationDetail from '@/pages/evaluations/detail';
 import AssessmentsList from '@/pages/assessments/list';
 import AssessmentDetail from '@/pages/assessments/detail';
 import ScenarioWizard from '@/pages/assessments/scenario-wizard';
+import ScenarioStudio from '@/pages/scenario-studio';
 import Explorer from '@/pages/explorer';
 import Examples from '@/pages/examples';
 import Benchmark from '@/pages/benchmark';
@@ -81,6 +82,7 @@ function Router() {
       <Route path="/evaluations/:id" component={EvaluationDetail} />
       <Route path="/assessments" component={AssessmentsList} />
       <Route path="/assessments/new" component={ScenarioWizard} />
+      <Route path="/scenario-studio" component={ScenarioStudio} />
       <Route path="/assessments/:id/participant" component={ParticipantPreview} />
       <Route path="/assessments/:id" component={AssessmentDetail} />
       <Route path="/assessments/:id/edit" component={AssessmentDetail} />
