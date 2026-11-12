@@ -19,7 +19,8 @@ vi.mock("@workspace/api-client-react", () => ({
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries }),
 }));
-vi.mock("wouter", () => ({
+vi.mock("wouter", async (importOriginal) => ({
+  ...await importOriginal<typeof import("wouter")>(),
   useLocation: () => ["/assessments/new", setLocation],
 }));
 vi.mock("@/hooks/use-toast", () => ({

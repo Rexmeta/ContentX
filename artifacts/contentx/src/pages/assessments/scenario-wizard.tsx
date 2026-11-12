@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useAuthState } from "@/lib/auth-state";
 import { Button } from "@/components/ui/button";
@@ -303,6 +303,8 @@ export default function ScenarioWizard() {
             />
           </div>
         </div>
+
+        {step === 1 && <Link href="/scenario-studio" className="text-sm font-medium text-primary underline underline-offset-4">템플릿 없이 작성</Link>}
 
         {/* STEP 1: 템플릿 선택 */}
         {step === 1 && (

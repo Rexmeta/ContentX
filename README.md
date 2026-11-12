@@ -197,3 +197,25 @@ pnpm --filter @workspace/simulation-contract test && AI_INTEGRATIONS_OPENAI_API_
 
 ## 📄 License
 MIT © 2026 ContentX / RoleplayX Team.
+
+### 템플릿 없이 시나리오 작성
+
+홈의 **템플릿 없이 작성** 또는 `/scenario-studio`에서 산업과 조직을 입력한다.
+`POST /api/v1/scenario-studio/research`는 공개 검색 결과의 제목, URL, 요약을 수집하고
+사건, 상황, 자료, 트레이드오프, 갈등, 인간관계, 대립 문제를 제안한다.
+서버에 `BRAVE_SEARCH_API_KEY`가 있으면 웹 검색을 사용하며, 검색 결과를 얻지 못하면
+Wikipedia 검색을 시도한다. 출처 없는 제안은 창작 가설로 표시한다.
+산업과 조직명만 검색 제공자에게 전송하며, 초점과 작성 방향은 기존 AI 제공자에 전달한다.
+
+선택한 소재와 직접 입력한 작성 방향은 `POST /api/v1/scenario-studio/draft`에서
+편집 가능한 정규 콘텐츠 그래프로 변환된다. 노드와 관계는 기존 그래프 캔버스에서
+확인하며, 장면 카드는 그래프의 `action` 노드를 같은 ID로 편집한다.
+장면의 순서, 길이(초), 역할, 대사·자막은 해당 노드의 속성에 저장된다.
+선택한 자료는 URL과 발췌문을 담은 자료 노드로 남는다.
+`POST /api/v1/scenario-studio/commit`은 검증된 그래프와 첫 버전을 함께 저장하고
+기존 그래프 작업공간으로 연결한다. 평가 패키지 작성은 `/assessments/new`에서 시작한다.
+
+숏폼 편집 패턴은 [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo)의
+소재·대본·자막 분리, [OpenCut](https://github.com/OpenCut-app/OpenCut)의 시간 기반 편집,
+[PySceneDetect](https://github.com/Breakthrough/PySceneDetect)의 장면 단위 구조를 참고했다.
+이 작성 흐름에서 편집하는 산출물은 그래프와 스토리보드 데이터다.

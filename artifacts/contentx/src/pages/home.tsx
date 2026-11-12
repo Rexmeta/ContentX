@@ -55,17 +55,20 @@ export default function Home() {
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               실전 역량 평가를 위한 <br />
-              <span className="text-primary">RoleplayX 시나리오 제작 스튜디오</span>
+              <span className="text-primary">시나리오 제작 스튜디오</span>
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
               검증된 Assessment Center 템플릿을 선택하고 우리 회사 상황을 입력하세요.
-              AI 상대역 페르소나와 정밀한 행동 평가 루브릭이 담긴 불변 패키지가 생성되어 RoleplayX로 즉시 발행됩니다.
+              산업 자료를 바탕으로 사건과 인물의 관계를 설계하거나, 평가 템플릿으로 RoleplayX 진단 시나리오를 만드세요.
             </p>
             <div className="pt-2 flex flex-wrap items-center gap-3">
-              <Link href="/assessments/new">
+              <Link href="/scenario-studio">
                 <Button size="lg" className="font-semibold shadow-sm">
-                  <PlusCircle className="mr-2 h-4 w-4" /> 새 시나리오 만들기 (마법사)
+                  <PlusCircle className="mr-2 h-4 w-4" /> 템플릿 없이 작성
                 </Button>
+              </Link>
+              <Link href="/assessments/new">
+                <Button variant="outline" size="lg">평가 템플릿으로 작성</Button>
               </Link>
               <Link href="/assessments">
                 <Button variant="outline" size="lg">
