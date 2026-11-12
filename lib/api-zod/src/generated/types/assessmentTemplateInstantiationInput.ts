@@ -6,8 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AssessmentTemplateInstantiationInputDifficulty } from './assessmentTemplateInstantiationInputDifficulty';
+import type { DiagnosticAuthoring } from './diagnosticAuthoring';
 
 export interface AssessmentTemplateInstantiationInput {
+  diagnosticMode?: boolean;
+  diagnostic?: DiagnosticAuthoring;
   /** @minLength 1 */
   templateId: string;
   /** @minLength 1 */

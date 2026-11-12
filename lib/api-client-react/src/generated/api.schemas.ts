@@ -5,6 +5,209 @@
  * ContentX API — platform-independent AI Content Engine
  * OpenAPI spec version: 0.1.0
  */
+export type DiagnosticAuthoringSchemaVersion = typeof DiagnosticAuthoringSchemaVersion[keyof typeof DiagnosticAuthoringSchemaVersion];
+
+
+export const DiagnosticAuthoringSchemaVersion = {
+  contentxdiagnosticv1: 'contentx.diagnostic.v1',
+} as const;
+
+export interface DiagnosticBriefing {
+  /** @minLength 1 */
+  roleAndAuthority: string;
+  /** @minLength 1 */
+  relationship: string;
+  /** @minLength 1 */
+  reason: string;
+  /** @minLength 1 */
+  goals: string;
+  /** @minimum 1 */
+  preparationSeconds: number;
+}
+
+export type DiagnosticMaterialType = typeof DiagnosticMaterialType[keyof typeof DiagnosticMaterialType];
+
+
+export const DiagnosticMaterialType = {
+  text: 'text',
+  table: 'table',
+  image: 'image',
+  video: 'video',
+} as const;
+
+export type DiagnosticMaterialDisplayAt = typeof DiagnosticMaterialDisplayAt[keyof typeof DiagnosticMaterialDisplayAt];
+
+
+export const DiagnosticMaterialDisplayAt = {
+  preparation: 'preparation',
+  conversation: 'conversation',
+  both: 'both',
+} as const;
+
+export type DiagnosticMaterialTable = {
+  /**
+     * @minItems 1
+     * @items.minLength 1
+     */
+  columns: string[];
+  /**
+     * @minItems 1
+     * @items.minItems 1
+     */
+  rows: string[][];
+};
+
+export interface DiagnosticMaterial {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  title: string;
+  type: DiagnosticMaterialType;
+  displayAt: DiagnosticMaterialDisplayAt;
+  reopenDuringConversation: boolean;
+  /** Accessible text equivalent including all essential facts */
+  text: string;
+  table?: DiagnosticMaterialTable;
+  assetId?: string;
+  altText?: string;
+  transcript?: string;
+}
+
+export interface DiagnosticPrivate {
+  hiddenCauses: string;
+  internalIntent: string;
+  modelAnswer: string;
+  instructions: string;
+}
+
+export type DiagnosticCueType = typeof DiagnosticCueType[keyof typeof DiagnosticCueType];
+
+
+export const DiagnosticCueType = {
+  discovery: 'discovery',
+  common: 'common',
+} as const;
+
+export interface DiagnosticCue {
+  /** @minLength 1 */
+  id: string;
+  type: DiagnosticCueType;
+  intent?: string;
+  condition?: string;
+  /** @minLength 1 */
+  fact: string;
+  /** @minItems 1 */
+  criterionIds: string[];
+  tone?: string;
+  intensity?: string;
+  fallbackCondition?: string;
+}
+
+export interface DiagnosticCriterion {
+  /** @minLength 1 */
+  id: string;
+  /** @minLength 1 */
+  dimensionKey: string;
+  /** @minLength 1 */
+  competencyName: string;
+  /** @minLength 1 */
+  observableBehavior: string;
+}
+
+export interface DiagnosticScenario {
+  /** @minLength 1 */
+  scenarioKey: string;
+  briefing: DiagnosticBriefing;
+  materials: DiagnosticMaterial[];
+  private: DiagnosticPrivate;
+  cues: DiagnosticCue[];
+  /** @minItems 1 */
+  criteria: DiagnosticCriterion[];
+}
+
+export interface DiagnosticAuthoring {
+  schemaVersion: DiagnosticAuthoringSchemaVersion;
+  /** @minItems 1 */
+  scenarios: DiagnosticScenario[];
+}
+
+export type AssessmentParticipantPreviewSchemaVersion = typeof AssessmentParticipantPreviewSchemaVersion[keyof typeof AssessmentParticipantPreviewSchemaVersion];
+
+
+export const AssessmentParticipantPreviewSchemaVersion = {
+  contentxparticipantv1: 'contentx.participant.v1',
+} as const;
+
+export type AssessmentParticipantPreviewPhase = typeof AssessmentParticipantPreviewPhase[keyof typeof AssessmentParticipantPreviewPhase];
+
+
+export const AssessmentParticipantPreviewPhase = {
+  preparation: 'preparation',
+  conversation: 'conversation',
+} as const;
+
+export type AssessmentParticipantPreviewScenariosItem = {
+  scenarioKey: string;
+  briefing: DiagnosticBriefing;
+  materials: DiagnosticMaterial[];
+};
+
+export interface AssessmentParticipantPreview {
+  schemaVersion: AssessmentParticipantPreviewSchemaVersion;
+  phase: AssessmentParticipantPreviewPhase;
+  scenarios: AssessmentParticipantPreviewScenariosItem[];
+}
+
+export type AssessmentDiagnosticExportSchemaVersion = typeof AssessmentDiagnosticExportSchemaVersion[keyof typeof AssessmentDiagnosticExportSchemaVersion];
+
+
+export const AssessmentDiagnosticExportSchemaVersion = {
+  'contentxdiagnostic-exportv1': 'contentx.diagnostic-export.v1',
+} as const;
+
+export type AssessmentDiagnosticExportReceiverStatus = typeof AssessmentDiagnosticExportReceiverStatus[keyof typeof AssessmentDiagnosticExportReceiverStatus];
+
+
+export const AssessmentDiagnosticExportReceiverStatus = {
+  mapping_required_not_runtime_verified: 'mapping_required_not_runtime_verified',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AssessmentDiagnosticExportRuntimeResults = { [key: string]: unknown } | null;
+
+export interface AssessmentDiagnosticExport {
+  schemaVersion: AssessmentDiagnosticExportSchemaVersion;
+  packageKey: string;
+  version: number;
+  diagnostic: DiagnosticAuthoring;
+  rules: string[];
+  receiverStatus: AssessmentDiagnosticExportReceiverStatus;
+  /** @nullable */
+  runtimeResults: AssessmentDiagnosticExportRuntimeResults;
+}
+
+export type AssessmentMediaUploadInputContentType = typeof AssessmentMediaUploadInputContentType[keyof typeof AssessmentMediaUploadInputContentType];
+
+
+export const AssessmentMediaUploadInputContentType = {
+  'image/png': 'image/png',
+  'image/jpeg': 'image/jpeg',
+  'image/webp': 'image/webp',
+  'video/mp4': 'video/mp4',
+  'video/webm': 'video/webm',
+} as const;
+
+export interface AssessmentMediaUploadInput {
+  contentType: AssessmentMediaUploadInputContentType;
+}
+
+export interface AssessmentMediaUpload {
+  assetId: string;
+  uploadURL: string;
+}
+
 export type ReferenceBenchmarkDefinitionScenario = {
   title: string;
   policy: string;
@@ -393,6 +596,7 @@ export type AssessmentPackageVersionCreateInputMetadata = {
 };
 
 export interface AssessmentPackageVersionCreateInput {
+  diagnostic?: DiagnosticAuthoring;
   /** @minLength 1 */
   packageId?: string;
   /** @minLength 1 */
@@ -781,6 +985,8 @@ export const AssessmentTemplateInstantiationInputDifficulty = {
 } as const;
 
 export interface AssessmentTemplateInstantiationInput {
+  diagnosticMode?: boolean;
+  diagnostic?: DiagnosticAuthoring;
   /** @minLength 1 */
   templateId: string;
   /** @minLength 1 */
@@ -2853,4 +3059,16 @@ export type PostV1CommercialValidationPackagesIdVerify200 = {
   storedChecksum: string;
   calculatedChecksum: string;
 };
+
+export type GetAssessmentParticipantPreviewParams = {
+  phase: GetAssessmentParticipantPreviewPhase;
+};
+
+export type GetAssessmentParticipantPreviewPhase = typeof GetAssessmentParticipantPreviewPhase[keyof typeof GetAssessmentParticipantPreviewPhase];
+
+
+export const GetAssessmentParticipantPreviewPhase = {
+  preparation: 'preparation',
+  conversation: 'conversation',
+} as const;
 

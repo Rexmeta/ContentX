@@ -2161,6 +2161,66 @@ paths:
       responses:
         "200": { description: Completed AssessmentScenarioPackageV1 payload, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentScenarioPackageV1" } } } }
         "404": { description: Package version not found, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
+  /v1/assessments/{id}/versions/{version}/diagnostic:
+    get:
+      operationId: getAssessmentDiagnostic
+      tags: [assessment]
+      summary: Author-only diagnostic source, never a participant response
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200": { description: Diagnostic source, content: { application/json: { schema: { $ref: "#/components/schemas/DiagnosticAuthoring" } } } }
+        "404": { description: No diagnostic source }
+    post:
+      operationId: createAssessmentDiagnosticVersion
+      tags: [assessment]
+      summary: Copy a selected immutable version into the next version with edited diagnostic source
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/DiagnosticAuthoring" } } }
+      responses:
+        "201": { description: New immutable version, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentPackageVersionRecord" } } } }
+  /v1/assessments/diagnostic-sample:
+    post:
+      operationId: createAssessmentDiagnosticSample
+      tags: [assessment]
+      summary: Create a private editable sales-manager diagnostic sample without AI
+      responses:
+        "201": { description: Sample, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentTemplateInstantiationResult" } } } }
+  /v1/assessments/{id}/versions/{version}/diagnostic-export:
+    get:
+      operationId: exportAssessmentDiagnostic
+      tags: [assessment]
+      summary: Author-only versioned diagnostic export with explicit receiver requirements
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200": { description: Export, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentDiagnosticExport" } } } }
+  /v1/assessments/{id}/versions/{version}/participant:
+    get:
+      operationId: getAssessmentParticipantPreview
+      tags: [assessment]
+      summary: Server allowlist projection, contains no private source or v1 package
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+        - { name: phase, in: query, required: true, schema: { type: string, enum: [preparation, conversation] } }
+      responses:
+        "200": { description: Participant-visible fields only, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentParticipantPreview" } } } }
+  /v1/assessment-media/uploads:
+    post:
+      operationId: requestAssessmentMediaUpload
+      tags: [assessment]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentMediaUploadInput" } } }
+      responses:
+        "200": { description: Private direct upload, content: { application/json: { schema: { $ref: "#/components/schemas/AssessmentMediaUpload" } } } }
   /v1/assessments/{id}/versions/{version}/publish:
     post:
       operationId: publishAssessmentPackageVersionToRoleplayX
@@ -2192,6 +2252,128 @@ paths:
         "404": { description: Assessment package not found, content: { application/json: { schema: { $ref: "#/components/schemas/ApiMessage" } } } }
 components:
   schemas:
+    DiagnosticAuthoring:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, scenarios]
+      properties:
+        schemaVersion: { type: string, enum: [contentx.diagnostic.v1] }
+        scenarios: { type: array, minItems: 1, items: { $ref: "#/components/schemas/DiagnosticScenario" } }
+    DiagnosticBriefing:
+      type: object
+      additionalProperties: false
+      required: [roleAndAuthority, relationship, reason, goals, preparationSeconds]
+      properties:
+        roleAndAuthority: { type: string, minLength: 1 }
+        relationship: { type: string, minLength: 1 }
+        reason: { type: string, minLength: 1 }
+        goals: { type: string, minLength: 1 }
+        preparationSeconds: { type: integer, minimum: 1 }
+    DiagnosticMaterial:
+      type: object
+      additionalProperties: false
+      required: [id, title, type, displayAt, reopenDuringConversation, text]
+      properties:
+        id: { type: string, minLength: 1 }
+        title: { type: string, minLength: 1 }
+        type: { type: string, enum: [text, table, image, video] }
+        displayAt: { type: string, enum: [preparation, conversation, both] }
+        reopenDuringConversation: { type: boolean }
+        text: { type: string, description: Accessible text equivalent including all essential facts }
+        table:
+          type: object
+          additionalProperties: false
+          required: [columns, rows]
+          properties:
+            columns: { type: array, minItems: 1, items: { type: string, minLength: 1 } }
+            rows: { type: array, minItems: 1, items: { type: array, minItems: 1, items: { type: string } } }
+        assetId: { type: string }
+        altText: { type: string }
+        transcript: { type: string }
+    DiagnosticCue:
+      type: object
+      additionalProperties: false
+      required: [id, type, fact, criterionIds]
+      properties:
+        id: { type: string, minLength: 1 }
+        type: { type: string, enum: [discovery, common] }
+        intent: { type: string }
+        condition: { type: string }
+        fact: { type: string, minLength: 1 }
+        criterionIds: { type: array, minItems: 1, items: { type: string } }
+        tone: { type: string }
+        intensity: { type: string }
+        fallbackCondition: { type: string }
+    DiagnosticCriterion:
+      type: object
+      additionalProperties: false
+      required: [id, dimensionKey, competencyName, observableBehavior]
+      properties:
+        id: { type: string, minLength: 1 }
+        dimensionKey: { type: string, minLength: 1 }
+        competencyName: { type: string, minLength: 1 }
+        observableBehavior: { type: string, minLength: 1 }
+    DiagnosticPrivate:
+      type: object
+      additionalProperties: false
+      required: [hiddenCauses, internalIntent, modelAnswer, instructions]
+      properties:
+        hiddenCauses: { type: string }
+        internalIntent: { type: string }
+        modelAnswer: { type: string }
+        instructions: { type: string }
+    DiagnosticScenario:
+      type: object
+      additionalProperties: false
+      required: [scenarioKey, briefing, materials, private, cues, criteria]
+      properties:
+        scenarioKey: { type: string, minLength: 1 }
+        briefing: { $ref: "#/components/schemas/DiagnosticBriefing" }
+        materials: { type: array, items: { $ref: "#/components/schemas/DiagnosticMaterial" } }
+        private: { $ref: "#/components/schemas/DiagnosticPrivate" }
+        cues: { type: array, items: { $ref: "#/components/schemas/DiagnosticCue" } }
+        criteria: { type: array, minItems: 1, items: { $ref: "#/components/schemas/DiagnosticCriterion" } }
+    AssessmentParticipantPreview:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, phase, scenarios]
+      properties:
+        schemaVersion: { type: string, enum: [contentx.participant.v1] }
+        phase: { type: string, enum: [preparation, conversation] }
+        scenarios:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [scenarioKey, briefing, materials]
+            properties:
+              scenarioKey: { type: string }
+              briefing: { $ref: "#/components/schemas/DiagnosticBriefing" }
+              materials: { type: array, items: { $ref: "#/components/schemas/DiagnosticMaterial" } }
+    AssessmentDiagnosticExport:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, packageKey, version, diagnostic, rules, receiverStatus, runtimeResults]
+      properties:
+        schemaVersion: { type: string, enum: [contentx.diagnostic-export.v1] }
+        packageKey: { type: string }
+        version: { type: integer }
+        diagnostic: { $ref: "#/components/schemas/DiagnosticAuthoring" }
+        rules: { type: array, items: { type: string } }
+        receiverStatus: { type: string, enum: [mapping_required_not_runtime_verified] }
+        runtimeResults: { type: ["object", "null"], additionalProperties: true }
+    AssessmentMediaUploadInput:
+      type: object
+      additionalProperties: false
+      required: [contentType]
+      properties:
+        contentType: { type: string, enum: [image/png, image/jpeg, image/webp, video/mp4, video/webm] }
+    AssessmentMediaUpload:
+      type: object
+      required: [assetId, uploadURL]
+      properties:
+        assetId: { type: string }
+        uploadURL: { type: string }
     ReferenceBenchmarkDefinition:
       type: object
       required: [id, version, title, purpose, scenario, cohorts, metrics, seedPolicy]
@@ -2410,6 +2592,7 @@ components:
       additionalProperties: false
       required: [packageKey, version, publishedAt, author, metadata, competencies, scenarios]
       properties:
+        diagnostic: { $ref: "#/components/schemas/DiagnosticAuthoring" }
         packageId: { type: string, minLength: 1 }
         packageKey: { type: string, minLength: 1 }
         version: { type: integer, minimum: 1 }
@@ -2605,6 +2788,8 @@ components:
       additionalProperties: false
       required: [templateId, companyContext]
       properties:
+        diagnosticMode: { type: boolean }
+        diagnostic: { $ref: "#/components/schemas/DiagnosticAuthoring" }
         templateId: { type: string, minLength: 1 }
         companyContext: { type: string, minLength: 1 }
         participantRole: { type: string, minLength: 1 }

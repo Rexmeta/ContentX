@@ -27,6 +27,9 @@ export const assessmentPackageVersionsTable = pgTable(
     version: integer("version").notNull(),
     /** AssessmentScenarioPackageV1, including the computed content hash. */
     packageJson: jsonb("package_json").notNull(),
+    /** ContentX-owned diagnostic source, deliberately outside strict RoleplayX v1. */
+    diagnosticJson: jsonb("diagnostic_json"),
+    diagnosticHash: text("diagnostic_hash"),
     /** SHA-256 of the canonical package excluding its checksum field. */
     contentHash: text("content_hash").notNull(),
     /** Local strict-schema and semantic validation result. */

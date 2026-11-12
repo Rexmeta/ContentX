@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/layout";
+import { useAuthState } from "@/lib/auth-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,6 +141,8 @@ export default function ScenarioWizard() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [companyContext, setCompanyContext] = useState("");
+  const { isSignedIn } = useAuthState();
+  const [diagnosticMode, setDiagnosticMode] = useState(false);
   const [participantRole, setParticipantRole] = useState("");
   const [situation, setSituation] = useState("");
   const [counterpartName, setCounterpartName] = useState("");
@@ -223,6 +226,7 @@ export default function ScenarioWizard() {
         data: {
           templateId: selectedTemplateId,
           companyContext: companyContext.trim(),
+          diagnosticMode: isSignedIn && diagnosticMode,
           participantRole: participantRole.trim() || undefined,
           situation: situation.trim() || undefined,
           counterpartName: counterpartName.trim() || undefined,
@@ -425,6 +429,10 @@ export default function ScenarioWizard() {
             </div>
 
             <div className="bg-card rounded-xl border p-6 space-y-5">
+              <label className={`flex items-start gap-3 rounded-lg border p-3 text-sm ${isSignedIn ? "" : "opacity-60"}`}>
+                <input type="checkbox" data-testid="checkbox-diagnostic-mode" className="mt-1" checked={isSignedIn && diagnosticMode} disabled={!isSignedIn} onChange={(e) => setDiagnosticMode(e.target.checked)} />
+                <span><b>진단형 롤플레이로 생성</b><span className="block text-xs text-muted-foreground">응시자 브리핑, 숨은 단서, 관찰 기준을 분리해 생성합니다.{isSignedIn ? "" : " 로그인 후 사용할 수 있습니다."}</span></span>
+              </label>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="input-company-context" className="text-sm font-semibold">

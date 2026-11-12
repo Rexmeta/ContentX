@@ -1,4 +1,7 @@
 import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { diagnosticHash, parseDiagnostic } from "./diagnostic";
+import { withAssessmentPackageHash } from "./hash";
+import type { AssessmentScenarioPackageV1 } from "./model";
 import {
   assessmentPackagesTable,
   assessmentPackageVersionsTable,
@@ -30,6 +33,7 @@ export type CreateAssessmentPackageInput = {
   description: string;
   sourceType: string;
   sourceId: string;
+  diagnosticOwnerId?: string;
 };
 
 export type CreateAssessmentPackageVersionInput = {
@@ -40,6 +44,8 @@ export type CreateAssessmentPackageVersionInput = {
   contentHash: string;
   validationReport: unknown;
   createdBy?: string | null;
+  diagnosticJson?: unknown;
+  diagnosticHash?: string | null;
 };
 
 export type CreatePublicationAttemptInput = {
@@ -187,12 +193,20 @@ export async function createAssessmentPackageVersion(
 ): Promise<AssessmentPackageVersionRow> {
   return db.transaction(async (tx) => {
     const [packageRow] = await tx
-      .select({ id: assessmentPackagesTable.id })
+      .select({ id: assessmentPackagesTable.id, diagnosticOwnerId: assessmentPackagesTable.diagnosticOwnerId })
       .from(assessmentPackagesTable)
       .where(eq(assessmentPackagesTable.id, input.packageId))
       .for("update");
     if (!packageRow) {
       throw new Error(`Assessment package "${input.packageId}" does not exist`);
+    }
+    if (packageRow.diagnosticOwnerId && packageRow.diagnosticOwnerId !== input.createdBy) throw new Error("Diagnostic package owner mismatch");
+    if (input.diagnosticJson) {
+      if (!packageRow.diagnosticOwnerId) throw new Error("Diagnostic source requires an owned package");
+      const source = parseDiagnostic(input.diagnosticJson, input.packageJson as AssessmentScenarioPackageV1);
+      input = { ...input, diagnosticJson: source, diagnosticHash: diagnosticHash(source) };
+    } else if (packageRow.diagnosticOwnerId) {
+      throw new Error("Diagnostic package versions must preserve diagnostic source");
     }
 
     const [matchingChecksum] = await tx
@@ -204,7 +218,10 @@ export async function createAssessmentPackageVersion(
           eq(assessmentPackageVersionsTable.contentHash, input.contentHash),
         ),
       );
-    if (matchingChecksum) return matchingChecksum;
+    if (matchingChecksum) {
+      if (matchingChecksum.diagnosticHash !== (input.diagnosticHash ?? null)) throw new Error("Immutable diagnostic snapshot conflicts with existing content");
+      return matchingChecksum;
+    }
 
     const [sameVersion] = await tx
       .select()
@@ -231,6 +248,29 @@ export async function createAssessmentPackageVersion(
       .set({ currentVersion: input.version })
       .where(eq(assessmentPackagesTable.id, input.packageId));
     return row;
+  });
+}
+
+/**
+ * Copy the selected snapshot, not today's mutable scenario library.
+ * Package lock serializes allocation/ownership and all source/version writes.
+ */
+export async function createDiagnosticSuccessor(packageId: string, baseVersion: number, source: unknown, ownerId: string) {
+  return db.transaction(async (tx) => {
+    const [parent] = await tx.select().from(assessmentPackagesTable).where(eq(assessmentPackagesTable.id, packageId)).for("update");
+    if (!parent) throw new Error("Assessment package not found");
+    if (parent.diagnosticOwnerId && parent.diagnosticOwnerId !== ownerId) throw new Error("Forbidden");
+    const [base] = await tx.select().from(assessmentPackageVersionsTable).where(and(eq(assessmentPackageVersionsTable.packageId, packageId), eq(assessmentPackageVersionsTable.version, baseVersion)));
+    if (!base) throw new Error("Assessment version not found");
+    const version = parent.currentVersion + 1;
+    const pkg = withAssessmentPackageHash({ ...(base.packageJson as AssessmentScenarioPackageV1), version: String(version), publishedAt: new Date().toISOString() });
+    const diagnostic = parseDiagnostic(source, pkg);
+    const [row] = await tx.insert(assessmentPackageVersionsTable).values({
+      id: `assessmentversion_${crypto.randomUUID()}`, packageId, version, packageJson: pkg, contentHash: pkg.provenance.contentHash,
+      diagnosticJson: diagnostic, diagnosticHash: diagnosticHash(diagnostic), validationReport: { valid: true, diagnostics: [] }, createdBy: ownerId,
+    }).returning();
+    await tx.update(assessmentPackagesTable).set({ diagnosticOwnerId: ownerId, currentVersion: version }).where(eq(assessmentPackagesTable.id, packageId));
+    return row!;
   });
 }
 

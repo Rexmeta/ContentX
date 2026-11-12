@@ -31,10 +31,14 @@ import type {
   AgentStateUpdate,
   AgentWithState,
   ApiMessage,
+  AssessmentDiagnosticExport,
+  AssessmentMediaUpload,
+  AssessmentMediaUploadInput,
   AssessmentPackageDetail,
   AssessmentPackageSummary,
   AssessmentPackageVersionCreateInput,
   AssessmentPackageVersionRecord,
+  AssessmentParticipantPreview,
   AssessmentPublicationRecord,
   AssessmentPublishInput,
   AssessmentPublishResult,
@@ -64,6 +68,7 @@ import type {
   DependencyRule,
   DependencyRuleInput,
   DependencyRuleUpdate,
+  DiagnosticAuthoring,
   Dimension,
   DimensionInput,
   DramaticScenario,
@@ -72,6 +77,7 @@ import type {
   EvaluationInput,
   EvaluationLineage,
   EvidencePackage,
+  GetAssessmentParticipantPreviewParams,
   GetPopulationDefinitionParams,
   HealthStatus,
   InteractionEvent,
@@ -9153,6 +9159,595 @@ export function useGetAssessmentPackageVersion<TData = Awaited<ReturnType<typeof
 
 
 
+
+export const getGetAssessmentDiagnosticUrl = (id: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/versions/${version}/diagnostic`
+}
+
+/**
+ * @summary Author-only diagnostic source, never a participant response
+ */
+export const getAssessmentDiagnostic = async (id: string,
+    version: number, options?: Parameters<typeof customFetch>[1]): Promise<DiagnosticAuthoring> => {
+
+  return customFetch<DiagnosticAuthoring>(getGetAssessmentDiagnosticUrl(id,version),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssessmentDiagnosticQueryKey = (id: string,
+    version: number,) => {
+    return [
+    `/api/v1/assessments/${id}/versions/${version}/diagnostic`
+    ] as const;
+    }
+
+
+export const getGetAssessmentDiagnosticQueryOptions = <TData = Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError = ErrorType<void>>(id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessmentDiagnosticQueryKey(id,version);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessmentDiagnostic>>> = ({ signal }) => getAssessmentDiagnostic(id,version, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && version !== null && version !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAssessmentDiagnosticQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessmentDiagnostic>>>
+export type GetAssessmentDiagnosticQueryError = ErrorType<void>
+
+
+export function useGetAssessmentDiagnostic<TData = Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssessmentDiagnostic>>,
+          TError,
+          Awaited<ReturnType<typeof getAssessmentDiagnostic>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssessmentDiagnostic<TData = Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssessmentDiagnostic>>,
+          TError,
+          Awaited<ReturnType<typeof getAssessmentDiagnostic>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssessmentDiagnostic<TData = Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Author-only diagnostic source, never a participant response
+ */
+
+export function useGetAssessmentDiagnostic<TData = Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError = ErrorType<void>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentDiagnostic>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAssessmentDiagnosticQueryOptions(id,version,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAssessmentDiagnosticVersionUrl = (id: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/versions/${version}/diagnostic`
+}
+
+/**
+ * @summary Copy a selected immutable version into the next version with edited diagnostic source
+ */
+export const createAssessmentDiagnosticVersion = async (id: string,
+    version: number,
+    diagnosticAuthoring: DiagnosticAuthoring, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentPackageVersionRecord> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AssessmentPackageVersionRecord>(getCreateAssessmentDiagnosticVersionUrl(id,version),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(diagnosticAuthoring)
+  }
+);}
+
+
+
+
+
+export const getCreateAssessmentDiagnosticVersionMutationKey = () => ['createAssessmentDiagnosticVersion'] as const;
+
+export const getCreateAssessmentDiagnosticVersionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentDiagnosticVersion>>, TError,CreateAssessmentDiagnosticVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAssessmentDiagnosticVersion>>, TError,CreateAssessmentDiagnosticVersionMutationVariables, TContext> => {
+
+const mutationKey = getCreateAssessmentDiagnosticVersionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAssessmentDiagnosticVersion>>, CreateAssessmentDiagnosticVersionMutationVariables> = (props) => {
+          const {id,version,data} = props ?? {};
+
+          return  createAssessmentDiagnosticVersion(id,version,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssessmentDiagnosticVersionMutationResult = NonNullable<Awaited<ReturnType<typeof createAssessmentDiagnosticVersion>>>
+    export type CreateAssessmentDiagnosticVersionMutationBody = BodyType<DiagnosticAuthoring>
+    export type CreateAssessmentDiagnosticVersionMutationError = ErrorType<unknown>
+    export type CreateAssessmentDiagnosticVersionMutationVariables = {id: string;version: number;data: BodyType<DiagnosticAuthoring>}
+
+    /**
+ * @summary Copy a selected immutable version into the next version with edited diagnostic source
+ */
+export const useCreateAssessmentDiagnosticVersion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentDiagnosticVersion>>, TError,CreateAssessmentDiagnosticVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createAssessmentDiagnosticVersion>>,
+        TError,
+        CreateAssessmentDiagnosticVersionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAssessmentDiagnosticVersionMutationOptions(options), queryClient);
+    }
+
+export const getCreateAssessmentDiagnosticSampleUrl = () => {
+
+
+
+
+  return `/api/v1/assessments/diagnostic-sample`
+}
+
+/**
+ * @summary Create a private editable sales-manager diagnostic sample without AI
+ */
+export const createAssessmentDiagnosticSample = async ( options?: Parameters<typeof customFetch>[1]): Promise<AssessmentTemplateInstantiationResult> => {
+
+  return customFetch<AssessmentTemplateInstantiationResult>(getCreateAssessmentDiagnosticSampleUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateAssessmentDiagnosticSampleMutationKey = () => ['createAssessmentDiagnosticSample'] as const;
+
+export const getCreateAssessmentDiagnosticSampleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentDiagnosticSample>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAssessmentDiagnosticSample>>, TError,void, TContext> => {
+
+const mutationKey = getCreateAssessmentDiagnosticSampleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAssessmentDiagnosticSample>>, void> = () => {
+
+
+          return  createAssessmentDiagnosticSample(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssessmentDiagnosticSampleMutationResult = NonNullable<Awaited<ReturnType<typeof createAssessmentDiagnosticSample>>>
+
+    export type CreateAssessmentDiagnosticSampleMutationError = ErrorType<unknown>
+
+
+    /**
+ * @summary Create a private editable sales-manager diagnostic sample without AI
+ */
+export const useCreateAssessmentDiagnosticSample = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessmentDiagnosticSample>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createAssessmentDiagnosticSample>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateAssessmentDiagnosticSampleMutationOptions(options), queryClient);
+    }
+
+export const getExportAssessmentDiagnosticUrl = (id: string,
+    version: number,) => {
+
+
+
+
+  return `/api/v1/assessments/${id}/versions/${version}/diagnostic-export`
+}
+
+/**
+ * @summary Author-only versioned diagnostic export with explicit receiver requirements
+ */
+export const exportAssessmentDiagnostic = async (id: string,
+    version: number, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentDiagnosticExport> => {
+
+  return customFetch<AssessmentDiagnosticExport>(getExportAssessmentDiagnosticUrl(id,version),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getExportAssessmentDiagnosticQueryKey = (id: string,
+    version: number,) => {
+    return [
+    `/api/v1/assessments/${id}/versions/${version}/diagnostic-export`
+    ] as const;
+    }
+
+
+export const getExportAssessmentDiagnosticQueryOptions = <TData = Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError = ErrorType<unknown>>(id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportAssessmentDiagnosticQueryKey(id,version);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>> = ({ signal }) => exportAssessmentDiagnostic(id,version, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && version !== null && version !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ExportAssessmentDiagnosticQueryResult = NonNullable<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>>
+export type ExportAssessmentDiagnosticQueryError = ErrorType<unknown>
+
+
+export function useExportAssessmentDiagnostic<TData = Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAssessmentDiagnostic>>,
+          TError,
+          Awaited<ReturnType<typeof exportAssessmentDiagnostic>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportAssessmentDiagnostic<TData = Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportAssessmentDiagnostic>>,
+          TError,
+          Awaited<ReturnType<typeof exportAssessmentDiagnostic>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportAssessmentDiagnostic<TData = Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Author-only versioned diagnostic export with explicit receiver requirements
+ */
+
+export function useExportAssessmentDiagnostic<TData = Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportAssessmentDiagnostic>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getExportAssessmentDiagnosticQueryOptions(id,version,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAssessmentParticipantPreviewUrl = (id: string,
+    version: number,
+    params: GetAssessmentParticipantPreviewParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/assessments/${id}/versions/${version}/participant?${stringifiedParams}` : `/api/v1/assessments/${id}/versions/${version}/participant`
+}
+
+/**
+ * @summary Server allowlist projection, contains no private source or v1 package
+ */
+export const getAssessmentParticipantPreview = async (id: string,
+    version: number,
+    params: GetAssessmentParticipantPreviewParams, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentParticipantPreview> => {
+
+  return customFetch<AssessmentParticipantPreview>(getGetAssessmentParticipantPreviewUrl(id,version,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssessmentParticipantPreviewQueryKey = (id: string,
+    version: number,
+    params?: GetAssessmentParticipantPreviewParams,) => {
+    return [
+    `/api/v1/assessments/${id}/versions/${version}/participant`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAssessmentParticipantPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError = ErrorType<unknown>>(id: string,
+    version: number,
+    params: GetAssessmentParticipantPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessmentParticipantPreviewQueryKey(id,version,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>> = ({ signal }) => getAssessmentParticipantPreview(id,version,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && version !== null && version !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAssessmentParticipantPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>>
+export type GetAssessmentParticipantPreviewQueryError = ErrorType<unknown>
+
+
+export function useGetAssessmentParticipantPreview<TData = Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number,
+    params: GetAssessmentParticipantPreviewParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssessmentParticipantPreview>>,
+          TError,
+          Awaited<ReturnType<typeof getAssessmentParticipantPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssessmentParticipantPreview<TData = Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number,
+    params: GetAssessmentParticipantPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssessmentParticipantPreview>>,
+          TError,
+          Awaited<ReturnType<typeof getAssessmentParticipantPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssessmentParticipantPreview<TData = Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number,
+    params: GetAssessmentParticipantPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Server allowlist projection, contains no private source or v1 package
+ */
+
+export function useGetAssessmentParticipantPreview<TData = Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError = ErrorType<unknown>>(
+ id: string,
+    version: number,
+    params: GetAssessmentParticipantPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssessmentParticipantPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAssessmentParticipantPreviewQueryOptions(id,version,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRequestAssessmentMediaUploadUrl = () => {
+
+
+
+
+  return `/api/v1/assessment-media/uploads`
+}
+
+export const requestAssessmentMediaUpload = async (assessmentMediaUploadInput: AssessmentMediaUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<AssessmentMediaUpload> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AssessmentMediaUpload>(getRequestAssessmentMediaUploadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assessmentMediaUploadInput)
+  }
+);}
+
+
+
+
+
+export const getRequestAssessmentMediaUploadMutationKey = () => ['requestAssessmentMediaUpload'] as const;
+
+export const getRequestAssessmentMediaUploadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestAssessmentMediaUpload>>, TError,RequestAssessmentMediaUploadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestAssessmentMediaUpload>>, TError,RequestAssessmentMediaUploadMutationVariables, TContext> => {
+
+const mutationKey = getRequestAssessmentMediaUploadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestAssessmentMediaUpload>>, RequestAssessmentMediaUploadMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  requestAssessmentMediaUpload(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestAssessmentMediaUploadMutationResult = NonNullable<Awaited<ReturnType<typeof requestAssessmentMediaUpload>>>
+    export type RequestAssessmentMediaUploadMutationBody = BodyType<AssessmentMediaUploadInput>
+    export type RequestAssessmentMediaUploadMutationError = ErrorType<unknown>
+    export type RequestAssessmentMediaUploadMutationVariables = {data: BodyType<AssessmentMediaUploadInput>}
+
+    export const useRequestAssessmentMediaUpload = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestAssessmentMediaUpload>>, TError,RequestAssessmentMediaUploadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof requestAssessmentMediaUpload>>,
+        TError,
+        RequestAssessmentMediaUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRequestAssessmentMediaUploadMutationOptions(options), queryClient);
+    }
 
 export const getPublishAssessmentPackageVersionToRoleplayXUrl = (id: string,
     version: number,) => {

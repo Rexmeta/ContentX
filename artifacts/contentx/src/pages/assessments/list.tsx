@@ -3,10 +3,11 @@ import { Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getGetAssessmentPackageVersionQueryKey, getGetAssessmentQueryKey, getListAssessmentPackagePublicationHistoryQueryKey, getListAssessmentsQueryKey, useCreateAssessmentPackageVersion, useListAssessments, type AssessmentPackageVersionCreateInput } from "@workspace/api-client-react";
+import { getGetAssessmentPackageVersionQueryKey, getGetAssessmentQueryKey, getListAssessmentPackagePublicationHistoryQueryKey, getListAssessmentsQueryKey, useCreateAssessmentDiagnosticSample, useCreateAssessmentPackageVersion, useListAssessments, type AssessmentPackageVersionCreateInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, PlusCircle, ShieldCheck } from "lucide-react";
+import { FlaskConical, Loader2, PlusCircle, ShieldCheck } from "lucide-react";
+import { useAuthState } from "@/lib/auth-state";
 import { AssessmentVersionForm } from "./assessment-version-form";
 import { trackEvent } from "@/lib/analytics";
 
@@ -17,6 +18,20 @@ export default function AssessmentsList() {
   const assessments = useListAssessments({ query: { queryKey: getListAssessmentsQueryKey() } });
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
+  const { isSignedIn, isLoaded } = useAuthState();
+  const sample = useCreateAssessmentDiagnosticSample();
+  const createSample = () => {
+    if (!isSignedIn) { setLocation("/sign-in"); return; }
+    sample.mutate(undefined, {
+      onSuccess: (result) => {
+        queryClient.invalidateQueries({ queryKey: getListAssessmentsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAssessmentQueryKey(result.assessmentId) });
+        toast({ title: "진단 샘플이 생성되었습니다", description: `${result.title} · v${result.version}` });
+        setLocation(`/assessments/${result.assessmentId}?version=${result.version}`);
+      },
+      onError: (error) => toast({ variant: "destructive", title: "샘플을 만들지 못했습니다", description: error.message }),
+    });
+  };
 
   const create = (packageId: string, data: AssessmentPackageVersionCreateInput) => {
     createVersion.mutate({ id: packageId, data }, {
@@ -46,7 +61,7 @@ export default function AssessmentsList() {
   };
 
   return (
-    <Layout breadcrumbs={[{ label: "ContentX" }, { label: "Assessments" }]} title={<Button data-testid="button-new-assessment" onClick={() => setFormOpen(true)}><PlusCircle className="h-4 w-4 mr-2" />새 평가</Button>}>
+    <Layout breadcrumbs={[{ label: "ContentX" }, { label: "Assessments" }]} title={<div className="flex gap-2"><Button data-testid="button-create-diagnostic-sample" variant="outline" onClick={createSample} disabled={!isLoaded || sample.isPending} title={isSignedIn ? undefined : "로그인 후 사용할 수 있습니다"}>{sample.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FlaskConical className="h-4 w-4 mr-2" />}진단 샘플{isSignedIn ? "" : " (로그인)"}</Button><Button data-testid="button-new-assessment" onClick={() => setFormOpen(true)}><PlusCircle className="h-4 w-4 mr-2" />새 평가</Button></div>}>
       <div className="max-w-3xl mx-auto p-4 md:p-6 space-y-6">
         <section className="rounded-xl border bg-card p-5">
           <div className="flex gap-3"><ShieldCheck className="h-5 w-5 text-primary mt-0.5" /><div><h1 className="text-lg font-semibold">RoleplayX Assessment</h1><p className="text-sm text-muted-foreground mt-1">시나리오를 저장하면 immutable version이 생성됩니다. 생성 뒤 검증을 통과한 버전만 발행할 수 있습니다.</p></div></div>

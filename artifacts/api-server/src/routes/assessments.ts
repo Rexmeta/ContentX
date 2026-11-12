@@ -34,8 +34,15 @@ import {
   AssessmentScenarioGenerationError,
   generateAssessmentScenario,
 } from "../domains/assessment/scenarioGenerator";
+import { assessmentActor, protectDiagnosticPackage } from "../domains/assessment/access";
+import diagnosticRoutes from "./assessmentDiagnostics";
+import { diagnosticHash, parseDiagnostic } from "../domains/assessment/diagnostic";
+import { validateDiagnosticMedia } from "../domains/assessment/media";
 
 const router: IRouter = Router();
+router.use("/v1/assessments/:id", protectDiagnosticPackage);
+router.use("/v1/assessment-packages/:packageId/versions/:version", protectDiagnosticPackage);
+router.use(diagnosticRoutes);
 
 function assessmentParams(value: unknown) {
   return GetAssessmentParams.safeParse(value);
@@ -103,11 +110,12 @@ function versionSummary(
   };
 }
 
-async function listAssessments(_req: Request, res: Response): Promise<void> {
+async function listAssessments(req: Request, res: Response): Promise<void> {
+  res.set("Cache-Control", "private, no-store");
   const packages = await assessmentRepository.listAssessmentPackageReadModels();
   res.json(
     ListAssessmentsResponse.parse(
-      packages.map((readModel) => assessmentRecord(readModel.assessmentPackage, readModel)),
+      packages.filter((r) => !r.assessmentPackage.diagnosticOwnerId || r.assessmentPackage.diagnosticOwnerId === assessmentActor(req)).map((readModel) => assessmentRecord(readModel.assessmentPackage, readModel)),
     ),
   );
 }
@@ -133,6 +141,8 @@ async function getAssessment(req: Request, res: Response): Promise<void> {
 }
 
 async function createVersion(req: Request, res: Response, packageId: string): Promise<void> {
+  const actor = assessmentActor(req);
+  if (req.body?.diagnostic && !actor) { res.status(401).json({ error: "Diagnostic author sign-in required" }); return; }
   const parsed = CreateAssessmentPackageVersionBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -169,9 +179,16 @@ async function createVersion(req: Request, res: Response, packageId: string): Pr
     res.status(400).json({ error: JSON.stringify({ diagnostics: compiled.diagnostics }) });
     return;
   }
+  let diagnostic;
+  try {
+    diagnostic = req.body?.diagnostic ? parseDiagnostic(req.body.diagnostic, compiled.package) : undefined;
+    if (diagnostic) await validateDiagnosticMedia(diagnostic, actor!);
+  } catch (error) { res.status(400).json({ error: error instanceof Error ? error.message : "Invalid diagnostic" }); return; }
 
   try {
     const existing = await assessmentRepository.getAssessmentPackage(input.packageId);
+    if (existing?.diagnosticOwnerId && existing.diagnosticOwnerId !== actor) { res.status(403).json({ error: "Forbidden" }); return; }
+    if (existing && diagnostic && !existing.diagnosticOwnerId) { res.status(400).json({ error: "Use diagnostic successor flow to add diagnostic source to an existing package" }); return; }
     if (existing && existing.packageKey !== input.packageKey) {
       res.status(409).json({ error: "packageId is already bound to a different packageKey." });
       return;
@@ -184,6 +201,7 @@ async function createVersion(req: Request, res: Response, packageId: string): Pr
         description: input.metadata.description,
         sourceType: "scenario-library",
         sourceId: input.scenarios.map((item) => item.scenarioId).sort().join(","),
+        ...(diagnostic ? { diagnosticOwnerId: actor! } : {}),
       });
     }
     const row = await assessmentRepository.createAssessmentPackageVersion({
@@ -193,7 +211,8 @@ async function createVersion(req: Request, res: Response, packageId: string): Pr
       packageJson: compiled.package,
       contentHash: compiled.package.provenance.contentHash,
       validationReport: { valid: true, diagnostics: compiled.diagnostics },
-      createdBy: input.author,
+      createdBy: diagnostic ? actor : input.author,
+      diagnosticJson: diagnostic,
     });
     res.status(201).json(CreateAssessmentPackageVersionResponse.parse(versionRecord(row)));
   } catch (error) {
@@ -213,7 +232,18 @@ async function validateVersion(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: "Assessment package version not found." });
     return;
   }
-  res.json(ValidateAssessmentPackageVersionResponse.parse(validateAssessmentScenarioPackage(row.packageJson)));
+  const report = validateAssessmentScenarioPackage(row.packageJson);
+  if (row.diagnosticJson) {
+    try {
+      parseDiagnostic(row.diagnosticJson, row.packageJson as import("../domains/assessment/model").AssessmentScenarioPackageV1);
+      if (diagnosticHash(row.diagnosticJson) !== row.diagnosticHash) throw new Error("Diagnostic integrity mismatch");
+      report.diagnostics.push({ severity: "warning", code: "DIAGNOSTIC_RECEIVER_MAPPING_REQUIRED", path: "diagnostic", message: "RoleplayX v1 does not transport diagnostic source. Use contentx.diagnostic-export.v1 and verify receiver mapping before execution." });
+    } catch (error) {
+      report.valid = false;
+      report.diagnostics.push({ severity: "error", code: "INVALID_DIAGNOSTIC", path: "diagnostic", message: error instanceof Error ? error.message : "Invalid diagnostic" });
+    }
+  }
+  res.json(ValidateAssessmentPackageVersionResponse.parse(report));
 }
 
 async function getVersionPackage(req: Request, res: Response): Promise<void> {
@@ -244,6 +274,10 @@ async function publishVersion(req: Request, res: Response): Promise<void> {
   const version = await assessmentRepository.getAssessmentPackageVersion(route.data.packageId, route.data.version);
   if (!version) {
     res.status(404).json({ error: "Assessment package version not found." });
+    return;
+  }
+  if (version.diagnosticJson) {
+    res.status(422).json({ error: "진단 단서·자료를 지원하는 RoleplayBot 계약이 확인되지 않았습니다. 진단용 내보내기로 매핑을 먼저 확인하세요. RoleplayX v1로 조용히 축소 발행하지 않습니다." });
     return;
   }
   try {
@@ -335,6 +369,9 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const diagnosticMode = parsed.data.diagnosticMode || !!req.body?.diagnostic;
+  const actor = assessmentActor(req);
+  if (diagnosticMode && !actor) { res.status(401).json({ error: "Diagnostic author sign-in required" }); return; }
 
   const {
     templateId: rawTemplateId,
@@ -374,7 +411,7 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
     });
 
     // Generation and both quality gates deliberately precede the first write.
-    const generated = await generateAssessmentScenario(instantiated);
+    const generated = await generateAssessmentScenario(instantiated, { diagnosticMode, diagnostic: req.body?.diagnostic });
     const compiled = compileAssessmentScenarioPackage({
       ...instantiated.compilationInput,
       metadata: {
@@ -391,8 +428,17 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
       res.status(422).json({ error: "Generated assessment could not be compiled.", diagnostics: compiled.diagnostics });
       return;
     }
+    let diagnostic;
+    try {
+      diagnostic = diagnosticMode ? parseDiagnostic(generated.diagnostic, compiled.package) : undefined;
+      if (diagnostic) await validateDiagnosticMedia(diagnostic, actor!);
+    } catch (error) {
+      res.status(422).json({ error: "Generated diagnostic source did not meet the structural contract.", diagnostics: [error instanceof Error ? error.message : "Invalid diagnostic"] });
+      return;
+    }
 
-    await scenarioRepository.insertScenario({
+    // Diagnostic generation includes privileged narrative: do not copy it to the public legacy scenario library.
+    if (!diagnosticMode) await scenarioRepository.insertScenario({
       id: scenarioId,
       title: generated.dramaticScenario.title,
       idea: `Assessment Template: ${instantiated.template.title}`,
@@ -408,6 +454,7 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
       description: compiled.package.metadata.description,
       sourceType: "scenario-template",
       sourceId: scenarioId,
+      ...(diagnostic ? { diagnosticOwnerId: actor! } : {}),
     });
 
     const row = await assessmentRepository.createAssessmentPackageVersion({
@@ -417,7 +464,8 @@ async function createFromTemplate(req: Request, res: Response): Promise<void> {
       packageJson: compiled.package,
       contentHash: compiled.package.provenance.contentHash,
       validationReport: { valid: true, diagnostics: compiled.diagnostics },
-      createdBy: "ContentX HR Studio",
+      createdBy: diagnostic ? actor : "ContentX HR Studio",
+      diagnosticJson: diagnostic,
     });
 
     res.status(201).json(

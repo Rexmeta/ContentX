@@ -8,8 +8,10 @@
 import type { AssessmentCompetency } from './assessmentCompetency';
 import type { AssessmentPackageVersionCreateInputMetadata } from './assessmentPackageVersionCreateInputMetadata';
 import type { AssessmentScenarioConfiguration } from './assessmentScenarioConfiguration';
+import type { DiagnosticAuthoring } from './diagnosticAuthoring';
 
 export interface AssessmentPackageVersionCreateInput {
+  diagnostic?: DiagnosticAuthoring;
   /** @minLength 1 */
   packageId?: string;
   /** @minLength 1 */

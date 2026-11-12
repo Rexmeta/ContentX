@@ -25,6 +25,8 @@ export const assessmentPackagesTable = pgTable(
     /** Canonical ContentX source identity; never RoleplayX-owned data. */
     sourceType: text("source_type").notNull(),
     sourceId: text("source_id").notNull(),
+    /** Null for legacy public authoring; diagnostic packages have a verified Clerk owner. */
+    diagnosticOwnerId: text("diagnostic_owner_id"),
     status: text("status").notNull().default("draft"),
     currentVersion: integer("current_version").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })

@@ -64,11 +64,19 @@ vi.mock("@workspace/api-client-react", () => ({
   getGetAssessmentPackageVersionQueryKey: () => ["version"],
   getListAssessmentPackagePublicationHistoryQueryKey: () => ["history"],
   getListAssessmentsQueryKey: () => ["assessments"],
+  useGetAssessmentDiagnostic: () => ({ data: undefined, isLoading: false, error: null }),
+  getGetAssessmentDiagnosticQueryKey: () => ["diagnostic"],
+  useCreateAssessmentDiagnosticVersion: () => ({ isPending: false, mutate: vi.fn() }),
+  exportAssessmentDiagnostic: vi.fn(),
+  getAssessmentPackageVersion: vi.fn(),
+  requestAssessmentMediaUpload: vi.fn(),
 }));
 
 vi.mock("wouter", () => ({
   useRoute: () => [true, { id: "assessment-1" }],
   useLocation: () => ["/assessments/assessment-1?version=1", vi.fn()],
+  useSearch: () => "version=1",
+  Link: ({ children, href, ...rest }: any) => <a href={href} {...rest}>{children}</a>,
 }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));

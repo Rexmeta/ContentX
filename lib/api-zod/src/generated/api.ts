@@ -4700,12 +4700,85 @@ export const GetAssessmentTemplateResponse = zod.object({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const createAssessmentFromTemplateBodyPassingScoreMin = 0;
 export const createAssessmentFromTemplateBodyPassingScoreMax = 100;
 
 
 
 export const CreateAssessmentFromTemplateBody = zod.object({
+  "diagnosticMode": zod.boolean().optional(),
+  "diagnostic": zod.object({
+  "schemaVersion": zod.enum(['contentx.diagnostic.v1']),
+  "scenarios": zod.array(zod.object({
+  "scenarioKey": zod.string().min(1),
+  "briefing": zod.object({
+  "roleAndAuthority": zod.string().min(1),
+  "relationship": zod.string().min(1),
+  "reason": zod.string().min(1),
+  "goals": zod.string().min(1),
+  "preparationSeconds": zod.int().min(1)
+}),
+  "materials": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "type": zod.enum(['text', 'table', 'image', 'video']),
+  "displayAt": zod.enum(['preparation', 'conversation', 'both']),
+  "reopenDuringConversation": zod.boolean(),
+  "text": zod.string().describe('Accessible text equivalent including all essential facts'),
+  "table": zod.object({
+  "columns": zod.array(zod.string().min(1)).min(1),
+  "rows": zod.array(zod.array(zod.string()).min(1)).min(1)
+}).optional(),
+  "assetId": zod.string().optional(),
+  "altText": zod.string().optional(),
+  "transcript": zod.string().optional()
+})),
+  "private": zod.object({
+  "hiddenCauses": zod.string(),
+  "internalIntent": zod.string(),
+  "modelAnswer": zod.string(),
+  "instructions": zod.string()
+}),
+  "cues": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "type": zod.enum(['discovery', 'common']),
+  "intent": zod.string().optional(),
+  "condition": zod.string().optional(),
+  "fact": zod.string().min(1),
+  "criterionIds": zod.array(zod.string()).min(1),
+  "tone": zod.string().optional(),
+  "intensity": zod.string().optional(),
+  "fallbackCondition": zod.string().optional()
+})),
+  "criteria": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "dimensionKey": zod.string().min(1),
+  "competencyName": zod.string().min(1),
+  "observableBehavior": zod.string().min(1)
+})).min(1)
+})).min(1)
+}).optional(),
   "templateId": zod.string().min(1),
   "companyContext": zod.string().min(1),
   "participantRole": zod.string().min(1).optional(),
@@ -4839,6 +4912,27 @@ export const CreateAssessmentPackageVersionParams = zod.object({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const createAssessmentPackageVersionBodyScenariosItemEstimatedTimeExclusiveMin = 0;
 
 
@@ -4882,6 +4976,57 @@ export const createAssessmentPackageVersionBodyScenariosItemTargetDurationMinute
 
 
 export const CreateAssessmentPackageVersionBody = zod.object({
+  "diagnostic": zod.object({
+  "schemaVersion": zod.enum(['contentx.diagnostic.v1']),
+  "scenarios": zod.array(zod.object({
+  "scenarioKey": zod.string().min(1),
+  "briefing": zod.object({
+  "roleAndAuthority": zod.string().min(1),
+  "relationship": zod.string().min(1),
+  "reason": zod.string().min(1),
+  "goals": zod.string().min(1),
+  "preparationSeconds": zod.int().min(1)
+}),
+  "materials": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "type": zod.enum(['text', 'table', 'image', 'video']),
+  "displayAt": zod.enum(['preparation', 'conversation', 'both']),
+  "reopenDuringConversation": zod.boolean(),
+  "text": zod.string().describe('Accessible text equivalent including all essential facts'),
+  "table": zod.object({
+  "columns": zod.array(zod.string().min(1)).min(1),
+  "rows": zod.array(zod.array(zod.string()).min(1)).min(1)
+}).optional(),
+  "assetId": zod.string().optional(),
+  "altText": zod.string().optional(),
+  "transcript": zod.string().optional()
+})),
+  "private": zod.object({
+  "hiddenCauses": zod.string(),
+  "internalIntent": zod.string(),
+  "modelAnswer": zod.string(),
+  "instructions": zod.string()
+}),
+  "cues": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "type": zod.enum(['discovery', 'common']),
+  "intent": zod.string().optional(),
+  "condition": zod.string().optional(),
+  "fact": zod.string().min(1),
+  "criterionIds": zod.array(zod.string()).min(1),
+  "tone": zod.string().optional(),
+  "intensity": zod.string().optional(),
+  "fallbackCondition": zod.string().optional()
+})),
+  "criteria": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "dimensionKey": zod.string().min(1),
+  "competencyName": zod.string().min(1),
+  "observableBehavior": zod.string().min(1)
+})).min(1)
+})).min(1)
+}).optional(),
   "packageId": zod.string().min(1).optional(),
   "packageKey": zod.string().min(1),
   "version": zod.int().min(1),
@@ -5174,6 +5319,381 @@ export const GetAssessmentPackageVersionResponse = zod.object({
   "author": zod.string().min(1),
   "contentHash": zod.string().regex(getAssessmentPackageVersionResponseProvenanceContentHashRegExp)
 })
+})
+
+
+/**
+ * @summary Author-only diagnostic source, never a participant response
+ */
+
+
+
+export const GetAssessmentDiagnosticParams = zod.object({
+  "id": zod.coerce.string(),
+  "version": zod.coerce.number().int().min(1)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const GetAssessmentDiagnosticResponse = zod.object({
+  "schemaVersion": zod.enum(['contentx.diagnostic.v1']),
+  "scenarios": zod.array(zod.object({
+  "scenarioKey": zod.string().min(1),
+  "briefing": zod.object({
+  "roleAndAuthority": zod.string().min(1),
+  "relationship": zod.string().min(1),
+  "reason": zod.string().min(1),
+  "goals": zod.string().min(1),
+  "preparationSeconds": zod.int().min(1)
+}),
+  "materials": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "type": zod.enum(['text', 'table', 'image', 'video']),
+  "displayAt": zod.enum(['preparation', 'conversation', 'both']),
+  "reopenDuringConversation": zod.boolean(),
+  "text": zod.string().describe('Accessible text equivalent including all essential facts'),
+  "table": zod.object({
+  "columns": zod.array(zod.string().min(1)).min(1),
+  "rows": zod.array(zod.array(zod.string()).min(1)).min(1)
+}).optional(),
+  "assetId": zod.string().optional(),
+  "altText": zod.string().optional(),
+  "transcript": zod.string().optional()
+})),
+  "private": zod.object({
+  "hiddenCauses": zod.string(),
+  "internalIntent": zod.string(),
+  "modelAnswer": zod.string(),
+  "instructions": zod.string()
+}),
+  "cues": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "type": zod.enum(['discovery', 'common']),
+  "intent": zod.string().optional(),
+  "condition": zod.string().optional(),
+  "fact": zod.string().min(1),
+  "criterionIds": zod.array(zod.string()).min(1),
+  "tone": zod.string().optional(),
+  "intensity": zod.string().optional(),
+  "fallbackCondition": zod.string().optional()
+})),
+  "criteria": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "dimensionKey": zod.string().min(1),
+  "competencyName": zod.string().min(1),
+  "observableBehavior": zod.string().min(1)
+})).min(1)
+})).min(1)
+})
+
+
+/**
+ * @summary Copy a selected immutable version into the next version with edited diagnostic source
+ */
+
+
+
+export const CreateAssessmentDiagnosticVersionParams = zod.object({
+  "id": zod.coerce.string(),
+  "version": zod.coerce.number().int().min(1)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const CreateAssessmentDiagnosticVersionBody = zod.object({
+  "schemaVersion": zod.enum(['contentx.diagnostic.v1']),
+  "scenarios": zod.array(zod.object({
+  "scenarioKey": zod.string().min(1),
+  "briefing": zod.object({
+  "roleAndAuthority": zod.string().min(1),
+  "relationship": zod.string().min(1),
+  "reason": zod.string().min(1),
+  "goals": zod.string().min(1),
+  "preparationSeconds": zod.int().min(1)
+}),
+  "materials": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "type": zod.enum(['text', 'table', 'image', 'video']),
+  "displayAt": zod.enum(['preparation', 'conversation', 'both']),
+  "reopenDuringConversation": zod.boolean(),
+  "text": zod.string().describe('Accessible text equivalent including all essential facts'),
+  "table": zod.object({
+  "columns": zod.array(zod.string().min(1)).min(1),
+  "rows": zod.array(zod.array(zod.string()).min(1)).min(1)
+}).optional(),
+  "assetId": zod.string().optional(),
+  "altText": zod.string().optional(),
+  "transcript": zod.string().optional()
+})),
+  "private": zod.object({
+  "hiddenCauses": zod.string(),
+  "internalIntent": zod.string(),
+  "modelAnswer": zod.string(),
+  "instructions": zod.string()
+}),
+  "cues": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "type": zod.enum(['discovery', 'common']),
+  "intent": zod.string().optional(),
+  "condition": zod.string().optional(),
+  "fact": zod.string().min(1),
+  "criterionIds": zod.array(zod.string()).min(1),
+  "tone": zod.string().optional(),
+  "intensity": zod.string().optional(),
+  "fallbackCondition": zod.string().optional()
+})),
+  "criteria": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "dimensionKey": zod.string().min(1),
+  "competencyName": zod.string().min(1),
+  "observableBehavior": zod.string().min(1)
+})).min(1)
+})).min(1)
+})
+
+export const CreateAssessmentDiagnosticVersionResponse = zod.object({
+  "id": zod.string(),
+  "packageId": zod.string(),
+  "version": zod.int(),
+  "contentHash": zod.string(),
+  "validation": zod.object({
+  "valid": zod.boolean(),
+  "diagnostics": zod.array(zod.object({
+  "severity": zod.enum(['error', 'warning']),
+  "code": zod.string(),
+  "path": zod.string(),
+  "message": zod.string()
+}))
+}),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create a private editable sales-manager diagnostic sample without AI
+ */
+
+
+
+
+export const createAssessmentDiagnosticSampleResponseContentHashRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const CreateAssessmentDiagnosticSampleResponse = zod.object({
+  "assessmentId": zod.string().min(1),
+  "version": zod.int().min(1),
+  "status": zod.enum(['draft']),
+  "title": zod.string().min(1),
+  "packageKey": zod.string().min(1),
+  "contentHash": zod.string().regex(createAssessmentDiagnosticSampleResponseContentHashRegExp)
+})
+
+
+/**
+ * @summary Author-only versioned diagnostic export with explicit receiver requirements
+ */
+
+
+
+export const ExportAssessmentDiagnosticParams = zod.object({
+  "id": zod.coerce.string(),
+  "version": zod.coerce.number().int().min(1)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const ExportAssessmentDiagnosticResponse = zod.object({
+  "schemaVersion": zod.enum(['contentx.diagnostic-export.v1']),
+  "packageKey": zod.string(),
+  "version": zod.int(),
+  "diagnostic": zod.object({
+  "schemaVersion": zod.enum(['contentx.diagnostic.v1']),
+  "scenarios": zod.array(zod.object({
+  "scenarioKey": zod.string().min(1),
+  "briefing": zod.object({
+  "roleAndAuthority": zod.string().min(1),
+  "relationship": zod.string().min(1),
+  "reason": zod.string().min(1),
+  "goals": zod.string().min(1),
+  "preparationSeconds": zod.int().min(1)
+}),
+  "materials": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "type": zod.enum(['text', 'table', 'image', 'video']),
+  "displayAt": zod.enum(['preparation', 'conversation', 'both']),
+  "reopenDuringConversation": zod.boolean(),
+  "text": zod.string().describe('Accessible text equivalent including all essential facts'),
+  "table": zod.object({
+  "columns": zod.array(zod.string().min(1)).min(1),
+  "rows": zod.array(zod.array(zod.string()).min(1)).min(1)
+}).optional(),
+  "assetId": zod.string().optional(),
+  "altText": zod.string().optional(),
+  "transcript": zod.string().optional()
+})),
+  "private": zod.object({
+  "hiddenCauses": zod.string(),
+  "internalIntent": zod.string(),
+  "modelAnswer": zod.string(),
+  "instructions": zod.string()
+}),
+  "cues": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "type": zod.enum(['discovery', 'common']),
+  "intent": zod.string().optional(),
+  "condition": zod.string().optional(),
+  "fact": zod.string().min(1),
+  "criterionIds": zod.array(zod.string()).min(1),
+  "tone": zod.string().optional(),
+  "intensity": zod.string().optional(),
+  "fallbackCondition": zod.string().optional()
+})),
+  "criteria": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "dimensionKey": zod.string().min(1),
+  "competencyName": zod.string().min(1),
+  "observableBehavior": zod.string().min(1)
+})).min(1)
+})).min(1)
+}),
+  "rules": zod.array(zod.string()),
+  "receiverStatus": zod.enum(['mapping_required_not_runtime_verified']),
+  "runtimeResults": zod.record(zod.string(), zod.unknown()).nullable()
+})
+
+
+/**
+ * @summary Server allowlist projection, contains no private source or v1 package
+ */
+
+
+
+export const GetAssessmentParticipantPreviewParams = zod.object({
+  "id": zod.coerce.string(),
+  "version": zod.coerce.number().int().min(1)
+})
+
+export const GetAssessmentParticipantPreviewQueryParams = zod.object({
+  "phase": zod.enum(['preparation', 'conversation'])
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const GetAssessmentParticipantPreviewResponse = zod.object({
+  "schemaVersion": zod.enum(['contentx.participant.v1']),
+  "phase": zod.enum(['preparation', 'conversation']),
+  "scenarios": zod.array(zod.object({
+  "scenarioKey": zod.string(),
+  "briefing": zod.object({
+  "roleAndAuthority": zod.string().min(1),
+  "relationship": zod.string().min(1),
+  "reason": zod.string().min(1),
+  "goals": zod.string().min(1),
+  "preparationSeconds": zod.int().min(1)
+}),
+  "materials": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "title": zod.string().min(1),
+  "type": zod.enum(['text', 'table', 'image', 'video']),
+  "displayAt": zod.enum(['preparation', 'conversation', 'both']),
+  "reopenDuringConversation": zod.boolean(),
+  "text": zod.string().describe('Accessible text equivalent including all essential facts'),
+  "table": zod.object({
+  "columns": zod.array(zod.string().min(1)).min(1),
+  "rows": zod.array(zod.array(zod.string()).min(1)).min(1)
+}).optional(),
+  "assetId": zod.string().optional(),
+  "altText": zod.string().optional(),
+  "transcript": zod.string().optional()
+}))
+}))
+})
+
+
+export const RequestAssessmentMediaUploadBody = zod.object({
+  "contentType": zod.enum(['image/png', 'image/jpeg', 'image/webp', 'video/mp4', 'video/webm'])
+})
+
+export const RequestAssessmentMediaUploadResponse = zod.object({
+  "assetId": zod.string(),
+  "uploadURL": zod.string()
 })
 
 

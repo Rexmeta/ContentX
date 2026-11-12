@@ -21,3 +21,4 @@ export * from "./commercialValidationArtifacts";
 export * from "./assessmentPackages";
 export * from "./assessmentPackageVersions";
 export * from "./assessmentPublications";
+export * from "./assessmentMedia";

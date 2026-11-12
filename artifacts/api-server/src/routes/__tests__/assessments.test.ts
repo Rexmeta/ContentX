@@ -8,6 +8,7 @@ import type {
 } from "@workspace/db";
 
 vi.mock("../../domains/assessment/repository", () => ({
+  getAssessmentPackage: vi.fn(),
   listAssessmentPackageReadModels: vi.fn(),
   getAssessmentPackageReadModel: vi.fn(),
   createAssessmentPackage: vi.fn(),
@@ -41,6 +42,7 @@ const createdAt = new Date("2026-01-01T00:00:00.000Z");
 const updatedAt = new Date("2026-01-02T00:00:00.000Z");
 
 const assessmentPackage: AssessmentPackageRow = {
+  diagnosticOwnerId: null,
   id: "assessment-1",
   packageKey: "customer-support",
   title: "Customer support assessment",
@@ -54,6 +56,8 @@ const assessmentPackage: AssessmentPackageRow = {
 };
 
 const version: AssessmentPackageVersionRow = {
+  diagnosticJson: null,
+  diagnosticHash: null,
   id: "assessment-version-1",
   packageId: assessmentPackage.id,
   version: 1,

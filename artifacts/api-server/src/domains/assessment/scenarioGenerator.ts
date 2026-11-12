@@ -4,6 +4,8 @@ import type { DramaticScenario } from "../scenario/model";
 import type { AssessmentScenarioConfiguration } from "./model";
 import type { InstantiatedAssessment } from "./templateInstantiator";
 import { assessmentElementKey } from "./compiler";
+import { diagnosticSchema } from "./diagnostic";
+import type { DiagnosticAuthoring } from "@workspace/api-zod";
 
 const text = (minimum: number) => z.string().trim().min(minimum);
 const successLevels = ["optimal", "good", "acceptable", "failure"] as const;
@@ -14,6 +16,7 @@ const successLabels: Record<(typeof successLevels)[number], string> = {
   failure: "실패",
 };
 const generatedSchema = z.object({
+  diagnostic: diagnosticSchema.optional(),
   title: text(8), logline: text(30), synopsis: text(500), theme: text(15), stakes: text(150), twist: text(80),
   acts: z.array(z.object({ name: text(4), summary: text(100), beats: z.array(text(20)).min(3).max(5) }).strict()).length(3),
   characters: z.array(z.object({
@@ -45,7 +48,7 @@ export class AssessmentScenarioGenerationError extends Error {
   }
 }
 
-function prompt(input: InstantiatedAssessment): string {
+function prompt(input: InstantiatedAssessment, diagnosticMode = false): string {
   const template = input.template;
   return `당신은 한국 기업의 Assessment Center 수석 설계자다. 아래 고정 평가 청사진을 절대 바꾸지 말고, 골든타임 장애 대응 사례처럼 구체적인 시간·수치·이해관계·상충하는 선택지·실패 결과가 살아 있는 고밀도 한국어 역할극을 JSON으로 설계하라.
 
@@ -61,7 +64,21 @@ acts는 정확히 3개이며 각 막은 name, summary, beats(3~5개)를 가진�
 characters는 2~4명이며 name, role, stance, goal, tradeoff, traits, initialDialogue, behaviorGuidelines를 가진다. stance(현재 주장과 근거), goal(얻고자 하는 결과), tradeoff(양보 가능한 조건)를 서로 반복하지 말고 각각 충분히 구체적으로 쓴다.
 playerRole은 position, department, experience, responsibility를 가진 객체이며 responsibility에는 응시자가 내려야 할 결정, 조율할 이해관계자, 만들어야 할 산출물을 명시한다.
 successCriteria는 optimal, good, acceptable, failure 네 키를 정확히 가진 객체다. 각 수준은 관찰 가능한 합의 수준, 실행안, 잔여 위험과 실패 결과가 단계적으로 구분되어야 한다.
-synopsis/stakes는 얕은 요약이 아니라 배경, 사건 경과, 구체적 데드라인, 단기·장기 이해관계와 위험을 충분히 서술한다. objectives는 측정 가능한 행동과 산출물을 쓴다.`;
+synopsis/stakes는 얕은 요약이 아니라 배경, 사건 경과, 구체적 데드라인, 단기·장기 이해관계와 위험을 충분히 서술한다. objectives는 측정 가능한 행동과 산출물을 쓴다.
+${diagnosticMode ? `
+진단 모드: diagnostic 키를 추가한다. 참가자 브리핑에는 시작 시점에 이미 아는 사실만 포함한다.
+숨겨진 원인, 상대의 내부 의도, 평가 기준, 모범 답변을 브리핑이나 공개 자료에 절대 넣지 말고 private/cues/criteria에 분리한다.
+diagnostic={schemaVersion:"contentx.diagnostic.v1",scenarios:[{
+scenarioKey:${JSON.stringify(input.configuration.scenarioKey)},
+briefing:{roleAndAuthority:"역할과 의사결정 권한",relationship:"상대와의 관계",reason:"지금 대화하는 이유",goals:"대화 목표",preparationSeconds:90},
+materials:[{id:"material-고유영문ID",title:"자료 제목",type:"text",displayAt:"both",reopenDuringConversation:true,text:"시작 시점에 허용된 업무 정보만"}],
+private:{hiddenCauses:"비공개 원인",internalIntent:"상대의 내부 의도",modelAnswer:"모범 답변",instructions:"실행 엔진 지시"},
+cues:[{id:"cue-고유영문ID",type:"discovery",intent:"특정 문장 일치가 아닌 질문의 의미상 의도",fact:"질문했을 때 공개할 핵심 사실",criterionIds:["criterion-고유영문ID"]},
+{id:"cue-common",type:"common",condition:"모두에게 제시할 구간",fallbackCondition:"구간 미도달 시 대체 시점이나 조건",fact:"반응 발화",tone:"비공격적",intensity:"중간",criterionIds:["criterion-고유영문ID"]}],
+criteria:[{id:"criterion-고유영문ID",dimensionKey:"위 고정 평가 차원의 실제 key",competencyName:"역량 이름",observableBehavior:"관찰 가능한 행동"}]
+}]}. 모든 ID는 영문/숫자/하이픈/밑줄로 고유하게 작성한다. 각 단서의 criterionIds는 실제 criteria.id에 연결한다.
+브리핑 총 250~400자 및 준비 60~120초는 파일럿 권장값일 뿐 상한이 아니다.
+` : ""}`;
 }
 
 function sameFixedSet(value: GeneratedAssessmentScenario, input: InstantiatedAssessment): string[] {
@@ -78,10 +95,10 @@ function sameFixedSet(value: GeneratedAssessmentScenario, input: InstantiatedAss
 }
 
 /** Generates and quality-gates rich Korean material before any persistence occurs. */
-export async function generateAssessmentScenario(input: InstantiatedAssessment): Promise<{ dramaticScenario: DramaticScenario; configuration: AssessmentScenarioConfiguration }> {
+export async function generateAssessmentScenario(input: InstantiatedAssessment, options: { diagnosticMode?: boolean; diagnostic?: unknown } = {}): Promise<{ dramaticScenario: DramaticScenario; configuration: AssessmentScenarioConfiguration; diagnostic?: DiagnosticAuthoring }> {
   let raw: unknown;
   try {
-    raw = await completeJSON({ system: "Return only strict JSON. Do not add commentary.", user: prompt(input), maxCompletionTokens: 8192 });
+    raw = await completeJSON({ system: "Return only strict JSON. Do not add commentary.", user: prompt(input, options.diagnosticMode), maxCompletionTokens: options.diagnosticMode ? 12000 : 8192 });
   } catch (error) {
     const message = error instanceof LLMRequestError ? error.message : "AI assessment scenario generation failed.";
     throw new AssessmentScenarioGenerationError("provider", message);
@@ -92,6 +109,11 @@ export async function generateAssessmentScenario(input: InstantiatedAssessment):
     : sameFixedSet(parsed.data, input);
   if (issues.length) throw new AssessmentScenarioGenerationError("validation", "AI output did not meet the required assessment quality contract.", issues);
   const value = parsed.data!;
+  // Explicit human-authored source wins, never overwritten by generated defaults.
+  const diagnostic = options.diagnostic !== undefined ? diagnosticSchema.safeParse(options.diagnostic) : value.diagnostic ? diagnosticSchema.safeParse(value.diagnostic) : undefined;
+  if (options.diagnosticMode && (!diagnostic || !diagnostic.success)) {
+    throw new AssessmentScenarioGenerationError("validation", "진단용 공개/비공개 구조가 올바르지 않습니다.", diagnostic && !diagnostic.success ? diagnostic.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`) : ["diagnostic is required"]);
+  }
   const playerRole = [
     `[직책] ${value.playerRole.position}`,
     `[소속] ${value.playerRole.department}`,
@@ -100,6 +122,7 @@ export async function generateAssessmentScenario(input: InstantiatedAssessment):
   ].join("\n");
   const successCriteria = successLevels.map((level) => `[${successLabels[level]}] ${value.successCriteria[level]}`);
   return {
+    ...(diagnostic?.success ? { diagnostic: diagnostic.data } : {}),
     dramaticScenario: {
       title: value.title, logline: value.logline, synopsis: value.synopsis, theme: value.theme, stakes: value.stakes, twist: value.twist,
       acts: value.acts, characters: value.characters.map(({ name, role, stance, goal, tradeoff }) => ({
